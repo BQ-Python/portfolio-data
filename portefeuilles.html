@@ -27,15 +27,16 @@
     .kpi.red strong{color:#dc2626;}
     .kpi small{font-size:0.95rem;color:var(--gris);}
 
-    /* Modal ultra aérée */
+    /* Modal */
     #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;}
     #modal.active{display:flex;}
-    .modal-content{background:white;border-radius:24px;max-width:1500px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,0.4);}
+    .modal-content{background:white;border-radius:24px;max-width:1350px;width:95%;box-shadow:0 40px 100px rgba(0,0,0,0.4);}
     .modal-header{background:var(--n);color:white;padding:2.5rem 3rem;display:flex;justify-content:space-between;align-items:center;border-radius:24px 24px 0 0;}
     .modal-header h2{font-size:2.6rem;font-weight:700;}
     .close{font-size:3.5rem;cursor:pointer;opacity:0.8;transition:.3s;}
     .close:hover{opacity:1;}
-    .modal-body{padding:4rem;}
+    .modal-body{padding:3rem 4rem 4rem;}
+
     .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2.5rem;margin-bottom:4rem;}
     .kpi-big{background:var(--l);padding:2.2rem;border-radius:18px;text-align:center;border-left:6px solid var(--g);box-shadow:0 8px 25px rgba(0,0,0,0.06);}
     .kpi-big strong{font-size:3.4rem;color:var(--g);font-weight:800;}
@@ -43,16 +44,15 @@
     .kpi-big.red strong{color:#dc2626;}
     .kpi-big div{font-size:1.1rem;color:var(--gris);margin-top:0.5rem;}
 
-    .main-chart{margin:3rem 0 5rem;}
-    canvas{background:white;border-radius:18px;padding:2rem;box-shadow:0 15px 40px rgba(0,0,0,0.08);}
+    .chart-container{max-width:100%;margin:3rem auto;position:relative;}
+    canvas{background:white;border-radius:18px;padding:1.8rem;box-shadow:0 15px 40px rgba(0,0,0,0.08);width:100%!important;height:auto!important;}
 
-    .metrics-tabs{text-align:center;margin:4rem 0 2rem;}
+    .metrics-tabs{text-align:center;margin:4rem 0 1rem;}
     .metrics-tabs select{padding:1rem 2rem;font-size:1.2rem;border-radius:12px;border:2px solid var(--gris);background:white;}
 
     table{width:100%;border-collapse:collapse;margin-top:3rem;}
     th,td{padding:1.2rem 0.5rem;border-bottom:1px solid #e2e8f0;text-align:left;}
     th{background:var(--l);font-weight:700;color:var(--n);}
-    td strong{font-weight:600;}
     tr:last-child td{border:none;}
   </style>
 </head>
@@ -75,7 +75,6 @@
   <div class="grid" id="grid"></div>
 </div>
 
-<!-- MODAL ULTRA PRO -->
 <div id="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -85,21 +84,22 @@
     <div class="modal-body">
       <div class="kpi-bar" id="kpi-bar"></div>
 
-      <!-- Graphique principal : Performance vs indices -->
-      <div class="main-chart">
-        <canvas id="mainChart" height="480"></canvas>
+      <!-- Graphique principal : Performance vs marchés -->
+      <div class="chart-container">
+        <canvas id="mainChart"></canvas>
       </div>
 
-      <!-- Menu déroulant pour les métriques détaillées -->
+      <!-- Menu déroulant : Volatilité ou Drawdown -->
       <div class="metrics-tabs">
         <select id="metricSelect" onchange="updateDetailChart()">
           <option value="vol">Volatilité annualisée</option>
-          <option value="dd">Drawdown</option>
-          <option value="ret" selected>Retours périodiques</option>
+          <option value="dd" selected>Drawdown</option>
         </select>
       </div>
-      <div class="main-chart">
-        <canvas id="detailChart" height="420"></canvas>
+
+      <!-- Graphique détaillé -->
+      <div class="chart-container">
+        <canvas id="detailChart"></canvas>
       </div>
 
       <h3 style="text-align:center;margin:4rem 0 1.5rem;font-size:2rem;">Composition actuelle</h3>
@@ -162,14 +162,7 @@ async function openModal(name, url) {
   const lines = txt.trim().split('\n').slice(1);
   currentData = lines.map(l => {
     const v = l.split(',');
-    return {
-      date: v[0], port: +v[1], sp: +v[2], nas: +v[3],
-      volD: +v[4], volW: +v[5], volM: +v[6],
-      ddC: +v[7], ddM: +v[8],
-      retPD: +v[9], retPW: +v[10], retPM: +v[11],
-      retSD: +v[12], retSW: +v[13], retSM: +v[14],
-      retND: +v[15], retNW: +v[16], retNM: +v[17]
-    };
+    return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3], volD: +v[4], volW: +v[5], volM: +v[6], ddC: +v[7], ddM: +v[8] };
   });
 
   const last = currentData[currentData.length-1];
@@ -179,14 +172,11 @@ async function openModal(name, url) {
     <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
     <div class="kpi-big"><strong>1.9</strong><div>Ratio de Sharpe</div></div>`;
 
-  // Composition
   const comp = await fetch(COMP_CSV).then(r => r.text());
   document.getElementById('comp').innerHTML = comp.trim().split('\n').slice(1)
     .filter(r => r.startsWith(name))
-    .map(r => {
-      const [_,a,t,w] = r.split(',');
-      return `<tr><td><strong>${a}</strong></td><td>${t}</td><td style="text-align:right;font-weight:700;">${w}</td></tr>`;
-    }).join('');
+    .map(r => { const [_,a,t,w] = r.split(','); return `<tr><td><strong>${a}</strong></td><td>${t}</td><td style="text-align:right;font-weight:700;">${w}</td></tr>`; })
+    .join('');
 
   drawMainChart();
   updateDetailChart();
@@ -209,6 +199,7 @@ function drawMainChart() {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { position: 'top', labels: { font: { size: 15 } } } },
       scales: { y: { grid: { color: '#f1f5f9' } } }
     }
@@ -219,37 +210,25 @@ function updateDetailChart() {
   const metric = document.getElementById('metricSelect').value;
   const ctx = document.getElementById('detailChart').getContext('2d');
   const labels = currentData.map(d => d.date.slice(5));
-  let config = {};
+
+  if (detailChart) detailChart.destroy();
 
   if (metric === 'vol') {
-    config = {
+    detailChart = new Chart(ctx, {
       type: 'line',
       data: { labels, datasets: [{ label: 'Volatilité annualisée', data: currentData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.1)', fill: true, tension: 0.3 }] },
-      options: { plugins: { title: { display: true, text: 'Volatilité annualisée (%)', font: { size: 18 } } } }
-    };
-  } else if (metric === 'dd') {
-    config = {
+      options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Volatilité annualisée (%)', font: { size: 18 } } } }
+    });
+  } else {
+    detailChart = new Chart(ctx, {
       type: 'line',
       data: { labels, datasets: [
         { label: 'Drawdown actuel', data: currentData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true },
-        { label: 'Drawdown max', data: currentData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
+        { label: 'Drawdown max',    data: currentData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
       ]},
-      options: { plugins: { title: { display: true, text: 'Drawdown (%)', font: { size: 18 } } } }
-    };
-  } else if (metric === 'ret') {
-    config = {
-      type: 'bar',
-      data: { labels, datasets: [
-        { label: 'Portefeuille', data: currentData.map(d => d.retPM), backgroundColor: '#ca8a04' },
-        { label: 'S&P 500', data: currentData.map(d => d.retSM), backgroundColor: '#e2e8f0' },
-        { label: 'NASDAQ', data: currentData.map(d => d.retNM), backgroundColor: '#cbd5e1' }
-      ]},
-      options: { plugins: { title: { display: true, text: 'Retours mensuels (%)', font: { size: 18 } } } }
-    };
+      options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Drawdown (%)', font: { size: 18 } } } }
+    });
   }
-
-  if (detailChart) detailChart.destroy();
-  detailChart = new Chart(ctx, config);
 }
 
 loadCards();
