@@ -37,17 +37,18 @@
     .close:hover{opacity:1;}
     .modal-body{padding:3rem 4rem 4rem;}
 
-    .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2.5rem;margin-bottom:4rem;}
-    .kpi-big{background:var(--l);padding:2.2rem;border-radius:18px;text-align:center;border-left:6px solid var(--g);box-shadow:0 8px 25px rgba(0,0,0,0.06);}
-    .kpi-big strong{font-size:3.4rem;color:var(--g);font-weight:800;}
+    /* KPI EN 1 LIGNE HORIZONTALE */
+    .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem;margin-bottom:3rem;}
+    .kpi-big{background:var(--l);padding:1.5rem 1rem;border-radius:14px;text-align:center;border-left:4px solid var(--g);box-shadow:0 4px 15px rgba(0,0,0,0.04);}
+    .kpi-big strong{font-size:2.4rem;color:var(--g);font-weight:700;display:block;}
     .kpi-big.red{border-left-color:#dc2626;}
     .kpi-big.red strong{color:#dc2626;}
-    .kpi-big div{font-size:1.1rem;color:var(--gris);margin-top:0.5rem;}
+    .kpi-big div{font-size:0.9rem;color:var(--gris);margin-top:0.3rem;}
 
-    .chart-wrapper{position:relative;height:480px;max-height:70vh;margin:3rem 0;padding:1.5rem;background:white;border-radius:18px;box-shadow:0 15px 40px rgba(0,0,0,0.08);}
+    .chart-wrapper{position:relative;height:420px;max-height:60vh;margin:2.5rem 0;padding:1.5rem;background:white;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.06);}
     .chart-wrapper canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
 
-    .metrics-tabs{text-align:center;margin:4rem 0 1rem;}
+    .metrics-tabs{text-align:center;margin:3rem 0 1rem;}
     .metrics-tabs select{padding:1rem 2rem;font-size:1.2rem;border-radius:12px;border:2px solid var(--gris);background:white;}
 
     table{width:100%;border-collapse:collapse;margin-top:3rem;}
@@ -79,12 +80,14 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2 id="modal-title"></h2>
-      <span class="close" onclick="closeModal()">x</span>
+      <span class="close" onclick="closeModal()">&times;</span>
     </div>
     <div class="modal-body">
       <div class="kpi-bar" id="kpi-bar"></div>
 
-      <div class="chart-wrapper"><canvas id="mainChart"></canvas></div>
+      <div class="chart-wrapper">
+        <canvas id="mainChart"></canvas>
+      </div>
 
       <div class="metrics-tabs">
         <select id="metricSelect" onchange="updateDetailChart()">
@@ -93,7 +96,9 @@
         </select>
       </div>
 
-      <div class="chart-wrapper"><canvas id="detailChart"></canvas></div>
+      <div class="chart-wrapper">
+        <canvas id="detailChart"></canvas>
+      </div>
 
       <h3 style="text-align:center;margin:4rem 0 1.5rem;font-size:2rem;">Composition actuelle</h3>
       <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="comp"></tbody></table>
@@ -108,7 +113,7 @@ const PORTFOLIOS = [
   { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_defensif_v2.csv" },
   { name: "Portefeuille Europe",     csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_europe_v2.csv" }
 ];
-const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3)%20(1).csv";
+const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
 
 let currentData = [];
 let mainChart = null;
@@ -121,7 +126,6 @@ function closeModal() {
   if (detailChart) detailChart.destroy();
 }
 
-// CHARGEMENT DES VIGNETTES + YTD + PERF ANNUALIÉE
 async function loadCards() {
   const grid = document.getElementById('grid');
   const currentYear = new Date().getFullYear();
@@ -137,7 +141,6 @@ async function loadCards() {
         return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3], volM: +v[6] };
       });
 
-      // Perf cumulée
       const perfCumul = data[data.length-1].port.toFixed(1);
 
       // YTD
@@ -153,13 +156,14 @@ async function loadCards() {
       const perfAnn = (Math.pow(totalReturn + 1, 1/years) - 1) * 100;
       const annualisee = perfAnn.toFixed(1);
 
-      // Volatilité annualisée (dernière valeur du CSV)
+      // Volatilité annualisée
       const vol = data[data.length-1].volM.toFixed(1);
 
       // Drawdown max
-      const dd = parseFloat(txt.trim().split('\n').pop().split(',')[8]).toFixed(1);
+      const lastLine = txt.trim().split('\n').pop().split(',');
+      const dd = parseFloat(lastLine[8]).toFixed(1);
 
-      // SHARPE RÉEL CALCULÉ
+      // Sharpe réel
       const sharpe = vol > 0 ? (perfAnn / parseFloat(vol)).toFixed(2) : "N/A";
 
       grid.innerHTML += `
