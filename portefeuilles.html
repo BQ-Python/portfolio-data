@@ -37,19 +37,24 @@
     .close:hover{opacity:1;}
     .modal-body{padding:3rem 4rem 4rem;}
 
-    /* KPI EN 1 LIGNE HORIZONTALE */
-    .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem;margin-bottom:3rem;}
-    .kpi-big{background:var(--l);padding:1.5rem 1rem;border-radius:14px;text-align:center;border-left:4px solid var(--g);box-shadow:0 4px 15px rgba(0,0,0,0.04);}
-    .kpi-big strong{font-size:2.4rem;color:var(--g);font-weight:700;display:block;}
+    .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2.5rem;margin-bottom:3rem;}
+    .kpi-big{background:var(--l);padding:2.2rem;border-radius:18px;text-align:center;border-left:6px solid var(--g);box-shadow:0 8px 25px rgba(0,0,0,0.06);}
+    .kpi-big strong{font-size:3.4rem;color:var(--g);font-weight:800;}
     .kpi-big.red{border-left-color:#dc2626;}
     .kpi-big.red strong{color:#dc2626;}
-    .kpi-big div{font-size:0.9rem;color:var(--gris);margin-top:0.3rem;}
+    .kpi-big div{font-size:1.1rem;color:var(--gris);margin-top:0.5rem;}
 
     .chart-wrapper{position:relative;height:420px;max-height:60vh;margin:2.5rem 0;padding:1.5rem;background:white;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.06);}
     .chart-wrapper canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
 
     .metrics-tabs{text-align:center;margin:3rem 0 1rem;}
     .metrics-tabs select{padding:1rem 2rem;font-size:1.2rem;border-radius:12px;border:2px solid var(--gris);background:white;}
+
+    /* RANGE DE DATES */
+    .date-range{text-align:center;margin:2rem 0;}
+    .date-range input{padding:0.8rem 1rem;border:2px solid var(--gris);border-radius:8px;font-size:1rem;margin:0 0.5rem;width:140px;}
+    .date-range button{background:var(--g);color:var(--n);padding:0.8rem 2rem;border:none;border-radius:8px;font-weight:700;cursor:pointer;transition:.3s;}
+    .date-range button:hover{background:#f5d28e;}
 
     table{width:100%;border-collapse:collapse;margin-top:3rem;}
     th,td{padding:1.2rem 0.5rem;border-bottom:1px solid #e2e8f0;text-align:left;}
@@ -85,6 +90,12 @@
     <div class="modal-body">
       <div class="kpi-bar" id="kpi-bar"></div>
 
+      <div class="date-range">
+        <input type="date" id="startDate" value="2019-01-01">
+        <input type="date" id="endDate" value="2025-11-17">
+        <button onclick="filterData()">Appliquer</button>
+      </div>
+
       <div class="chart-wrapper">
         <canvas id="mainChart"></canvas>
       </div>
@@ -116,6 +127,7 @@ const PORTFOLIOS = [
 const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
 
 let currentData = [];
+let filteredData = [];
 let mainChart = null;
 let detailChart = null;
 
@@ -206,15 +218,18 @@ async function openModal(name, url) {
     };
   });
 
-  const last = currentData[currentData.length-1];
+  // Filtre initial (tout)
+  filteredData = [...currentData];
+
+  const last = filteredData[filteredData.length-1];
   const currentYear = new Date().getFullYear();
 
   // YTD
-  const ytdRow = currentData.find(d => d.date.startsWith(`${currentYear}-01-`)) || currentData[0];
+  const ytdRow = filteredData.find(d => d.date.startsWith(`${currentYear}-01-`)) || filteredData[0];
   const perfYTD = ((last.port / ytdRow.port) - 1) * 100;
 
   // Perf annualisée (CAGR)
-  const startDate = new Date(currentData[0].date);
+  const startDate = new Date(filteredData[0].date);
   const endDate = new Date(last.date);
   const years = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25);
   const totalReturn = last.port / 100;
@@ -243,16 +258,28 @@ async function openModal(name, url) {
   updateDetailChart();
 }
 
+function filterData() {
+  const start = new Date(document.getElementById('startDate').value);
+  const end = new Date(document.getElementById('endDate').value);
+  filteredData = currentData.filter(d => {
+    const dDate = new Date(d.date);
+    return dDate >= start && dDate <= end;
+  });
+  drawMainChart();
+  updateDetailChart();
+}
+
 function drawMainChart() {
   if (mainChart) mainChart.destroy();
+  const labels = filteredData.map(d => d.date.slice(5));
   mainChart = new Chart('mainChart', {
     type: 'line',
     data: {
-      labels: currentData.map(d => d.date.slice(5)),
+      labels,
       datasets: [
-        { label: 'Portefeuille', data: currentData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.05)', borderWidth: 3, tension: 0.3, fill: true },
-        { label: 'S&P 500', data: currentData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2, tension: 0.3, borderDash: [6,6] },
-        { label: 'NASDAQ', data: currentData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2, tension: 0.3, borderDash: [10,6] }
+        { label: 'Portefeuille', data: filteredData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.05)', borderWidth: 3, tension: 0.3, fill: true },
+        { label: 'S&P 500', data: filteredData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2, tension: 0.3, borderDash: [6,6] },
+        { label: 'NASDAQ', data: filteredData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2, tension: 0.3, borderDash: [10,6] }
       ]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 15 } } } } }
@@ -262,20 +289,20 @@ function drawMainChart() {
 function updateDetailChart() {
   if (detailChart) detailChart.destroy();
   const metric = document.getElementById('metricSelect').value;
-  const labels = currentData.map(d => d.date.slice(5));
+  const labels = filteredData.map(d => d.date.slice(5));
 
   if (metric === 'vol') {
     detailChart = new Chart('detailChart', {
       type: 'line',
-      data: { labels, datasets: [{ label: 'Volatilité annualisée', data: currentData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.1)', fill: true, tension: 0.3 }] },
+      data: { labels, datasets: [{ label: 'Volatilité annualisée', data: filteredData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.1)', fill: true, tension: 0.3 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Volatilité annualisée (%)', font: { size: 18 } } } }
     });
   } else {
     detailChart = new Chart('detailChart', {
       type: 'line',
       data: { labels, datasets: [
-        { label: 'Drawdown actuel', data: currentData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true },
-        { label: 'Drawdown max', data: currentData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
+        { label: 'Drawdown actuel', data: filteredData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true },
+        { label: 'Drawdown max', data: filteredData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
       ]},
       options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Drawdown (%)', font: { size: 18 } } } }
     });
