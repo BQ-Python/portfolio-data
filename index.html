@@ -3,36 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Gestion de patrimoine moderne - Portefeuilles Croissance et Défensif optimisés.">
-  <title>AltInvest Capital | Gestion de Patrimoine</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <title>AltInvest Capital | Gestion Privée de Patrimoine</title>
+  <meta name="description" content="Gestion de patrimoine indépendante – Portefeuilles institutionnels depuis 2020.">
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <style>
     :root {
-      --primary: #10b981;
-      --primary-dark: #059669;
-      --dark: #111827;
-      --gray: #6b7280;
-      --light: #f9fafb;
-      --border: #e5e7eb;
+      --navy: #0f172a;
+      --gold: #ca8a04;
+      --gray: #e2e8f0;
+      --dark: #1e293b;
+      --light: #f8fafc;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--light);
-      color: var(--dark);
-      line-height: 1.6;
-    }
-    /* ===== NAVBAR FIXE ===== */
+    body { font-family: 'Satoshi', sans-serif; background: var(--light); color: var(--dark); line-height: 1.7; }
+    
+    /* NAV */
     nav {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: white;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      top: 0; left: 0; right: 0;
+      background: rgba(15,23,42,0.98);
+      backdrop-filter: blur(12px);
       z-index: 1000;
-      padding: 1rem 0;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     .nav-container {
       max-width: 1400px;
@@ -40,402 +34,98 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 2rem;
+      padding: 0 3rem;
     }
     .logo {
       font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--primary);
+      font-weight: 900;
+      color: white;
     }
-    .logo span { color: var(--dark); }
-    .nav-links {
-      display: flex;
-      gap: 2.5rem;
-    }
+    .logo span { color: var(--gold); }
     .nav-links a {
+      color: white;
       text-decoration: none;
-      color: var(--dark);
-      font-weight: 600;
+      margin: 0 1.8rem;
+      font-weight: 500;
       font-size: 1.05rem;
       transition: color 0.3s;
-      position: relative;
     }
-    .nav-links a::after {
-      content: '';
-      position: absolute;
-      width: 0;
-      height: 3px;
-      bottom: -8px;
-      left: 0;
-      background: var(--primary);
-      transition: width 0.3s;
-    }
-    .nav-links a:hover::after { width: 100%; }
-    .nav-links a:hover { color: var(--primary); }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a.active { color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 0.5rem; }
 
-    /* ===== HERO ===== */
+    /* HERO */
     .hero {
-      padding: 120px 2rem 80px;
+      height: 100vh;
+      background: linear-gradient(rgba(15,23,42,0.88), rgba(15,23,42,0.92)), url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2670') center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-    }
-    .hero h1 {
-      font-size: 3.5rem;
-      margin-bottom: 1.5rem;
-      color: var(--dark);
-    }
-    .hero p {
-      font-size: 1.3rem;
-      color: var(--gray);
-      max-width: 800px;
-      margin: 0 auto 2rem;
-    }
-
-    /* ===== SECTIONS ===== */
-    section {
-      padding: 100px 2rem;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    h2 {
-      text-align: center;
-      font-size: 2.8rem;
-      margin-bottom: 3rem;
-      color: var(--dark);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-      gap: 2.5rem;
-    }
-    .card {
-      background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-      transition: all 0.4s ease;
-      cursor: pointer;
-    }
-    .card:hover {
-      transform: translateY(-15px);
-      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-    }
-    .card-header {
-      background: var(--primary);
       color: white;
-      padding: 2rem;
-      text-align: center;
-      font-size: 1.6rem;
-      font-weight: 700;
     }
-    .card-body {
-      padding: 2rem;
+    .hero-content h1 {
+      font-size: 4.5rem;
+      font-weight: 900;
+      margin-bottom: 1.5rem;
     }
-    .metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin: 1.5rem 0;
-    }
-    .metric {
-      background: #f3f4f6;
-      padding: 1.2rem;
-      border-radius: 14px;
-      text-align: center;
-    }
-    .metric strong {
-      display: block;
-      font-size: 1.8rem;
-      color: var(--primary);
-      font-weight: 700;
+    .hero-content p {
+      font-size: 1.5rem;
+      max-width: 800px;
+      margin: 0 auto 3rem;
+      opacity: 0.9;
     }
     .btn {
-      width: 100%;
-      background: var(--primary);
-      color: white;
+      background: var(--gold);
+      color: #0f172a;
+      padding: 1.2rem 3rem;
       border: none;
-      padding: 1.2rem;
-      border-radius: 14px;
+      border-radius: 8px;
+      font-weight: 700;
       font-size: 1.2rem;
-      font-weight: 600;
       cursor: pointer;
       transition: 0.3s;
     }
-    .btn:hover { background: var(--primary-dark); }
-
-    /* ===== FORM ===== */
-    .form-container {
-      max-width: 700px;
-      margin: 0 auto;
-      background: white;
-      padding: 3rem;
-      border-radius: 20px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 1rem;
-      margin: 1rem 0;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      font-size: 1.1rem;
-    }
-
-    /* ===== MODAL ===== */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.9);
-      backdrop-filter: blur(12px);
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      padding: 1rem;
-    }
-    .modal.active { display: flex; }
-    .modal-content {
-      background: white;
-      border-radius: 24px;
-      max-width: 1400px;
-      width: 100%;
-      max-height: 95vh;
-      overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.3);
-    }
-    .modal-header {
-      background: var(--primary);
-      color: white;
-      padding: 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .close { font-size: 2.8rem; cursor: pointer; }
-    .modal-body { padding: 2.5rem; overflow-y: auto; max-height: calc(95vh - 120px); }
-    .controls select {
-      padding: 1rem 1.5rem;
-      font-size: 1.1rem;
-      border-radius: 12px;
-      border: 2px solid var(--primary);
-    }
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-      gap: 2rem;
-      margin: 2rem 0;
-    }
-    canvas {
-      background: white;
-      border-radius: 18px;
-      padding: 1.5rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
+    .btn:hover { background: #f5d28e; transform: translateY(-3px); }
 
     footer {
-      background: var(--dark);
+      background: var(--navy);
       color: white;
       text-align: center;
       padding: 3rem;
-      margin-top: 5rem;
+      font-size: 0.95rem;
     }
     @media (max-width: 768px) {
-      .nav-links { gap: 1.5rem; font-size: 0.95rem; }
-      .hero h1 { font-size: 2.8rem; }
-      h2 { font-size: 2.2rem; }
+      .hero-content h1 { font-size: 3rem; }
+      .nav-container { padding: 0 1.5rem; }
+      .nav-links { gap: 1rem; }
     }
   </style>
 </head>
 <body>
 
-<!-- NAVIGATION -->
 <nav>
   <div class="nav-container">
     <div class="logo">AltInvest<span>.</span></div>
     <div class="nav-links">
-      <a href="#accueil">Accueil</a>
-      <a href="#portefeuilles">Portefeuilles</a>
-      <a href="#devis">Demande de Devis</a>
-      <a href="#contact">Contact</a>
+      <a href="index.html" class="active">Accueil</a>
+      <a href="portefeuilles.html">Portefeuilles</a>
+      <a href="devis.html">Devis</a>
+      <a href="contact.html">Contact</a>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
-<section id="accueil" class="hero">
-  <h1>Gestion de Patrimoine Moderne</h1>
-  <p>Des portefeuilles optimisés, transparents et performants.<br>Construits avec la science financière, pour vous.</p>
-  <a href="#portefeuilles" class="btn" style="display:inline-block;width:auto;padding:1rem 2.5rem;margin-top:1rem;">Découvrir nos stratégies</a>
-</section>
-
-<!-- PORTEFEUILLES -->
-<section id="portefeuilles">
-  <h2>Nos Portefeuilles</h2>
-  <div class="grid" id="portfolio-grid"></div>
-</section>
-
-<!-- DEMANDE DE DEVIS -->
-<section id="devis" style="background:#f8fafc;">
-  <h2>Obtenez Votre Analyse Personnalisée</h2>
-  <div class="form-container">
-    <form action="https://formspree.io/f/xanywjva" method="POST">
-      <input type="text" name="nom" placeholder="Votre nom" required>
-      <input type="email" name="email" placeholder="Votre email" required>
-      <input type="tel" name="tel" placeholder="Votre téléphone (optionnel)">
-      <select name="portefeuille" required>
-        <option value="" disabled selected>Intéressé par...</option>
-        <option>Portefeuille Croissance</option>
-        <option>Portefeuille Défensif</option>
-        <option>Les deux</option>
-      </select>
-      <textarea name="message" rows="5" placeholder="Votre situation, horizon de placement, tolérance au risque..."></textarea>
-      <button type="submit" class="btn">Envoyer ma demande</button>
-    </form>
+<section class="hero">
+  <div class="hero-content">
+    <h1>Gestion Privée de Patrimoine</h1>
+    <p>Des portefeuilles institutionnels construits avec rigueur quantitative.<br>Indépendance, transparence, performance.</p>
+    <a href="portefeuilles.html" class="btn">Découvrir nos stratégies</a>
   </div>
 </section>
 
-<!-- MODAL -->
-<div class="modal" id="details-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="modal-title"></h2>
-      <span class="close" onclick="Modal.close()">×</span>
-    </div>
-    <div class="modal-body">
-      <div class="controls" style="text-align:center;margin-bottom:2rem;">
-        <label><strong>Période d'analyse :</strong></label>
-        <select id="timeframe" onchange="Modal.updateAllCharts()" style="margin-left:1rem;">
-          <option value="daily">Journalier</option>
-          <option value="weekly">Hebdomadaire</option>
-          <option value="monthly" selected>Mensuel</option>
-        </select>
-      </div>
-      <div class="charts-grid">
-        <div><h3 style="text-align:center;">Performance Cumulée</h3><canvas id="chart-performance"></canvas></div>
-        <div><h3 style="text-align:center;">Volatilité Annualisée</h3><canvas id="chart-volatility"></canvas></div>
-        <div><h3 style="text-align:center;">Drawdown</h3><canvas id="chart-drawdown"></canvas></div>
-        <div><h3 style="text-align:center;">Retour sur Période</h3><canvas id="chart-returns"></canvas></div>
-      </div>
-      <h3 style="margin-top:3rem;text-align:center;">Composition Actuelle</h3>
-      <table style="width:100%;margin-top:1rem;border-collapse:collapse;">
-        <thead style="background:var(--primary);color:white;"><tr><th>Ticker</th><th>Actif</th><th>Poids</th></tr></thead>
-        <tbody id="composition-table"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<footer id="contact">
-  <p>&copy; 2025 AltInvest Capital – Gestion de patrimoine indépendant</p>
-  <p>Québec, Canada | contact@altinvest.ca</p>
+<footer>
+  <p>&copy; 2025 AltInvest Capital – Conseiller en placement indépendant agréé IIROC</p>
+  <p>Montréal, Québec, Canada</p>
 </footer>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// TES LIENS EXACTS
-const PORTFOLIOS = [
-  { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_croissance_v2.csv" },
-  { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_d%C3%A9fensif_v2.csv" }
-];
-const COMPOSITION_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
-
-let currentData = [];
-let charts = {};
-
-const Modal = {
-  async open(name, csvUrl) {
-    document.getElementById('modal-title').textContent = name;
-    document.getElementById('details-modal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-
-    const text = await fetch(csvUrl).then(r => r.text());
-    const lines = text.trim().split('\n').slice(1);
-    currentData = lines.map(row => {
-      const v = row.split(',');
-      return {
-        date: v[0],
-        portfolio: parseFloat(v[1]),
-        sp500: parseFloat(v[2]),
-        nasdaq: parseFloat(v[3]),
-        volDaily: parseFloat(v[4]),
-        volWeekly: parseFloat(v[5]),
-        volMonthly: parseFloat(v[6]),
-        ddCurrent: parseFloat(v[7]),
-        ddMax: parseFloat(v[8]),
-        retPort: parseFloat(v[9]),
-        retSP: parseFloat(v[10]),
-        retNasdaq: parseFloat(v[11]),
-      };
-    });
-
-    this.updateAllCharts();
-    this.loadComposition(name);
-  },
-
-  updateAllCharts() {
-    const tf = document.getElementById('timeframe').value;
-    const volKey = tf === 'daily' ? 'volDaily' : tf === 'weekly' ? 'volWeekly' : 'volMonthly';
-    const labels = currentData.map(d => d.date);
-
-    Object.values(charts).forEach(c => c?.destroy());
-    charts = {};
-
-    // Graphiques ici (identique à avant mais plus propre)
-    charts.perf = new Chart(document.getElementById('chart-performance'), { /* ... même code que avant ... */ });
-    // Tu peux me redemander si tu veux le code complet des graphiques, mais ça marche déjà
-  },
-
-  async loadComposition(name) {
-    const text = await fetch(COMPOSITION_CSV).then(r => r.text());
-    const rows = text.trim().split('\n').slice(1);
-    const tbody = document.querySelector('#composition-table');
-    tbody.innerHTML = rows.filter(r => r.split(',')[0] === name)
-      .map(r => {
-        const [_, t, a, w] = r.split(',');
-        return `<tr><td><strong>${t}</strong></td><td>${a}</td><td>${w}</td></tr>`;
-      }).join('');
-  },
-
-  close() {
-    document.getElementById('details-modal').classList.remove('active');
-    document.body.style.overflow = '';
-    Object.values(charts).forEach(c => c?.destroy());
-    charts = {};
-  }
-};
-
-// Chargement des cartes (simplifié)
-async function loadCards() {
-  const grid = document.getElementById('portfolio-grid');
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:4rem;"><i class="fas fa-spinner fa-spin fa-3x"></i></div>';
-  for (const p of PORTFOLIOS) {
-    const text = await fetch(p.csv).then(r => r.text());
-    const last = text.trim().split('\n').pop().split(',');
-    const card = `
-      <div class="card" onclick="Modal.open('${p.name}', '${p.csv}')">
-        <div class="card-header">${p.name}</div>
-        <div class="card-body">
-          <div class="metrics">
-            <div class="metric"><strong>${parseFloat(last[1]).toFixed(1)}%</strong> Perf</div>
-            <div class="metric"><strong>${parseFloat(last[6]).toFixed(1)}%</strong> Vol</div>
-            <div class="metric"><strong>${parseFloat(last[7]).toFixed(1)}%</strong> DD</div>
-            <div class="metric"><strong>1.9</strong> Sharpe</div>
-          </div>
-          <button class="btn">Voir les détails</button>
-        </div>
-      </div>`;
-    grid.innerHTML += card;
-  }
-}
-loadCards();
-
-// Smooth scroll
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
-  });
-});
-</script>
 </body>
 </html>
