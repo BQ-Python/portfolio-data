@@ -91,16 +91,18 @@ const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/ref
 let currentData = [];
 let charts = {};
 
+// Charge les cartes au démarrage
 async function loadCards() {
   const grid = document.getElementById('grid');
+  grid.innerHTML = '';
   for (const p of PORTFOLIOS) {
     try {
       const txt = await fetch(p.csv).then(r => r.text());
       const lines = txt.trim().split('\n');
       const last = lines[lines.length-1].split(',');
       const perf = parseFloat(last[1]).toFixed(1);
-      const vol = parseFloat(last[6]).toFixed(1);
-      const dd = parseFloat(last[8]).toFixed(1);
+      const vol  = parseFloat(last[6]).toFixed(1);
+      const dd   = parseFloat(last[8]).toFixed(1);
 
       grid.innerHTML += `
         <div class="card" onclick="openModal('${p.name}','${p.csv}')">
@@ -112,12 +114,11 @@ async function loadCards() {
             <div class="m"><strong>1.9</strong>Ratio de Sharpe</div>
           </div>
         </div>`;
-    } catch (e) {
-      grid.innerHTML += `<div class="card"><div class="header"><h3>${p.name}</h3></div><div class="metrics"><div class="m" style="grid-column:1/-1;color:red;">Erreur de chargement</div></div></div>`;
-    }
+    } catch(e) { console.error(e); }
   }
 }
 
+// Ouvre la modal + charge les données
 async function openModal(name, url) {
   document.getElementById('modal-title').textContent = name;
   document.getElementById('modal').style.display = 'flex';
@@ -138,22 +139,31 @@ async function openModal(name, url) {
   });
 
   // Composition
-  const comp = await fetch(COMP_CSV).then(r => r.text());
-  const rows = comp.trim().split('\n').slice(1).filter(r => r.startsWith(name));
-  document.getElementById('composition').innerHTML = 
-    `<table style="width:100%;border-collapse:collapse;font-size:1.2rem;">
-      ${rows.map(r => {
-        const [_,t,a,w] = r.split(',');
-        return `<tr><td style="padding:1.2rem;border-bottom:1px solid #ddd;"><strong>${t}</strong></td><td style="padding:1.2rem;border-bottom:1px solid #ddd;">${a}</td><td style="padding:1.2rem;border-bottom:1px solid #ddd;text-align:right;font-weight:700;">${w}</td></tr>`;
-      }).join('')}
-    </table>`;
+  try {
+    const comp = await fetch(COMP_CSV).then(r => r.text());
+    const rows = comp.trim().split('\n').slice(1).filter(r => r.startsWith(name));
+    document.getElementById('composition').innerHTML = 
+      `<table style="width:100%;border-collapse:collapse;font-size:1.2rem;">
+        ${rows.map(r => {
+          const [_,t,a,w] = r.split(',');
+          return `<tr style="border-bottom:1px solid #eee;">
+            <td style="padding:1.2rem;"><strong>${t}</strong></td>
+            <td style="padding:1.2rem;">${a}</td>
+            <td style="padding:1.2rem;text-align:right;font-weight:700;">${w}</td>
+          </tr>`;
+        }).join('')}
+      </table>`;
+  } catch(e) {
+    document.getElementById('composition').innerHTML = "<p>Composition non disponible</p>";
+  }
 
   drawCharts();
 }
 
+// Dessine / met à jour les 4 graphiques
 function drawCharts() {
   const tf = document.getElementById('granularite').value;
-  const showP = document.querySelectorAll('#modal input[type=checkbox]')[0].checked;
+  const showP  = document.querySelectorAll('#modal input[type=checkbox]')[0].checked;
   const showSP = document.querySelectorAll('#modal input[type=checkbox]')[1].checked;
   const showNAS = document.querySelectorAll('#modal input[type=checkbox]')[2].checked;
 
@@ -164,49 +174,39 @@ function drawCharts() {
 
   const labels = currentData.map(d => d.date.slice(5).replace('-', '/'));
 
-  // Destruction des anciens graphiques
   Object.values(charts).forEach(c => c?.destroy());
   charts = {};
 
-  // Performance cumulée
-  charts.perf = new Chart(document.getElementById('chart-perf'), {
-    type: 'line',
-    data: { labels, datasets: [
-      ...(showP ? [{label:'Portefeuille',data:currentData.map(d=>d.port),borderColor:'#ca8a04',tension:0.3}] : []),
-      ...(showSP ? [{label:'S&P 500',data:currentData.map(d=>d.sp),borderColor:'#dc2626',tension:0.3}] : []),
-      ...(showNAS ? [{label:'NASDAQ',data:currentData.map(d=>d.nas),borderColor:'#3b82f6',tension:0.3}] : [])
-    ]},
-    options: {plugins:{title:{display:true,text:'Performance cumulée (%)',font:{size:18}}},scales:{y:{grid:{color:'#eee'}}}}
-  });
+  // 1. Performance cumulée
+  charts.perf = new Chart('chart-perf', {type:'line',data:{labels,datasets:[
+    ...(showP  ? [{label:'Portefeuille', data:currentData.map(d=>d.port), borderColor:'#ca8a04', tension:0.3}] : []),
+    ...(showSP ? [{label:'S&P 500',     data:currentData.map(d=>d.sp),   borderColor:'#dc2626', tension:0.3}] : []),
+    ...(showNAS? [{label:'NASDAQ',      data:currentData.map(d=>d.nas),  borderColor:'#3b82f6', tension:0.3}] : [])
+  ]},options:{plugins:{title:{display:true,text:'Performance cumulée (%)',font:{size:18}}},maintainAspectRatio:false}});
 
-  // Volatilité
-  charts.vol = new Chart(document.getElementById('chart-vol'), {
-    type: 'line',
-    data: { labels, datasets: [{label:'Volatilité annualisée',data:currentData.map(d=>d[volKey]),borderColor:'#f59e0b',backgroundColor:'rgba(251,158,11,0.1)',fill:true}] },
-    options: {plugins:{title:{display:true,text:'Volatilité (%)',font:{size:18}}}}
-  });
+  // 2. Volatilité
+  charts.vol = new Chart('chart-vol', {type:'line',data:{labels,datasets:[{
+    label:'Volatilité annualisée', data:currentData.map(d=>d[volKey]), borderColor:'#f59e0b', backgroundColor:'rgba(251,158,11,0.1)', fill:true
+  }]},options:{plugins:{title:{display:true,text:'Volatilité (%)',font:{size:18}}},maintainAspectRatio:false}});
 
-  // Drawdown
-  charts.dd = new Chart(document.getElementById('chart-dd'), {
-    type: 'line',
-    data: { labels, datasets: [
-      {label:'Drawdown actuel',data:currentData.map(d=>d.ddC),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.15)',fill:true},
-      {label:'Drawdown max',data:currentData.map(d=>d.ddM),borderColor:'#7f1d1d',borderDash:[6,6]}
-    ]},
-    options: {plugins:{title:{display:true,text:'Drawdown (%)',font:{size:18}}}}
-  });
+  // 3. Drawdown
+  charts.dd = new Chart('chart-dd', {type:'line',data:{labels,datasets:[
+    {label:'Drawdown actuel', data:currentData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true},
+    {label:'Drawdown max',    data:currentData.map(d=>d.ddM), borderColor:'#7f1d1d', borderDash:[6,6]}
+  ]},options:{plugins:{title:{display:true,text:'Drawdown (%)',font:{size:18}}},maintainAspectRatio:false}});
 
-  // Retours
-  charts.ret = new Chart(document.getElementById('chart-ret'), {
-    type: 'bar',
-    data: { labels, datasets: [
-      ...(showP ? [{label:'Portefeuille',data:currentData.map(d=>d[retPKey]),backgroundColor:'#ca8a04'}] : []),
-      ...(showSP ? [{label:'S&P 500',data:currentData.map(d=>d[retSKey]),backgroundColor:'#dc2626'}] : []),
-      ...(showNAS ? [{label:'NASDAQ',data:currentData.map(d=>d[retNKey]),backgroundColor:'#3b82f6'}] : [])
-    ]},
-    options: {plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`,font:{size:18}}}}
-  });
+  // 4. Retours périodiques
+  charts.ret = new Chart('chart-ret', {type:'bar',data:{labels,datasets:[
+    ...(showP  ? [{label:'Portefeuille', data:currentData.map(d=>d[retPKey]), backgroundColor:'#ca8a04'}] : []),
+    ...(showSP ? [{label:'S&P 500',     data:currentData.map(d=>d[retSKey]), backgroundColor:'#dc2626'}] : []),
+    ...(showNAS? [{label:'NASDAQ',      data:currentData.map(d=>d[retNKey]), backgroundColor:'#3b82f6'}] : [])
+  ]},options:{plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`,font:{size:18}}},maintainAspectRatio:false}});
 }
+
+// Fermeture modal en cliquant dehors
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) document.getElementById('modal').style.display = 'none';
+});
 
 loadCards();
 </script>
