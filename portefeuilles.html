@@ -44,21 +44,8 @@
     .kpi-big.red strong{color:#dc2626;}
     .kpi-big div{font-size:1.1rem;color:var(--gris);margin-top:0.5rem;}
 
-    /* CONTENEUR FIXE POUR LES GRAPHIQUES → PLUS JAMAIS TROP GRANDS */
-    .chart-wrapper{
-      position:relative;
-      height:480px;           /* Hauteur fixe raisonnable */
-      max-height:70vh;
-      margin:3rem 0;
-      padding:1.5rem;
-      background:white;
-      border-radius:18px;
-      box-shadow:0 15px 40px rgba(0,0,0,0.08);
-    }
-    .chart-wrapper canvas{
-      position:absolute;
-      top:0;left:0;width:100%!important;height:100%!important;
-    }
+    .chart-wrapper{position:relative;height:480px;max-height:70vh;margin:3rem 0;padding:1.5rem;background:white;border-radius:18px;box-shadow:0 15px 40px rgba(0,0,0,0.08);}
+    .chart-wrapper canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
 
     .metrics-tabs{text-align:center;margin:4rem 0 1rem;}
     .metrics-tabs select{padding:1rem 2rem;font-size:1.2rem;border-radius:12px;border:2px solid var(--gris);background:white;}
@@ -92,17 +79,13 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2 id="modal-title"></h2>
-      <span class="close" onclick="closeModal()">&times;</span>
+      <span class="close" onclick="closeModal()">x</span>
     </div>
     <div class="modal-body">
       <div class="kpi-bar" id="kpi-bar"></div>
 
-      <!-- Graphique principal -->
-      <div class="chart-wrapper">
-        <canvas id="mainChart"></canvas>
-      </div>
+      <div class="chart-wrapper"><canvas id="mainChart"></canvas></div>
 
-      <!-- Menu Vol / DD -->
       <div class="metrics-tabs">
         <select id="metricSelect" onchange="updateDetailChart()">
           <option value="vol">Volatilité annualisée</option>
@@ -110,10 +93,7 @@
         </select>
       </div>
 
-      <!-- Graphique détaillé -->
-      <div class="chart-wrapper">
-        <canvas id="detailChart"></canvas>
-      </div>
+      <div class="chart-wrapper"><canvas id="detailChart"></canvas></div>
 
       <h3 style="text-align:center;margin:4rem 0 1.5rem;font-size:2rem;">Composition actuelle</h3>
       <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="comp"></tbody></table>
@@ -125,7 +105,8 @@
 <script>
 const PORTFOLIOS = [
   { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_croissance_v2.csv" },
-  { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_defensif_v2.csv" }
+  { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_defensif_v2.csv" },
+  { name: "Portefeuille Europe",     csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_europe_v2.csv" }
 ];
 const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
 
@@ -140,23 +121,47 @@ function closeModal() {
   if (detailChart) detailChart.destroy();
 }
 
+// CHARGEMENT DES VIGNETTES + YTD + PERF ANNUALIÉE
 async function loadCards() {
   const grid = document.getElementById('grid');
+  const currentYear = new Date().getFullYear();
+
   for (const p of PORTFOLIOS) {
     try {
       const txt = await fetch(p.csv).then(r => r.text());
-      const lines = txt.trim().split('\n');
-      const last = lines[lines.length-1].split(',');
-      const perf = parseFloat(last[1]).toFixed(1);
-      const vol = parseFloat(last[6]).toFixed(1);
-      const dd = parseFloat(last[8]).toFixed(1);
+      const lines = txt.trim().split('\n').slice(1);
+      const data = lines.map(l => {
+        const v = l.split(',');
+        return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3] };
+      });
+
+      const perfCumul = data[data.length-1].port.toFixed(1);
+
+      // YTD
+      const ytdRow = data.find(d => d.date.startsWith(`${currentYear}-01-`)) || data[0];
+      const perfYTD = ((data[data.length-1].port / ytdRow.port) - 1) * 100;
+      const ytd = perfYTD.toFixed(1);
+
+      // Perf annualisée (CAGR)
+      const startDate = new Date(data[0].date);
+      const endDate = new Date(data[data.length-1].date);
+      const years = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25);
+      const perfAnn = (Math.pow(data[data.length-1].port / 100 + 1, 1/years) - 1) * 100;
+      const annualisee = perfAnn.toFixed(1);
+
+      // Vol et DD (dernière ligne du CSV)
+      const lastLine = txt.trim().split('\n').pop().split(',');
+      const vol = parseFloat(lastLine[6]).toFixed(1);
+      const dd = parseFloat(lastLine[8]).toFixed(1);
 
       grid.innerHTML += `
         <div class="card" onclick="openModal('${p.name}', '${p.csv}')">
           <div class="header"><h3>${p.name}</h3></div>
           <div class="metrics">
-            <div class="kpi"><strong>${perf}%</strong><small>Perf. cumulée</small></div>
-            <div class="kpi"><strong>${vol}%</strong><small>Vol. mensuelle</small></div>
+            <div class="kpi"><strong>${perfCumul}%</strong><small>Perf. cumulée</small></div>
+            <div class="kpi"><strong>${ytd}%</strong><small>YTD ${currentYear}</small></div>
+            <div class="kpi"><strong>${annualisee}%</strong><small>Perf. annualisée</small></div>
+            <div class="kpi"><strong>${vol}%</strong><small>Vol. annualisée</small></div>
             <div class="kpi red"><strong>${dd}%</strong><small>Drawdown max</small></div>
             <div class="kpi"><strong>1.9</strong><small>Sharpe</small></div>
           </div>
