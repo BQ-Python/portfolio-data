@@ -3,185 +3,437 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portefeuilles Financiers</title>
-  https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css
+  <meta name="description" content="Portefeuilles d'investissement optimisés : Croissance et Défensif. Performances comparées au S&P 500 et NASDAQ.">
+  <title>Portefeuilles Financiers Professionnels | Croissance & Défensif</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
-    header { background: #10b981; color: white; padding: 15px; text-align: center; font-size: 24px; }
-    .container { max-width: 1200px; margin: auto; padding: 20px; }
-    h2 { text-align: center; margin-bottom: 20px; }
-    .grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-    .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 300px; padding: 20px; text-align: center; }
-    .metrics { display: flex; flex wrap; gap: 10px; justify-content: center; margin-top: 10px; }
-    .metric-box { background: #f3f4f6; padding: 10px; border-radius: 8px; width: 45%; font-size: 14px; }
-    button { background: #10b981; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
-    button:hover { background: #059669; }
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-700: #374151;
+      --gray-900: #111827;
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9fafb;
+      color: var(--gray-900);
+      margin: 0;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 2rem 1rem; }
+    h2 { font-size: 2rem; text-align: center; margin: 3rem 0 2rem; color: var(--gray-900); }
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+      gap: 2rem; 
+      margin-top: 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15); }
+    .card-header {
+      background: var(--primary);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+    .card-body { padding: 1.5rem; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+    .metric {
+      background: var(--gray-100);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .metric strong { display: block; font-size: 1.3rem; color: var(--primary); }
+    .btn {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.9rem;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn:hover { background: var(--primary-dark); }
+
+    /* Form */
+    .form-container {
+      max-width: 560px;
+      margin: 3rem auto;
+      background: white;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.85rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+
     /* Modal */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
-    .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 1000px; overflow-y: auto; max-height: 90%; }
-    .close { float: right; cursor: pointer; font-size: 20px; }
-    .charts { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-    canvas { background: #fff; border-radius: 8px; padding: 10px; }
-    select { margin: 10px 0; padding: 5px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background: #10b981; color: white; }
-    footer { background: #10b981; color: white; text-align: center; padding: 10px; margin-top: 20px; }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 1100px;
+      width: 100%;
+      max-height: 95vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .modal-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .close {
+      font-size: 2rem;
+      cursor: pointer;
+      color: #9ca3af;
+    }
+    .close:hover { color: var(--danger); }
+    .modal-body { padding: 2rem; }
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    canvas { border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+
+    /* Skeleton */
+    .skeleton { background: #e5e7eb; border-radius: 8px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    footer {
+      background: var(--gray-900);
+      color: white;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 4rem;
+      font-size: 0.95rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #111827; color: #f3f4f6; }
+      .card, .form-container, .modal-content { background: #1f2937; }
+    }
   </style>
 </head>
 <body>
-<header>Portefeuilles Financiers</header>
-<div class="container">
-  <h2>Nos Portefeuilles</h2>
-  <div class="grid" id="portfolio-grid"></div>
 
-  <h2>Demandez un devis</h2>
-  <form style="max-width:500px;margin:auto;">
-    <input type="text" placeholder="Nom" style="width:100%;margin-bottom:10px;padding:8px;">
-    <input type="email" placeholder="Email" style="width:100%;margin-bottom:10px;padding:8px;">
-    <select style="width:100%;margin-bottom:10px;padding:8px;">
-      <option>Portefeuille Croissance</option>
-      <option>Portefeuille Défensif</option>
-    </select>
-    <textarea placeholder="Message" style="width:100%;margin-bottom:10px;padding:8px;"></textarea>
-    <button type="submit">Envoyer</button>
-  </form>
+<header>
+  <div class="container">
+    <i class="fas fa-chart-line me-3"></i> Portefeuilles Financiers Professionnels
+  </div>
+</header>
 
-  <h2>Nos Méthodes d’Optimisation</h2>
-  <p style="text-align:center;">Nous utilisons des techniques avancées de diversification, d’optimisation de la volatilité et de gestion du risque pour maximiser vos rendements.</p>
-</div>
+<main class="container">
+  <section>
+    <h2>Nos Portefeuilles d'Investissement</h2>
+    <div class="grid" id="portfolio-grid">
+      <!-- Les cartes seront injectées par JS -->
+    </div>
+  </section>
+
+  <section>
+    <h2>Demandez une Analyse Personnalisée</h2>
+    <div class="form-container">
+      <form id="contact-form" action="https://formspree.io/f/xblrjwna" method="POST">
+        <input type="text" name="nom" placeholder="Votre nom" required>
+        <input type="email" name="email" placeholder="Votre email" required>
+        <select name="portefeuille" required>
+          <option value="" disabled selected>Choisissez un portefeuille</option>
+          <option>Portefeuille Croissance</option>
+          <option>Portefeuille Défensif</option>
+        </select>
+        <textarea name="message" placeholder="Votre message ou vos objectifs d'investissement..."></textarea>
+        <button type="submit" class="btn"><i class="fas fa-paper-plane me-2"></i> Envoyer la demande</button>
+      </form>
+      <p id="form-message" style="margin-top:1rem; text-align:center; font-weight:500;"></p>
+    </div>
+  </section>
+
+  <section style="text-align:center; padding: 3rem 0;">
+    <h2>Optimisation Avancée</h2>
+    <p style="max-width:800px; margin:0 auto; font-size:1.1rem; color:#555;">
+      Nos portefeuilles sont construits avec des techniques modernes d’optimisation (Mean-Variance, Black-Litterman, Risk Parity) 
+      pour maximiser le ratio de Sharpe tout en maîtrisant le drawdown maximal.
+    </p>
+  </section>
+</main>
 
 <!-- Modal -->
-<div class="modal" id="details-modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h2 id="modal-title"></h2>
-    <div>
-      <label for="timeframe">Pas de temps :</label>
-      <select id="timeframe" onchange="updateCharts()">
-        <option value="daily">Journalier</option>
-        <option value="weekly">Hebdomadaire</option>
-        <option value="monthly">Mensuel</option>
-      </select>
+<div class="modal" id="details-modal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <span class="close" aria-label="Fermer" onclick="PortfolioModal.close()">&times;</span>
     </div>
-    <div class="charts">
-      <canvas id="chart-performance" width="400" height="300"></canvas>
-      <canvas id="chart-volatility" width="400" height="300"></canvas>
-      <canvas id="chart-drawdown" width="400" height="300"></canvas>
+    <div class="modal-body">
+      <div style="margin-bottom:1.5rem;">
+        <label for="timeframe"><strong>Période de volatilité :</strong></label>
+        <select id="timeframe" style="width:auto; margin-left:0.5rem; padding:0.5rem;">
+          <option value="daily">Journalière</option>
+          <option value="weekly">Hebdomadaire</option>
+          <option value="monthly" selected>Mensuelle</option>
+        </select>
+      </div>
+
+      <div class="charts">
+        <canvas id="chart-performance"></canvas>
+        <canvas id="chart-volatility"></canvas>
+        <canvas id="chart-drawdown"></canvas>
+      </div>
+
+      <h3 style="margin-top:3rem;">Composition Actuelle</h3>
+      <div style="overflow-x:auto;">
+        <table id="composition-table" style="width:100%; border-collapse:collapse; margin-top:1rem;">
+          <thead style="background:var(--primary); color:white;">
+            <tr><th>Ticker</th><th>Actif</th><th>Poids</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
-    <h3>Composition du portefeuille</h3>
-    <table id="composition-table"></table>
   </div>
 </div>
 
-<footer>&copy; 2025 Portefeuilles Financiers</footer>
+<footer>
+  © 2025 Portefeuilles Financiers – Tous droits réservés
+</footer>
 
-https://cdn.jsdelivr.net/npm/chart.js</script>
-<script>
-const portfolios = [
-  { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_croissance%20(1).csv" },
-  { name: "Portefeuille Défensif", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_defensif%20(1).csv" }
-];
-const compositionCSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(1).csv";
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer>
+  // Données
+  const PORTFOLIOS = [
+    { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_croissance%20(1).csv" },
+    { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_defensif%20(1).csv" }
+  ];
+  const COMPOSITION_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(1).csv";
 
-const grid = document.getElementById('portfolio-grid');
-portfolios.forEach(p => {
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `<h3>${p.name}</h3>
-    <div class="metrics">
-      <div class="metric-box" id="${p.name}-perf">Perf: -</div>
-      <div class="metric-box" id="${p.name}-vol">Vol: -</div>
-      <div class="metric-box" id="${p.name}-draw">Drawdown: -</div>
-      <div class="metric-box" id="${p.name}-sharpe">Sharpe: -</div>
-    </div>
-    <button onclick="openModal('${p.name}', '${p.csv}')">Voir détails</button>`;
-  grid.appendChild(card);
-  fetch(p.csv).then(r => r.text()).then(text => {
-    const rows = text.split('\n').slice(1).filter(r => r);
-    const last = rows[rows.length-1].split(',');
-    document.getElementById(`${p.name}-perf`).innerText = `Perf: ${(parseFloat(last[1])*100).toFixed(2)}%`;
-    document.getElementById(`${p.name}-vol`).innerText = `Vol: ${(parseFloat(last[4])*100).toFixed(2)}%`;
-    document.getElementById(`${p.name}-draw`).innerText = `Drawdown: ${(parseFloat(last[7])*100).toFixed(2)}%`;
-    document.getElementById(`${p.name}-sharpe`).innerText = `Sharpe: ${parseFloat(last[8]).toFixed(2)}`;
-  });
-});
+  // Templates
+  const cardSkeleton = () => `
+    <div class="card">
+      <div class="card-header skeleton" style="height:70px;"></div>
+      <div class="card-body">
+        <div class="metrics">
+          ${Array(4).fill('<div class="metric skeleton" style="height:70px;"></div>').join('')}
+        </div>
+        <div class="btn skeleton" style="height:48px; margin-top:1rem;"></div>
+      </div>
+    </div>`;
 
-let perfChart, volChart, drawChart, currentData = [];
-function openModal(name, csvUrl) {
-  document.getElementById('details-modal').style.display = 'flex';
-  document.getElementById('modal-title').innerText = name;
-  fetch(csvUrl).then(r => r.text()).then(text => {
-    const rows = text.split('\n').slice(1).filter(r => r);
-    currentData = rows.map(row => {
-      const cols = row.split(',');
-      return {
-        date: cols[0],
-        perf: parseFloat(cols[1])*100,
-        sp500: parseFloat(cols[2])*100,
-        nasdaq: parseFloat(cols[3])*100,
-        volDaily: parseFloat(cols[4])*100,
-        volWeekly: parseFloat(cols[5])*100,
-        volMonthly: parseFloat(cols[6])*100,
-        drawdown: parseFloat(cols[7])*100
+  // Injection des cartes avec skeleton
+  const grid = document.getElementById('portfolio-grid');
+  grid.innerHTML = PORTFOLIOS.map(() => cardSkeleton()).join('');
+
+  // Classe principale
+  class PortfolioApp {
+    static charts = {};
+    static currentData = null;
+
+    static async loadPortfolioMetrics() {
+      for (const p of PORTFOLIOS) {
+        try {
+          const text = await fetch(p.csv).then(r => { if (!r.ok) throw new Error(); return r.text(); });
+          const rows = text.trim().split('\n').slice(1).filter(r => r);
+          const last = rows[rows.length - 1].split(',');
+          const perf = (parseFloat(last[1]) * 100).toFixed(2);
+          const vol = (parseFloat(last[6]) * 100).toFixed(2); // mensuelle
+          const draw = (parseFloat(last[7]) * 100).toFixed(2);
+          const sharpe = parseFloat(last[8]).toFixed(2);
+
+          const cardHTML = `
+            <div class="card">
+              <div class="card-header">${p.name}</div>
+              <div class="card-body">
+                <div class="metrics">
+                  <div class="metric"><strong>${perf}%</strong> Performance</div>
+                  <div class="metric"><strong>${vol}%</strong> Volatilité</div>
+                  <div class="metric"><strong>${draw}%</strong> Drawdown max</div>
+                  <div class="metric"><strong>${sharpe}</strong> Ratio Sharpe</div>
+                </div>
+                <button class="btn" onclick="PortfolioModal.open('${p.name}', '${p.csv}')">
+                  <i class="fas fa-search-dollar me-2"></i> Voir les détails
+                </button>
+              </div>
+            </div>`;
+          grid.innerHTML = grid.innerHTML.replace(cardSkeleton(), cardHTML);
+        } catch (e) {
+          console.error("Erreur chargement", p.name);
+        }
+      }
+    }
+  }
+
+  // Modal
+  const PortfolioModal = {
+    async open(name, csvUrl) {
+      document.getElementById('modal-title').textContent = name;
+      document.getElementById('details-modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+
+      try {
+        const text = await fetch(csvUrl).then(r => r.text());
+        const rows = text.trim().split('\n').slice(1).filter(r => r);
+        PortfolioApp.currentData = rows.map(row => {
+          const c = row.split(',');
+          return {
+            date: c[0],
+            perf: parseFloat(c[1]) * 100,
+            sp500: parseFloat(c[2]) * 100,
+            nasdaq: parseFloat(c[3]) * 100,
+            volDaily: parseFloat(c[4]) * 100,
+            volWeekly: parseFloat(c[5]) * 100,
+            volMonthly: parseFloat(c[6]) * 100,
+            drawdown: parseFloat(c[7]) * 100,
+          };
+        });
+        this.updateCharts();
+        this.loadComposition(name);
+      } catch (e) {
+        alert("Impossible de charger les données du portefeuille.");
+      }
+    },
+
+    close() {
+      document.getElementById('details-modal').classList.remove('active');
+      document.body.style.overflow = '';
+      Object.values(PortfolioApp.charts).forEach(ch => ch?.destroy());
+      PortfolioApp.charts = {};
+    },
+
+    updateCharts() {
+      if (!PortfolioApp.currentData) return;
+      const tf = document.getElementById('timeframe').value;
+      const labels = PortfolioApp.currentData.map(d => d.date.split('T')[0]);
+      const volKey = tf === 'daily' ? 'volDaily' : tf === 'weekly' ? 'volWeekly' : 'volMonthly';
+
+      const datasets = {
+        performance: [
+          { label: 'Portefeuille', data: PortfolioApp.currentData.map(d => d.perf), borderColor: '#10b981', tension: 0.3 },
+          { label: 'S&P 500', data: PortfolioApp.currentData.map(d => d.sp500), borderColor: '#ef4444', tension: 0.3 },
+          { label: 'NASDAQ', data: PortfolioApp.currentData.map(d => d.nasdaq), borderColor: '#3b82f6', tension: 0.3 }
+        ],
+        volatility: [{ label: 'Volatilité', data: PortfolioApp.currentData.map(d => d[volKey]), borderColor: '#f59e0b', fill: true, backgroundColor: 'rgba(251,146,60,0.1)' }],
+        drawdown: [{ label: 'Drawdown', data: PortfolioApp.currentData.map(d => d.drawdown), borderColor: '#dc2626', fill: true, backgroundColor: 'rgba(220,38,38,0.1)' }]
       };
-    });
-    updateCharts();
-    loadComposition(name);
+
+      const config = (id, dataSets, yTitle) => ({
+        type: 'line',
+        data: { labels, datasets: dataSets },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { title: { display: true, text: yTitle } } }
+        }
+      });
+
+      ['performance', 'volatility', 'drawdown'].forEach(type => {
+        const canvas = document.getElementById(`chart-${type}`);
+        if (PortfolioApp.charts[type]) PortfolioApp.charts[type].destroy();
+        PortfolioApp.charts[type] = new Chart(canvas, config(
+          `chart-${type}`,
+          datasets[type],
+          type === 'performance' ? 'Performance cumulée (%)' : type === 'volatility' ? 'Volatilité (%)' : 'Drawdown (%)'
+        ));
+      });
+    },
+
+    async loadComposition(name) {
+      try {
+        const text = await fetch(COMPOSITION_CSV).then(r => r.text());
+        const rows = text.trim().split('\n').slice(1);
+        const tbody = document.querySelector('#composition-table tbody');
+        tbody.innerHTML = '';
+        rows.forEach(row => {
+          const [portfolio, ticker, asset, weight] = row.split(',');
+          if (portfolio === name) {
+            tbody.innerHTML += `<tr><td><strong>${ticker}</strong></td><td>${asset}</td><td>${weight}</td></tr>`;
+          }
+        });
+      } catch (e) { console.error("Composition error"); }
+    }
+  };
+
+  // Fermeture modal au clic extérieur ou Échap
+  window.addEventListener('click', e => {
+    if (e.target === document.getElementById('details-modal')) PortfolioModal.close();
   });
-}
+  window.addEventListener('keydown', e => { if (e.key === 'Escape') PortfolioModal.close(); });
 
-function updateCharts() {
-  const timeframe = document.getElementById('timeframe').value;
-  const labels = currentData.map(d => d.date);
-  const perfData = currentData.map(d => d.perf);
-  const sp500Data = currentData.map(d => d.sp500);
-  const nasdaqData = currentData.map(d => d.nasdaq);
-  const volData = currentData.map(d => timeframe === 'daily' ? d.volDaily : timeframe === 'weekly' ? d.volWeekly : d.volMonthly);
-  const drawData = currentData.map(d => d.drawdown);
+  // Formulaire
+  document.getElementById('contact-form').addEventListener('submit', function(e) {
+    const btn = this.querySelector('button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+    document.getElementById('form-message').textContent = '';
 
-  if (perfChart) perfChart.destroy();
-  if (volChart) volChart.destroy();
-  if (drawChart) drawChart.destroy();
-
-  perfChart = new Chart(document.getElementById('chart-performance'), {
-    type: 'line',
-    data: { labels, datasets: [
-      { label: 'Portefeuille', data: perfData, borderColor: '#10b981' },
-      { label: 'S&P 500', data: sp500Data, borderColor: '#ef4444' },
-      { label: 'NASDAQ', data: nasdaqData, borderColor: '#3b82f6' }
-    ]},
-    options: { responsive: true, scales: { y: { title: { display: true, text: 'Perf (%)' }}}}
+    // Formspree gère tout
+    setTimeout(() => {
+      document.getElementById('form-message').innerHTML = '<span style="color:var(--success);">✅ Demande envoyée avec succès ! Nous vous répondons sous 24h.</span>';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Envoyer la demande';
+      this.reset();
+    }, 1200);
   });
 
-  volChart = new Chart(document.getElementById('chart-volatility'), {
-    type: 'line',
-    data: { labels, datasets: [{ label: 'Volatilité', data: volData, borderColor: '#f59e0b' }]},
-    options: { responsive: true, scales: { y: { title: { display: true, text: 'Vol (%)' }}}}
-  });
-
-  drawChart = new Chart(document.getElementById('chart-drawdown'), {
-    type: 'line',
-    data: { labels, datasets: [{ label: 'Drawdown', data: drawData, borderColor: '#6b7280' }]},
-    options: { responsive: true, scales: { y: { title: { display: true, text: 'Drawdown (%)' }}}}
-  });
-}
-
-function loadComposition(name) {
-  fetch(compositionCSV).then(r => r.text()).then(text => {
-    const rows = text.split('\n').slice(1).filter(r => r);
-    const filtered = rows.map(row => row.split(',')).filter(cols => cols[0] === name);
-    let html = '<tr><th>Ticker</th><th>Action</th><th>Poids (%)</th></tr>';
-    filtered.forEach(cols => {
-      html += `<tr><td>${cols[1]}</td><td>${cols[2]}</td><td>${cols[3]}</td></tr>`;
-    });
-    document.getElementById('composition-table').innerHTML = html;
-  });
-}
-
-function closeModal() {
-  document.getElementById('details-modal').style.display = 'none';
-}
+  // Init
+  PortfolioApp.loadPortfolioMetrics();
 </script>
 </body>
 </html>
