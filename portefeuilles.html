@@ -27,8 +27,8 @@
     .kpi.red strong{color:#dc2626;}
     .kpi small{font-size:0.95rem;color:var(--gris);}
 
-    /* Modal épurée */
-    #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center;padding:2rem;}
+    /* Modal */
+    #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;}
     #modal.active{display:flex;}
     .modal-content{background:white;border-radius:24px;max-width:1500px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,0.4);}
     .modal-header{background:var(--n);color:white;padding:2rem 3rem;display:flex;justify-content:space-between;align-items:center;border-radius:24px 24px 0 0;}
@@ -41,7 +41,7 @@
     .kpi-big strong{font-size:3rem;color:var(--g);}
     .kpi-big.red{border-left-color:#dc2626;}
     .kpi-big.red strong{color:#dc2626;}
-    .controls{text-align:center;margin:2rem 0;}
+    .controls{text-align:center;margin:2.5rem 0;}
     .controls select,.controls label{margin:0 0.8rem;padding:0.9rem 1.8rem;font-size:1.1rem;border-radius:12px;border:2px solid var(--gris);}
     .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(600px,1fr));gap:3rem;margin:3rem 0;}
     canvas{background:white;border-radius:16px;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.06);}
@@ -49,7 +49,7 @@
     th,td{padding:1rem;border-bottom:1px solid #e2e8f0;text-align:left;}
     th{background:var(--l);font-weight:700;color:var(--n);}
     tr:last-child td{border-bottom:none;}
-    .error{text-align:center;color:#dc2626;font-size:1.2rem;padding:2rem;}
+    .error{color:#dc2626;text-align:center;padding:2rem;}
   </style>
 </head>
 <body>
@@ -71,7 +71,7 @@
   <div class="grid" id="grid"></div>
 </div>
 
-<!-- Modal épurée -->
+<!-- Modal -->
 <div id="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -93,10 +93,10 @@
       </div>
 
       <div class="charts">
-        <canvas id="perf" width="600" height="400"></canvas>
-        <canvas id="vol" width="600" height="400"></canvas>
-        <canvas id="dd" width="600" height="400"></canvas>
-        <canvas id="ret" width="600" height="400"></canvas>
+        <canvas id="perf"></canvas>
+        <canvas id="vol"></canvas>
+        <canvas id="dd"></canvas>
+        <canvas id="ret"></canvas>
       </div>
 
       <h3 style="text-align:center;margin:3rem 0 1.5rem;font-size:1.8rem;">Composition actuelle</h3>
@@ -130,10 +130,9 @@ async function loadCards() {
   for (const p of PORTFOLIOS) {
     try {
       const response = await fetch(p.csv);
-      if (!response.ok) throw new Error('CSV not found');
+      if (!response.ok) throw new Error('CSV introuvable');
       const txt = await response.text();
       const lines = txt.trim().split('\n');
-      if (lines.length < 2) throw new Error('Empty CSV');
       const last = lines[lines.length-1].split(',');
       const perf = parseFloat(last[1] || 0).toFixed(1);
       const vol = parseFloat(last[6] || 0).toFixed(1);
@@ -149,9 +148,9 @@ async function loadCards() {
             <div class="kpi"><strong>1.9</strong><small>Sharpe</small></div>
           </div>
         </div>`;
-    } catch(e) {
+    } catch (e) {
       console.error(e);
-      grid.innerHTML += `<div class="error">Erreur pour ${p.name}: ${e.message}</div>`;
+      grid.innerHTML += `<div class="error">Erreur ${p.name}</div>`;
     }
   }
 }
@@ -163,11 +162,8 @@ async function openModal(name, url) {
   document.body.style.overflow = 'hidden';
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('CSV not found');
-    const txt = await response.text();
+    const txt = await fetch(url).then(r => r.text());
     const lines = txt.trim().split('\n').slice(1);
-    if (lines.length === 0) throw new Error('No data in CSV');
     currentData = lines.map(l => {
       const v = l.split(',');
       return {
@@ -186,65 +182,81 @@ async function openModal(name, url) {
       <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
       <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité annualisée</div></div>
       <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-      <div class="kpi-big"><strong>1.9</strong><div>Ratio de Sharpe</div></div>
-    `;
+      <div class="kpi-big"><strong>1.9</strong><div>Ratio de Sharpe</div></div>`;
 
     // Composition
-    const compResponse = await fetch(COMP_CSV);
-    if (compResponse.ok) {
-      const compTxt = await compResponse.text();
+    try {
+      const compTxt = await fetch(COMP_CSV).then(r => r.text());
       const rows = compTxt.trim().split('\n').slice(1).filter(r => r.startsWith(name));
       document.getElementById('comp').innerHTML = rows.map(r => {
         const [_,actif,ticker,weight] = r.split(',');
         return `<tr><td><strong>${actif}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
       }).join('');
-    } else {
+    } catch(e) {
       document.getElementById('comp').innerHTML = '<tr><td colspan="3" style="text-align:center;color:#64748b;">Composition non disponible</td></tr>';
     }
 
     drawCharts();
-  } catch(e) {
+  } catch (e) {
     console.error(e);
-    document.getElementById('kpi-bar').innerHTML = '<div class="error">Erreur de chargement des données</div>';
-    document.getElementById('comp').innerHTML = '<tr><td colspan="3" style="text-align:center;color:#dc2626;">Données non disponibles</td></tr>';
+    document.getElementById('kpi-bar').innerHTML = '<div class="error">Données indisponibles</div>';
   }
 }
 
 function drawCharts() {
   const tf = document.getElementById('granularite').value;
-  const showP = document.querySelectorAll('#modal input[type=checkbox]')[0].checked;
+  const showP  = document.querySelectorAll('#modal input[type=checkbox]')[0].checked;
   const showSP = document.querySelectorAll('#modal input[type=checkbox]')[1].checked;
   const showNAS = document.querySelectorAll('#modal input[type=checkbox]')[2].checked;
 
-  const volKey = tf==='daily'?'volD':tf==='weekly'?'volW':'volM';
-  const retKey = tf==='daily'?'retPD':tf==='weekly'?'retPW':'retPM';
-  const retSKey = tf==='daily'?'retSD':tf==='weekly'?'retSW':'retSM';
-  const retNKey = tf==='daily'?'retND':tf==='weekly'?'retNW':'retNM';
+  const volKey = tf === 'daily' ? 'volD' : tf === 'weekly' ? 'volW' : 'volM';
+  const retKey  = tf === 'daily' ? 'retPD' : tf === 'weekly' ? 'retPW' : 'retPM';
+  const retSKey = tf === 'daily' ? 'retSD' : tf === 'weekly' ? 'retSW' : 'retSM';
+  const retNKey = tf === 'daily' ? 'retND' : tf === 'weekly' ? 'retNW' : 'retNM';
 
   const labels = currentData.map(d => d.date.slice(5));
 
   Object.values(charts).forEach(c => c?.destroy());
+  charts = {};
 
-  charts.perf = new Chart('perf', {type:'line',data:{labels,datasets:[
-    ...(showP ? [{label:'Portefeuille',data:currentData.map(d=>d.port),borderColor:'#ca8a04',borderWidth:2.5,tension:0.3,pointRadius:0}] : []),
-    ...(showSP ? [{label:'S&P 500',data:currentData.map(d=>d.sp),borderColor:'#64748b',borderWidth:1.5,tension:0.3,pointRadius:0,borderDash:[5,5]}] : []),
-    ...(showNAS ? [{label:'NASDAQ',data:currentData.map(d=>d.nas),borderColor:'#94a3b8',borderWidth:1.5,tension:0.3,pointRadius:0,borderDash:[8,8]}] : [])
-  ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:14}}}},scales:{y:{grid:{color:'#f1f5f9'},ticks:{font:{size:13}}}}}});
+  // 1. Performance cumulée
+  charts.perf = new Chart('perf', {
+    type: 'line',
+    data: { labels, datasets: [
+      ...(showP  ? [{label:'Portefeuille', data:currentData.map(d=>d.port), borderColor:'#ca8a04', borderWidth:2.5, tension:0.3, pointRadius:0}] : []),
+      ...(showSP ? [{label:'S&P 500',     data:currentData.map(d=>d.sp),   borderColor:'#64748b', borderWidth:1.5, tension:0.3, pointRadius:0, borderDash:[5,5]}] : []),
+      ...(showNAS? [{label:'NASDAQ',      data:currentData.map(d=>d.nas),  borderColor:'#94a3b8', borderWidth:1.5, tension:0.3, pointRadius:0, borderDash:[8,8]}] : [])
+    ]},
+    options: {responsive:true, plugins:{legend:{position:'top',labels:{font:{size:14}}}}, scales:{y:{grid:{color:'#f1f5f9'}}}}
+  });
 
-  charts.vol = new Chart('vol', {type:'line',data:{labels,datasets:[{
-    label:'Volatilité annualisée',data:currentData.map(d=>d[volKey]),borderColor:'#ca8a04',backgroundColor:'rgba(202,138,4,0.08)',fill:true,borderWidth:2,tension:0.3
-  }]},options:{responsive:true,plugins:{title:{display:true,text:'Volatilité (%)',font:{size:16}}}},scales:{y:{grid:{color:'#f1f5f9'}}}});
+  // 2. Volatilité
+  charts.vol = new Chart('vol', {
+    type: 'line',
+    data: { labels, datasets: [{label:'Volatilité annualisée', data:currentData.map(d=>d[volKey]), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.08)', fill:true, borderWidth:2, tension:0.3}]},
+    options: {responsive:true, plugins:{title:{display:true,text:'Volatilité (%)',font:{size:16}}}}
+  });
 
-  charts.dd = new Chart('dd', {type:'line',data:{labels,datasets:[
-    {label:'Drawdown actuel',data:currentData.map(d=>d.ddC),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.12)',fill:true,borderWidth:2},
-    {label:'Drawdown max',data:currentData.map(d=>d.ddM),borderColor:'#7f1d1d',borderWidth:1.5,borderDash:[6,6]}
-  ]},options:{responsive:true,plugins:{title:{display:true,text:'Drawdown (%)',font:{size:16}}}},scales:{y:{grid:{color:'#f1f5f9'}}}});
+  // 3. Drawdown
+  charts.dd = new Chart('dd', {
+    type: 'line',
+    data: { labels, datasets: [
+      {label:'Drawdown actuel', data:currentData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.12)', fill:true, borderWidth:2},
+      {label:'Drawdown max',    data:currentData.map(d=>d.ddM), borderColor:'#7f1d1d', borderWidth:1.5, borderDash:[6,6]}
+    ]},
+    options: {responsive:true, plugins:{title:{display:true,text:'Drawdown (%)',font:{size:16}}}}
+  });
 
-  charts.ret = new Chart('ret', {type:'bar',data:{labels,datasets:[
-    ...(showP ? [{label:'Portefeuille',data:currentData.map(d=>d[retKey]),backgroundColor:'#ca8a04'}] : []),
-    ...(showSP ? [{label:'S&P 500',data:currentData.map(d=>d[retSKey]),backgroundColor:'#e2e8f0'}] : []),
-    ...(showNAS ? [{label:'NASDAQ',data:currentData.map(d=>d[retNKey]),backgroundColor:'#cbd5e1'}] : [])
-  ]},options:{responsive:true,plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`,font:{size:16}}}},scales:{y:{grid:{color:'#f1f5f9'}}}}});
+  // 4. Retours périodiques
+  charts.ret = new Chart('ret', {
+    type: 'bar',
+    data: { labels, datasets: [
+      ...(showP  ? [{label:'Portefeuille', data:currentData.map(d=>d[retKey]),  backgroundColor:'#ca8a04'}] : []),
+      ...(showSP ? [{label:'S&P 500',     data:currentData.map(d=>d[retSKey]), backgroundColor:'#e2e8f0'}] : []),
+      ...(showNAS? [{label:'NASDAQ',      data:currentData.map(d=>d[retNKey]), backgroundColor:'#cbd5e1'}] : [])
+    ]},
+    options: {responsive:true, plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`,font:{size:16}}}}
+  });
 }
 
 loadCards();
