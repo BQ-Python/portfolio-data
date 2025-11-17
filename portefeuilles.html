@@ -30,7 +30,7 @@
     /* Modal */
     #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;}
     #modal.active{display:flex;}
-    .modal-content{background:white;border-radius:24px;max-width:1350px;width:95%;box-shadow:0 40px 100px rgba(0,0,0,0.4);}
+    .modal-content{background:white;border-radius:24px;max-width:1350px;width:95%;max-height:95vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,0.4);}
     .modal-header{background:var(--n);color:white;padding:2.5rem 3rem;display:flex;justify-content:space-between;align-items:center;border-radius:24px 24px 0 0;}
     .modal-header h2{font-size:2.6rem;font-weight:700;}
     .close{font-size:3.5rem;cursor:pointer;opacity:0.8;transition:.3s;}
@@ -44,8 +44,21 @@
     .kpi-big.red strong{color:#dc2626;}
     .kpi-big div{font-size:1.1rem;color:var(--gris);margin-top:0.5rem;}
 
-    .chart-container{max-width:100%;margin:3rem auto;position:relative;}
-    canvas{background:white;border-radius:18px;padding:1.8rem;box-shadow:0 15px 40px rgba(0,0,0,0.08);width:100%!important;height:auto!important;}
+    /* CONTENEUR FIXE POUR LES GRAPHIQUES → PLUS JAMAIS TROP GRANDS */
+    .chart-wrapper{
+      position:relative;
+      height:480px;           /* Hauteur fixe raisonnable */
+      max-height:70vh;
+      margin:3rem 0;
+      padding:1.5rem;
+      background:white;
+      border-radius:18px;
+      box-shadow:0 15px 40px rgba(0,0,0,0.08);
+    }
+    .chart-wrapper canvas{
+      position:absolute;
+      top:0;left:0;width:100%!important;height:100%!important;
+    }
 
     .metrics-tabs{text-align:center;margin:4rem 0 1rem;}
     .metrics-tabs select{padding:1rem 2rem;font-size:1.2rem;border-radius:12px;border:2px solid var(--gris);background:white;}
@@ -84,12 +97,12 @@
     <div class="modal-body">
       <div class="kpi-bar" id="kpi-bar"></div>
 
-      <!-- Graphique principal : Performance vs marchés -->
-      <div class="chart-container">
+      <!-- Graphique principal -->
+      <div class="chart-wrapper">
         <canvas id="mainChart"></canvas>
       </div>
 
-      <!-- Menu déroulant : Volatilité ou Drawdown -->
+      <!-- Menu Vol / DD -->
       <div class="metrics-tabs">
         <select id="metricSelect" onchange="updateDetailChart()">
           <option value="vol">Volatilité annualisée</option>
@@ -98,7 +111,7 @@
       </div>
 
       <!-- Graphique détaillé -->
-      <div class="chart-container">
+      <div class="chart-wrapper">
         <canvas id="detailChart"></canvas>
       </div>
 
@@ -162,7 +175,7 @@ async function openModal(name, url) {
   const lines = txt.trim().split('\n').slice(1);
   currentData = lines.map(l => {
     const v = l.split(',');
-    return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3], volD: +v[4], volW: +v[5], volM: +v[6], ddC: +v[7], ddM: +v[8] };
+    return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3], volM: +v[6], ddC: +v[7], ddM: +v[8] };
   });
 
   const last = currentData[currentData.length-1];
@@ -183,48 +196,38 @@ async function openModal(name, url) {
 }
 
 function drawMainChart() {
-  const ctx = document.getElementById('mainChart').getContext('2d');
-  const labels = currentData.map(d => d.date.slice(5));
-
   if (mainChart) mainChart.destroy();
-  mainChart = new Chart(ctx, {
+  mainChart = new Chart('mainChart', {
     type: 'line',
     data: {
-      labels,
+      labels: currentData.map(d => d.date.slice(5)),
       datasets: [
         { label: 'Portefeuille', data: currentData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.05)', borderWidth: 3, tension: 0.3, fill: true },
-        { label: 'S&P 500',      data: currentData.map(d => d.sp),   borderColor: '#64748b', borderWidth: 2, tension: 0.3, borderDash: [6,6] },
-        { label: 'NASDAQ',       data: currentData.map(d => d.nas),  borderColor: '#94a3b8', borderWidth: 2, tension: 0.3, borderDash: [10,6] }
+        { label: 'S&P 500', data: currentData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2, tension: 0.3, borderDash: [6,6] },
+        { label: 'NASDAQ', data: currentData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2, tension: 0.3, borderDash: [10,6] }
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { font: { size: 15 } } } },
-      scales: { y: { grid: { color: '#f1f5f9' } } }
-    }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 15 } } } } }
   });
 }
 
 function updateDetailChart() {
+  if (detailChart) detailChart.destroy();
   const metric = document.getElementById('metricSelect').value;
-  const ctx = document.getElementById('detailChart').getContext('2d');
   const labels = currentData.map(d => d.date.slice(5));
 
-  if (detailChart) detailChart.destroy();
-
   if (metric === 'vol') {
-    detailChart = new Chart(ctx, {
+    detailChart = new Chart('detailChart', {
       type: 'line',
       data: { labels, datasets: [{ label: 'Volatilité annualisée', data: currentData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.1)', fill: true, tension: 0.3 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Volatilité annualisée (%)', font: { size: 18 } } } }
     });
   } else {
-    detailChart = new Chart(ctx, {
+    detailChart = new Chart('detailChart', {
       type: 'line',
       data: { labels, datasets: [
         { label: 'Drawdown actuel', data: currentData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true },
-        { label: 'Drawdown max',    data: currentData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
+        { label: 'Drawdown max', data: currentData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
       ]},
       options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Drawdown (%)', font: { size: 18 } } } }
     });
