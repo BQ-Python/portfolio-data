@@ -130,11 +130,14 @@ async function loadCards() {
     try {
       const txt = await fetch(p.csv).then(r => r.text());
       const lines = txt.trim().split('\n').slice(1);
+      if (lines.length < 10) continue;
+
       const data = lines.map(l => {
         const v = l.split(',');
-        return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3] };
+        return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3], volM: +v[6] };
       });
 
+      // Perf cumulée
       const perfCumul = data[data.length-1].port.toFixed(1);
 
       // YTD
@@ -146,13 +149,18 @@ async function loadCards() {
       const startDate = new Date(data[0].date);
       const endDate = new Date(data[data.length-1].date);
       const years = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25);
-      const perfAnn = (Math.pow(data[data.length-1].port / 100 + 1, 1/years) - 1) * 100;
+      const totalReturn = data[data.length-1].port / 100;
+      const perfAnn = (Math.pow(totalReturn + 1, 1/years) - 1) * 100;
       const annualisee = perfAnn.toFixed(1);
 
-      // Vol et DD (dernière ligne du CSV)
-      const lastLine = txt.trim().split('\n').pop().split(',');
-      const vol = parseFloat(lastLine[6]).toFixed(1);
-      const dd = parseFloat(lastLine[8]).toFixed(1);
+      // Volatilité annualisée (dernière valeur du CSV)
+      const vol = data[data.length-1].volM.toFixed(1);
+
+      // Drawdown max
+      const dd = parseFloat(txt.trim().split('\n').pop().split(',')[8]).toFixed(1);
+
+      // SHARPE RÉEL CALCULÉ
+      const sharpe = vol > 0 ? (perfAnn / parseFloat(vol)).toFixed(2) : "N/A";
 
       grid.innerHTML += `
         <div class="card" onclick="openModal('${p.name}', '${p.csv}')">
@@ -163,10 +171,13 @@ async function loadCards() {
             <div class="kpi"><strong>${annualisee}%</strong><small>Perf. annualisée</small></div>
             <div class="kpi"><strong>${vol}%</strong><small>Vol. annualisée</small></div>
             <div class="kpi red"><strong>${dd}%</strong><small>Drawdown max</small></div>
-            <div class="kpi"><strong>1.9</strong><small>Sharpe</small></div>
+            <div class="kpi"><strong>${sharpe}</strong><small>Ratio de Sharpe</small></div>
           </div>
         </div>`;
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      console.error("Erreur chargement", p.name, e);
+      grid.innerHTML += `<div class="error">Erreur ${p.name}</div>`;
+    }
   }
 }
 
