@@ -6,41 +6,91 @@
   <title>Nos Portefeuilles | AltInvest Capital</title>
   <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
   <style>
-    /* Même style que index.html – je te mets seulement le différent */
-    body { background: #fff; padding-top: 100px; }
-    nav { /* même que index.html */ }
-    /* ... (copie le CSS de nav de la page précédente) ... */
-    .container { max-width: 1400px; margin: 0 auto; padding: 3rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 3rem; }
-    .card { background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; cursor: pointer; transition: 0.4s; }
-    .card:hover { transform: translateY(-12px); }
-    .card-header { background: linear-gradient(135deg, #1e293b, #334155); color: white; padding: 2.5rem; text-align: center; font-size: 1.8rem; font-weight: 700; }
-    .metrics { padding: 2rem; display: grid; grid-template-columns: repeat(2,1fr); gap: 1.5rem; }
-    .metric { text-align: center; padding: 1.5rem; background: #f8fafc; border-radius: 12px; }
-    .metric strong { font-size: 2rem; color: #ca8a04; display: block; }
-    .modal { /* même style premium que avant */ }
+    :root{--navy:#0f172a;--gold:#ca8a04;--gray:#e2e8f0;--dark:#1e293b;--light:#f8fafc;}
+    body{font-family:'Satoshi',sans-serif;background:#fff;padding-top:100px;color:var(--dark);}
+    nav{position:fixed;top:0;width:100%;background:rgba(15,23,42,0.98);backdrop-filter:blur(12px);z-index:1000;padding:1.2rem 0;border-bottom:1px solid rgba(255,255,255,0.1);}
+    .nav-container{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 3rem;}
+    .logo{font-size:1.9rem;font-weight:900;color:white;}
+    .logo span{color:var(--gold);}
+    .nav-links a{color:white;text-decoration:none;margin:0 2rem;font-weight:500;}
+    .nav-links a:hover,.nav-links a.active{color:var(--gold);}
+    .container{max-width:1400px;margin:0 auto;padding:4rem 2rem;}
+    h1{text-align:center;font-size:3.5rem;margin-bottom:3rem;color:var(--navy);}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:3rem;}
+    .card{background:white;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,0.1);overflow:hidden;cursor:pointer;transition:.4s;}
+    .card:hover{transform:translateY(-15px);box-shadow:0 30px 70px rgba(0,0,0,0.15);}
+    .card-header{background:linear-gradient(135deg,var(--navy),#334155);color:white;padding:3rem;text-align:center;font-size:2rem;font-weight:700;}
+    .metrics{padding:2.5rem;display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;}
+    .metric{background:#f8fafc;padding:1.8rem;border-radius:16px;text-align:center;}
+    .metric strong{font-size:2.2rem;color:var(--gold);display:block;font-weight:700;}
+    .btn{width:100%;background:var(--gold);color:#0f172a;padding:1.3rem;border:none;border-radius:0 0 20px 20px;font-weight:700;font-size:1.2rem;cursor:pointer;}
   </style>
 </head>
 <body>
-
-<!-- NAV même code que index.html -->
+<nav>
+  <div class="nav-container">
+    <div class="logo">AltInvest<span>.</span></div>
+    <div class="nav-links">
+      <a href="index.html">Accueil</a>
+      <a href="portefeuilles.html" class="active">Portefeuilles</a>
+      <a href="devis.html">Devis</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
 
 <div class="container">
-  <h1 style="text-align:center;font-size:3rem;margin:3rem 0;color:#0f172a;">Nos Portefeuilles</h1>
-  <div class="grid" id="portfolio-grid"></div>
+  <h1 data-aos="fade-up">Nos Portefeuilles Institutionnels</h1>
+  <div class="grid" id="portfolio-grid" data-aos="fade-up" data-aos-delay="200">
+    <!-- Cartes injectées par JS -->
+  </div>
 </div>
 
-<!-- MODAL + tout le JS exactement comme avant, mais avec tes vrais liens -->
+<!-- Modal + JS complet en bas de page -->
+<div id="details-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:white;border-radius:24px;max-width:1400px;width:100%;max-height:95vh;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.4);">
+    <div style="background:var(--navy);color:white;padding:2rem 3rem;display:flex;justify-content:space-between;align-items:center;">
+      <h2 id="modal-title" style="margin:0;font-size:2rem;"></h2>
+      <span style="font-size:3rem;cursor:pointer;" onclick="document.getElementById('details-modal').style.display='none'">×</span>
+    </div>
+    <div style="padding:3rem;overflow-y:auto;max-height:calc(95vh-120px);">
+      <div style="text-align:center;margin-bottom:2rem;">
+        <select id="timeframe" onchange="updateCharts()" style="padding:1rem 2rem;font-size:1.1rem;border-radius:12px;border:2px solid var(--gold);">
+          <option value="daily">Journalier</option>
+          <option value="weekly">Hebdomadaire</option>
+          <option value="monthly" selected>Mensuel</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:2rem;margin:2rem 0;">
+        <div><canvas id="chart-performance"></canvas></div>
+        <div><canvas id="chart-volatility"></canvas></div>
+        <div><canvas id="chart-drawdown"></canvas></div>
+        <div><canvas id="chart-returns"></canvas></div>
+      </div>
+      <h3 style="text-align:center;margin-top:3rem;">Composition</h3>
+      <table style="width:100%;border-collapse:collapse;margin-top:1rem;"><tbody id="composition-table"></tbody></table>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <script>
+AOS.init();
 const PORTFOLIOS = [
   { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_croissance_v2.csv" },
-  { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_d%C3%A9fensif_v2.csv" }
+  { name: "Portefeuille Défensif", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_d%C3%A9fensif_v2.csv" }
 ];
 const COMPOSITION_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
 
-// Tout le code Modal + affichage métriques corrigé (je te le donne complet si tu veux, mais il est 100% fonctionnel maintenant)
-</script>
-</body>
-</html>
+let currentData = [], charts = {};
+
+async function loadCards() {
+  const grid = document.getElementById('portfolio-grid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:6rem;"><i class="fas fa-spinner fa-spin fa-4x" style="color:var(--gold);"></i></div>';
+  for (const p of PORTFOLIOS) {
+    try {
+      const text = await fetch(p.csv).then(r => r.text());
+      const lines = text.trim().split
