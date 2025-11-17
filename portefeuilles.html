@@ -91,7 +91,6 @@ const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/ref
 let currentData = [];
 let charts = {};
 
-// Fonction loadCards SANS ALERT (vraie modal)
 async function loadCards() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:100px;font-size:1.5rem;">Chargement...</div>';
@@ -105,7 +104,6 @@ async function loadCards() {
       const vol  = parseFloat(last[6]).toFixed(1);
       const dd   = parseFloat(last[8]).toFixed(1);
 
-      // onclick = openModal (PAS D'ALERT !)
       grid.innerHTML += `
         <div class="card" onclick="openModal('${p.name}', '${p.csv}')">
           <div class="header"><h3>${p.name}</h3></div>
@@ -117,13 +115,14 @@ async function loadCards() {
           </div>
         </div>`;
     } catch(e) {
+      console.error(e);
       grid.innerHTML += `<div class="card"><div class="header"><h3>${p.name}</h3></div><div class="metrics"><p style="color:red;grid-column:1/-1;">Erreur chargement</p></div></div>`;
     }
   }
 }
 
-// Fonction openModal SANS ALERT (vraie modal)
 async function openModal(name, url) {
+  // PAS D'ALERT ICI – DIRECTEMENT LA MODAL
   document.getElementById('modal-title').textContent = name;
   document.getElementById('modal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -148,7 +147,8 @@ async function openModal(name, url) {
     const comp = await fetch(COMP_CSV).then(r => r.text());
     const rows = comp.trim().split('\n').slice(1).filter(r => r.startsWith(name));
     document.getElementById('composition').innerHTML = 
-      `<table style="width:100%;border-collapse:collapse;"><tbody>
+      `<table style="width:100%;border-collapse:collapse;font-size:1.2rem;">
+        <tbody>
         ${rows.map(r => {
           const [_,t,a,w] = r.split(',');
           return `<tr style="border-bottom:1px solid #eee;">
@@ -157,18 +157,19 @@ async function openModal(name, url) {
             <td style="padding:1.2rem;text-align:right;font-weight:700;">${w}</td>
           </tr>`;
         }).join('')}
-      </tbody></table>`;
+        </tbody>
+      </table>`;
 
     drawCharts();
   } catch(e) {
-    console.error(e);
+    console.error('Erreur chargement modal:', e);
+    document.getElementById('composition').innerHTML = "<p style='text-align:center;color:red;'>Erreur de chargement des données</p>";
   }
 }
 
-// Fonction drawCharts (graphiques)
 function drawCharts() {
   const tf = document.getElementById('granularite').value;
-  const showP  = document.querySelectorAll('#modal input[type=checkbox]')[0].checked;
+  const showP = document.querySelectorAll('#modal input[type=checkbox]')[0].checked;
   const showSP = document.querySelectorAll('#modal input[type=checkbox]')[1].checked;
   const showNAS = document.querySelectorAll('#modal input[type=checkbox]')[2].checked;
 
@@ -178,35 +179,29 @@ function drawCharts() {
   const retNKey = tf === 'daily' ? 'retND' : tf === 'weekly' ? 'retNW' : 'retNM';
 
   const labels = currentData.map(d => d.date.slice(5).replace('-', '/'));
-  const ctxPerf = document.getElementById('chart-perf').getContext('2d');
-  const ctxVol = document.getElementById('chart-vol').getContext('2d');
-  const ctxDd = document.getElementById('chart-dd').getContext('2d');
-  const ctxRet = document.getElementById('chart-ret').getContext('2d');
-
-  // Destruction
   Object.values(charts).forEach(c => c?.destroy());
   charts = {};
 
   // Performance
-  charts.perf = new Chart(ctxPerf, {
+  charts.perf = new Chart(document.getElementById('chart-perf'), {
     type: 'line',
     data: { labels, datasets: [
       ...(showP ? [{label:'Portefeuille', data:currentData.map(d=>d.port), borderColor:'#ca8a04', tension:0.3}] : []),
       ...(showSP ? [{label:'S&P 500', data:currentData.map(d=>d.sp), borderColor:'#dc2626', tension:0.3}] : []),
       ...(showNAS ? [{label:'NASDAQ', data:currentData.map(d=>d.nas), borderColor:'#3b82f6', tension:0.3}] : [])
-    ]},
+    ] },
     options: {responsive:true, plugins:{title:{display:true,text:'Performance cumulée (%)'}}, scales:{y:{grid:{color:'#eee'}}}}
   });
 
   // Volatilité
-  charts.vol = new Chart(ctxVol, {
+  charts.vol = new Chart(document.getElementById('chart-vol'), {
     type: 'line',
     data: { labels, datasets: [{label:'Volatilité', data:currentData.map(d=>d[volKey]), borderColor:'#f59e0b', backgroundColor:'rgba(251,158,11,0.1)', fill:true}] },
     options: {responsive:true, plugins:{title:{display:true,text:'Volatilité (%)'}}}
   });
 
   // Drawdown
-  charts.dd = new Chart(ctxDd, {
+  charts.dd = new Chart(document.getElementById('chart-dd'), {
     type: 'line',
     data: { labels, datasets: [
       {label:'Drawdown actuel', data:currentData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true},
@@ -216,7 +211,7 @@ function drawCharts() {
   });
 
   // Retours
-  charts.ret = new Chart(ctxRet, {
+  charts.ret = new Chart(document.getElementById('chart-ret'), {
     type: 'bar',
     data: { labels, datasets: [
       ...(showP ? [{label:'Portefeuille', data:currentData.map(d=>d[retPKey]), backgroundColor:'#ca8a04'}] : []),
@@ -235,7 +230,6 @@ document.getElementById('modal').addEventListener('click', e => {
   }
 });
 
-// Initialisation
 loadCards();
 </script>
 </body>
