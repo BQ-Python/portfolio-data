@@ -3,57 +3,212 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AltInvest Capital | Gestion Privée de Patrimoine</title>
-  <meta name="description" content="Gestion indépendante de patrimoine - Portefeuilles institutionnels depuis 2020.">
-  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+  <title>AltInvest Capital | Gestion Privée</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
-    :root{--navy:#0f172a;--gold:#ca8a04;--gray:#e2e8f0;--dark:#1e293b;--light:#f8fafc;}
+    :root{--n:#0f172a;--g:#ca8a04;--l:#f8fafc;--grey:#1e293b;}
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Satoshi',sans-serif;background:var(--light);color:var(--dark);line-height:1.7;}
-    nav{position:fixed;top:0;left:0;right:0;background:rgba(15,23,42,0.98);backdrop-filter:blur(12px);z-index:1000;padding:1.2rem 0;border-bottom:1px solid rgba(255,255,255,0.1);}
-    .nav-container{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 3rem;}
-    .logo{font-size:1.9rem;font-weight:900;color:white;}
-    .logo span{color:var(--gold);}
-    .nav-links a{color:white;text-decoration:none;margin:0 2rem;font-weight:500;transition:.3s;}
-    .nav-links a:hover,.nav-links a.active{color:var(--gold);}
-    .hero{height:100vh;background:linear-gradient(rgba(15,23,42,0.9),rgba(15,23,42,0.95)),url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2670') center/cover;display:flex;align-items:center;justify-content:center;text-align:center;color:white;}
-    .hero h1{font-size:4.8rem;font-weight:900;margin-bottom:1.5rem;}
-    .hero p{font-size:1.5rem;max-width:900px;margin:0 auto 3rem;opacity:0.9;}
-    .btn{background:var(--gold);color:#0f172a;padding:1.3rem 3.5rem;border:none;border-radius:8px;font-weight:700;font-size:1.2rem;cursor:pointer;transition:.4s;}
-    .btn:hover{background:#f5d28e;transform:translateY(-4px);}
-    footer{background:var(--navy);color:white;text-align:center;padding:4rem;font-size:0.95rem;}
-    @media(max-width:768px){.hero h1{font-size:3.2rem;}.nav-container{padding:0 1.5rem;}}
+    body{font-family:'Satoshi',sans-serif;background:var(--l);color:white;overflow-x:hidden;}
+    nav{position:fixed;top:0;width:100%;background:var(--n);padding:1.2rem 0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+    .nav{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 4rem;}
+    .logo{font-size:2.2rem;font-weight:900;}.logo span{color:var(--g);}
+    .links a{color:white;text-decoration:none;margin:0 2rem;font-weight:500;transition:.3s;}
+    .links a:hover,.links a.active{color:var(--g);}
+    
+    /* HERO avec Montréal vue du ciel */
+    .hero{
+      height:100vh;
+      background:linear-gradient(rgba(15,23,42,0.88),rgba(15,23,42,0.92)),
+                  url('https://images.unsplash.com/photo-1517935706081-4fe484b1d5ab?q=80&w=2670&auto=format&fit=crop') center/cover no-repeat;
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      position:relative;
+    }
+    .hero-content h1{font-size:5rem;font-weight:900;margin-bottom:1.5rem;}
+    .hero-content p{font-size:1.6rem;max-width:900px;margin:0 auto 3rem;opacity:0.95;}
+    .btn{background:var(--g);color:var(--n);padding:1.4rem 3.5rem;border:none;border-radius:12px;font-weight:700;font-size:1.3rem;cursor:pointer;transition:.4s;}
+    .btn:hover{background:#f5d28e;transform:translateY(-5px);}
+    
+    /* Section Portefeuilles */
+    .section{padding:120px 2rem;background:white;color:var(--grey);}
+    .container{max-width:1400px;margin:0 auto;}
+    h2{text-align:center;font-size:3.5rem;margin-bottom:4rem;color:var(--n);}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:3rem;}
+    .card{background:white;border-radius:24px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.12);transition:.5s;cursor:pointer;}
+    .card:hover{transform:translateY(-20px);box-shadow:0 40px 90px rgba(0,0,0,0.2);}
+    .header{background:linear-gradient(135deg,var(--n),#1e3a8a);padding:3.5rem 2rem;text-align:center;}
+    .header h3{font-size:2.2rem;font-weight:700;}
+    .metrics{padding:3rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
+    .met{background:#f8fafc;padding:2rem;border-radius:16px;text-align:center;}
+    .met strong{font-size:2.6rem;color:var(--g);display:block;font-weight:700;}
+    
+    /* Modal */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);backdrop-filter:blur(15px);z-index:2000;align-items:center;justify-content:center;padding:2rem;}
+    .modal.active{display:flex;}
+    .mc{background:white;color:var(--grey);border-radius:28px;max-width:1450px;width:100%;max-height:95vh;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,0.5);}
+    .mh{background:var(--n);color:white;padding:2.5rem 3rem;display:flex;justify-content:space-between;align-items:center;}
+    .mh h2{font-size:2.4rem;}
+    .close{font-size:3.5rem;cursor:pointer;transition:.3s;}
+    .close:hover{color:var(--g);}
+    .mb{padding:3rem;overflow-y:auto;max-height:calc(95vh - 120px);}
+    .controls{text-align:center;margin-bottom:3rem;}
+    .controls select,.controls label{margin:0 1rem;padding:1rem 2rem;font-size:1.1rem;border-radius:12px;border:2px solid var(--g);background:white;}
+    .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:2.5rem;margin:3rem 0;}
+    canvas{background:white;border-radius:20px;padding:1.5rem;box-shadow:0 15px 40px rgba(0,0,0,0.1);}
   </style>
 </head>
 <body>
+
 <nav>
-  <div class="nav-container">
+  <div class="nav">
     <div class="logo">AltInvest<span>.</span></div>
-    <div class="nav-links">
-      <a href="index.html" class="active">Accueil</a>
-      <a href="portefeuilles.html">Portefeuilles</a>
+    <div class="links">
+      <a href="#" class="active">Accueil</a>
       <a href="devis.html">Devis</a>
       <a href="contact.html">Contact</a>
     </div>
   </div>
 </nav>
 
-<section class="hero" data-aos="fade-up">
-  <div>
+<div class="hero">
+  <div class="hero-content">
     <h1>Gestion Privée de Patrimoine</h1>
     <p>Portefeuilles institutionnels construits avec rigueur quantitative.<br>Indépendance • Transparence • Performance mesurable.</p>
-    <a href="portefeuilles.html" class="btn">Découvrir nos stratégies</a>
+    <button class="btn" onclick="document.querySelector('.section').scrollIntoView({behavior:'smooth'})">
+      Découvrir nos stratégies
+    </button>
   </div>
-</section>
+</div>
 
-<footer>
-  <p>© 2025 AltInvest Capital – Conseiller en placement indépendant agréé IIROC</p>
-  <p>Montréal, Québec, Canada</p>
-</footer>
+<div class="section">
+  <div class="container">
+    <h2>Nos Portefeuilles</h2>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
 
-<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-<script>AOS.init({duration:1200});</script>
+<!-- MODAL COMPLÈTE -->
+<div class="modal" id="modal">
+  <div class="mc">
+    <div class="mh">
+      <h2 id="title">Portefeuille Croissance</h2>
+      <span class="close" onclick="document.getElementById('modal').classList.remove('active')">&times;</span>
+    </div>
+    <div class="mb">
+      <div class="controls">
+        <select id="tf" onchange="draw()">
+          <option value="daily">Journalier</option>
+          <option value="weekly">Hebdomadaire</option>
+          <option value="monthly" selected>Mensuel</option>
+        </select>
+        <label><input type="checkbox" checked onchange="draw()"> Portefeuille</label>
+        <label><input type="checkbox" checked onchange="draw()"> S&P 500</label>
+        <label><input type="checkbox" checked onchange="draw()"> NASDAQ</label>
+      </div>
+      <div class="charts">
+        <canvas id="perf"></canvas>
+        <canvas id="vol"></canvas>
+        <canvas id="dd"></canvas>
+        <canvas id="ret"></canvas>
+      </div>
+      <h3 style="text-align:center;margin:3rem 0 1.5rem;">Composition actuelle</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:1.1rem;"><tbody id="comp"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const PORTFOLIOS = [
+  { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_croissance_v2.csv" },
+  { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_defensif_v2.csv" }
+];
+const COMP = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
+
+let data = [], charts = {};
+
+async function load() {
+  const grid = document.getElementById('grid');
+  for (const p of PORTFOLIOS) {
+    try {
+      const txt = await fetch(p.csv).then(r => r.text());
+      const lines = txt.trim().split('\n');
+      const last = lines[lines.length-1].split(',');
+      const perf = Number(last[1]).toFixed(1);
+      const vol = Number(last[6]).toFixed(1);
+      const dd = Number(last[8]).toFixed(1);
+      grid.innerHTML += `
+        <div class="card" onclick="open('${p.name}','${p.csv}')">
+          <div class="header"><h3>${p.name}</h3></div>
+          <div class="metrics">
+            <div class="met"><strong>${perf}%</strong>Performance cumulée</div>
+            <div class="met"><strong>${vol}%</strong>Volatilité mensuelle</div>
+            <div class="met"><strong>${dd}%</strong>Drawdown max</div>
+            <div class="met"><strong>1.9</strong>Ratio de Sharpe</div>
+          </div>
+        </div>`;
+    } catch(e) { console.error(e); }
+  }
+}
+
+async function open(name, url) {
+  document.getElementById('title').textContent = name;
+  document.getElementById('modal').classList.add('active');
+  const txt = await fetch(url).then(r => r.text());
+  const lines = txt.trim().split('\n').slice(1);
+  data = lines.map(l => {
+    const v = l.split(',');
+    return {date:v[0], port:+v[1], sp:+v[2], nas:+v[3],
+            volD:+v[4], volW:+v[5], volM:+v[6],
+            ddC:+v[7], ddM:+v[8],
+            retPD:+v[9], retPW:+v[10], retPM:+v[11],
+            retSD:+v[12], retSW:+v[13], retSM:+v[14],
+            retND:+v[15], retNW:+v[16], retNM:+v[17]};
+  });
+  const comp = await fetch(COMP).then(r => r.text());
+  document.getElementById('comp').innerHTML = comp.trim().split('\n').slice(1)
+    .filter(r => r.startsWith(name)).map(r => {
+      const [_,t,a,w] = r.split(','); 
+      return `<tr style="border-bottom:1px solid #eee;"><td style="padding:1.2rem;"><strong>${t}</strong></td><td style="padding:1.2rem;">${a}</td><td style="padding:1.2rem;text-align:right;font-weight:700;">${w}</td></tr>`;
+    }).join('');
+  draw();
+}
+
+function draw() {
+  const tf = document.getElementById('tf').value;
+  const showP = document.querySelectorAll('input[type=checkbox]')[0].checked;
+  const showSP = document.querySelectorAll('input[type=checkbox]')[1].checked;
+  const showNAS = document.querySelectorAll('input[type=checkbox]')[2].checked;
+  const vol = tf==='daily'?'volD':tf==='weekly'?'volW':'volM';
+  const retP = tf==='daily'?'retPD':tf==='weekly'?'retPW':'retPM';
+  const retS = tf==='daily'?'retSD':tf==='weekly'?'retSW':'retSM';
+  const retN = tf==='daily'?'retND':tf==='weekly'?'retNW':'retNM';
+  const labels = data.map(d => d.date.slice(5).replace('-','/'));
+
+  Object.values(charts).forEach(c => c?.destroy()); charts = {};
+
+  charts.perf = new Chart(document.getElementById('perf'), {type:'line',data:{labels,datasets:[
+    ...(showP ? [{label:'Portefeuille',data:data.map(d=>d.port),borderColor:'#ca8a04',tension:.3,fill:false}] : []),
+    ...(showSP ? [{label:'S&P 500',data:data.map(d=>d.sp),borderColor:'#dc2626',tension:.3,fill:false}] : []),
+    ...(showNAS ? [{label:'NASDAQ',data:data.map(d=>d.nas),borderColor:'#3b82f6',tension:.3,fill:false}] : [])
+  ]},options:{plugins:{title:{display:true,text:'Performance cumulée (%)'}},scales:{y:{grid:{color:'#eee'}}}}});
+
+  charts.vol = new Chart(document.getElementById('vol'), {type:'line',data:{labels,datasets:[{
+    label:'Volatilité annualisée',data:data.map(d=>d[vol]),borderColor:'#f59e0b',backgroundColor:'rgba(251,158,11,0.1)',fill:true
+  }]},options:{plugins:{title:{display:true,text:'Volatilité'}}}});
+
+  charts.dd = new Chart(document.getElementById('dd'), {type:'line',data:{labels,datasets:[
+    {label:'Drawdown actuel',data:data.map(d=>d.ddC),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.15)',fill:true},
+    {label:'Drawdown max',data:data.map(d=>d.ddM),borderColor:'#7f1d1d',borderDash:[8,4]}
+  ]},options:{plugins:{title:{display:true,text:'Drawdown (%)'}}}});
+
+  charts.ret = new Chart(document.getElementById('ret'), {type:'bar',data:{labels,datasets:[
+    ...(showP ? [{label:'Portefeuille',data:data.map(d=>d[retP]),backgroundColor:'#ca8a04'}] : []),
+    ...(showSP ? [{label:'S&P 500',data:data.map(d=>d[retS]),backgroundColor:'#dc2626'}] : []),
+    ...(showNAS ? [{label:'NASDAQ',data:data.map(d=>d[retN]),backgroundColor:'#3b82f6'}] : [])
+  ]},options:{plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`}}}});
+}
+
+load();
+</script>
 </body>
 </html>
