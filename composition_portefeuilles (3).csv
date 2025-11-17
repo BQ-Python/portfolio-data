@@ -1,0 +1,16 @@
+Portfolio,Ticker,Asset,Weight
+Portefeuille Croissance,AAPL,Apple,15.00
+Portefeuille Croissance,MSFT,Microsoft,15.00
+Portefeuille Croissance,NVDA,NVIDIA,15.00
+Portefeuille Croissance,GOOGL,Alphabet,12.00
+Portefeuille Croissance,AMZN,Amazon,12.00
+Portefeuille Croissance,META,Meta,10.00
+Portefeuille Croissance,TSLA,Tesla,10.00
+Portefeuille Croissance,QQQ,Invesco QQQ,11.00
+Portefeuille Défensif,VTI,Vanguard Total Stock,30.00
+Portefeuille Défensif,BND,Vanguard Total Bond,25.00
+Portefeuille Défensif,GLD,SPDR Gold,15.00
+Portefeuille Défensif,TLT,iShares 20+ Year Treasury,10.00
+Portefeuille Défensif,VNQ,Vanguard Real Estate,8.00
+Portefeuille Défensif,XLU,Utilities,7.00
+Portefeuille Défensif,XLV,Health Care,5.00
