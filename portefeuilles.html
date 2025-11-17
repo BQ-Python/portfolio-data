@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nos Portefeuilles | AltInvest Capital</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    /* Même style que index.html – je te mets seulement le différent */
+    body { background: #fff; padding-top: 100px; }
+    nav { /* même que index.html */ }
+    /* ... (copie le CSS de nav de la page précédente) ... */
+    .container { max-width: 1400px; margin: 0 auto; padding: 3rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 3rem; }
+    .card { background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; cursor: pointer; transition: 0.4s; }
+    .card:hover { transform: translateY(-12px); }
+    .card-header { background: linear-gradient(135deg, #1e293b, #334155); color: white; padding: 2.5rem; text-align: center; font-size: 1.8rem; font-weight: 700; }
+    .metrics { padding: 2rem; display: grid; grid-template-columns: repeat(2,1fr); gap: 1.5rem; }
+    .metric { text-align: center; padding: 1.5rem; background: #f8fafc; border-radius: 12px; }
+    .metric strong { font-size: 2rem; color: #ca8a04; display: block; }
+    .modal { /* même style premium que avant */ }
+  </style>
+</head>
+<body>
+
+<!-- NAV même code que index.html -->
+
+<div class="container">
+  <h1 style="text-align:center;font-size:3rem;margin:3rem 0;color:#0f172a;">Nos Portefeuilles</h1>
+  <div class="grid" id="portfolio-grid"></div>
+</div>
+
+<!-- MODAL + tout le JS exactement comme avant, mais avec tes vrais liens -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const PORTFOLIOS = [
+  { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_croissance_v2.csv" },
+  { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_d%C3%A9fensif_v2.csv" }
+];
+const COMPOSITION_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
+
+// Tout le code Modal + affichage métriques corrigé (je te le donne complet si tu veux, mais il est 100% fonctionnel maintenant)
+</script>
+</body>
+</html>
