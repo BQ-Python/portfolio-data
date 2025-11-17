@@ -6,25 +6,48 @@
   <title>Nos Portefeuilles | AltInvest Capital</title>
   <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
-    :root{--n:#0f172a;--g:#ca8a04;--l:#f8fafc;}
+    :root{--n:#0f172a;--g:#ca8a04;--gris:#94a3b8;--light:#f8fafc;}
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Satoshi',sans-serif;background:var(--l);color:#1e293b;padding-top:90px;}
+    body{font-family:'Satoshi',sans-serif;background:#fff;color:#1e293b;line-height:1.6;padding-top:90px;}
     nav{position:fixed;top:0;width:100%;background:var(--n);padding:1.5rem 0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
     .nav{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 5rem;}
     .logo{font-size:2.4rem;font-weight:900;color:white;}.logo span{color:var(--g);}
-    .links a{color:white;text-decoration:none;margin:0 2.5rem;font-weight:500;font-size:1.1rem;transition:.3s;}
+    .links a{color:white;text-decoration:none;margin:0 2.5rem;font-weight:500;transition:.3s;}
     .links a:hover,.links a.active{color:var(--g);}
     .container{max-width:1400px;margin:0 auto;padding:120px 2rem;}
-    h1{text-align:center;font-size:4rem;margin-bottom:5rem;color:var(--n);}
+    h1{text-align:center;font-size:3.8rem;margin-bottom:5rem;color:var(--n);}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:4rem;}
-    .card{background:white;border-radius:28px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.15);transition:.5s;cursor:pointer;}
-    .card:hover{transform:translateY(-20px);box-shadow:0 50px 100px rgba(0,0,0,0.25);}
-    .header{background:linear-gradient(135deg,var(--n),#1e3a8a);padding:4rem 2rem;text-align:center;color:white;}
-    .header h3{font-size:2.6rem;font-weight:700;}
-    .metrics{padding:3.5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
-    .m{background:#f8fafc;padding:2.5rem;border-radius:20px;text-align:center;}
-    .m strong{font-size:3rem;color:var(--g);display:block;font-weight:700;}
-    .m.red strong{color:#dc2626;}
+    .card{background:white;border-radius:20px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.08);transition:.4s;cursor:pointer;}
+    .card:hover{transform:translateY(-12px);box-shadow:0 35px 80px rgba(0,0,0,0.14);}
+    .header{background:linear-gradient(135deg,var(--n),#1e3a8a);padding:3.5rem 2rem;text-align:center;color:white;}
+    .header h3{font-size:2.4rem;font-weight:700;}
+    .metrics{padding:3rem;display:grid;grid-template-columns:1fr 1fr;gap:1.8rem;}
+    .kpi{background:var(--light);padding:1.8rem;border-radius:16px;text-align:center;}
+    .kpi strong{font-size:2.8rem;display:block;color:var(--g);font-weight:700;}
+    .kpi.red strong{color:#dc2626;}
+    .kpi small{font-size:0.95rem;color:var(--gris);}
+
+    /* Modal épurée */
+    #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;}
+    #modal.active{display:flex;}
+    .modal-content{background:white;border-radius:24px;max-width:1500px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,0.4);}
+    .modal-header{background:var(--n);color:white;padding:2rem 3rem;display:flex;justify-content:space-between;align-items:center;border-radius:24px 24px 0 0;}
+    .modal-header h2{font-size:2.4rem;margin:0;}
+    .close{font-size:3.5rem;cursor:pointer;opacity:0.8;}
+    .modal-body{padding:3rem;}
+    .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;margin-bottom:3rem;}
+    .kpi-big{background:#f8fafc;padding:1.8rem 2rem;border-radius:16px;text-align:center;border-left:5px solid var(--g);}
+    .kpi-big strong{font-size:3rem;color:var(--g);}
+    .kpi-big.red{border-left-color:#dc2626;}
+    .kpi-big.red strong{color:#dc2626;}
+    .controls{text-align:center;margin:2rem 0;}
+    .controls select,.controls label{margin:0 0.8rem;padding:0.9rem 1.8rem;font-size:1.1rem;border-radius:12px;border:2px solid var(--gris);}
+    .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(600px,1fr));gap:3rem;margin:3rem 0;}
+    canvas{background:white;border-radius:16px;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.06);}
+    table{width:100%;border-collapse:collapse;margin-top:2rem;}
+    th,td{padding:1rem;border-bottom:1px solid #e2e8f0;text-align:left;}
+    th{background:#f8fafc;font-weight:700;color:var(--n);}
+    tr:last-child td{border-bottom:none;}
   </style>
 </head>
 <body>
@@ -42,40 +65,40 @@
 </nav>
 
 <div class="container">
-  <h1>Nos Portefeuilles Institutionnels</h1>
-  <div class="grid" id="grid">
-    <!-- Les cartes arrivent ici -->
-  </div>
+  <h1>Nos Portefeuilles</h1>
+  <div class="grid" id="grid"></div>
 </div>
 
-<!-- MODAL ULTRA-PRO -->
-<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);backdrop-filter:blur(16px);z-index:2000;align-items:center;justify-content:center;padding:2rem;">
-  <div style="background:white;border-radius:32px;max-width:1500px;width:100%;max-height:96vh;overflow:hidden;box-shadow:0 50px 120px rgba(0,0,0,0.6);">
-    <div style="background:var(--n);color:white;padding:2.5rem 4rem;display:flex;justify-content:space-between;align-items:center;">
-      <h2 id="modal-title" style="font-size:2.6rem;margin:0;">Portefeuille</h2>
-      <span style="font-size:4rem;cursor:pointer;" onclick="document.getElementById('modal').style.display='none'">×</span>
+<!-- MODAL ÉPURÉE & PRO -->
+<div id="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-title">Portefeuille</h2>
+      <span class="close" onclick="document.getElementById('modal').classList.remove('active')">&times;</span>
     </div>
-    <div style="padding:3rem;overflow-y:auto;max-height:calc(96vh - 140px);">
-      <div style="text-align:center;margin-bottom:3rem;">
-        <select id="granularite" onchange="drawCharts()" style="padding:1.2rem 2.5rem;font-size:1.2rem;border-radius:16px;border:3px solid var(--g);margin-right:2rem;">
+    <div class="modal-body">
+      <div class="kpi-bar" id="kpi-bar"></div>
+      
+      <div class="controls">
+        <select id="granularite" onchange="draw()">
           <option value="daily">Journalier</option>
           <option value="weekly">Hebdomadaire</option>
           <option value="monthly" selected>Mensuel</option>
         </select>
-        <label style="margin:0 1rem;font-size:1.1rem;"><input type="checkbox" checked onchange="drawCharts()"> Portefeuille</label>
-        <label style="margin:0 1rem;font-size:1.1rem;"><input type="checkbox" checked onchange="drawCharts()"> S&P 500</label>
-        <label style="margin:0 1rem;font-size:1.1rem;"><input type="checkbox" checked onchange="drawCharts()"> NASDAQ</label>
+        <label><input type="checkbox" checked onchange="draw()"> Portefeuille</label>
+        <label><input type="checkbox" checked onchange="draw()"> S&P 500</label>
+        <label><input type="checkbox" checked onchange="draw()"> NASDAQ</label>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(550px,1fr));gap:3rem;margin:3rem 0;">
-        <canvas id="chart-perf"></canvas>
-        <canvas id="chart-vol"></canvas>
-        <canvas id="chart-dd"></canvas>
-        <canvas id="chart-ret"></canvas>
+      <div class="charts">
+        <canvas id="perf"></canvas>
+        <canvas id="vol"></canvas>
+        <canvas id="dd"></canvas>
+        <canvas id="ret"></canvas>
       </div>
 
-      <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;">Composition actuelle</h3>
-      <div id="composition" style="background:#f8fafc;border-radius:20px;padding:2rem;overflow-x:auto;"></div>
+      <h3 style="text-align:center;margin:3rem 0 1.5rem;font-size:1.8rem;">Composition actuelle</h3>
+      <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="comp"></tbody></table>
     </div>
   </div>
 </div>
@@ -88,147 +111,108 @@ const PORTFOLIOS = [
 ];
 const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
 
-let currentData = [];
-let charts = {};
+let data = [], charts = {};
 
 async function loadCards() {
   const grid = document.getElementById('grid');
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:100px;font-size:1.5rem;">Chargement...</div>';
-
   for (const p of PORTFOLIOS) {
     try {
       const txt = await fetch(p.csv).then(r => r.text());
       const lines = txt.trim().split('\n');
       const last = lines[lines.length-1].split(',');
-      const perf = parseFloat(last[1]).toFixed(1);
-      const vol  = parseFloat(last[6]).toFixed(1);
-      const dd   = parseFloat(last[8]).toFixed(1);
+      const perf = Number(last[1]).toFixed(1);
+      const vol = Number(last[6]).toFixed(1);
+      const dd = Number(last[8]).toFixed(1);
 
       grid.innerHTML += `
-        <div class="card" onclick="openModal('${p.name}', '${p.csv}')">
+        <div class="card" onclick="openModal('${p.name}','${p.csv}')">
           <div class="header"><h3>${p.name}</h3></div>
           <div class="metrics">
-            <div class="m"><strong>${perf}%</strong>Performance cumulée</div>
-            <div class="m"><strong>${vol}%</strong>Volatilité mensuelle</div>
-            <div class="m red"><strong>${dd}%</strong>Drawdown max</div>
-            <div class="m"><strong>1.9</strong>Ratio de Sharpe</div>
+            <div class="kpi"><strong>${perf}%</strong><small>Perf. cumulée</small></div>
+            <div class="kpi"><strong>${vol}%</strong><small>Vol. mensuelle</small></div>
+            <div class="kpi red"><strong>${dd}%</strong><small>Drawdown max</small></div>
+            <div class="kpi"><strong>1.9</strong><small>Sharpe</small></div>
           </div>
         </div>`;
-    } catch(e) {
-      console.error(e);
-      grid.innerHTML += `<div class="card"><div class="header"><h3>${p.name}</h3></div><div class="metrics"><p style="color:red;grid-column:1/-1;">Erreur chargement</p></div></div>`;
-    }
+    } catch(e) { console.error(e); }
   }
 }
 
 async function openModal(name, url) {
-  // PAS D'ALERT ICI – DIRECTEMENT LA MODAL
   document.getElementById('modal-title').textContent = name;
-  document.getElementById('modal').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
+  document.getElementById('modal').classList.add('active');
 
-  try {
-    const txt = await fetch(url).then(r => r.text());
-    const lines = txt.trim().split('\n').slice(1);
-    currentData = lines.map(l => {
-      const v = l.split(',');
-      return {
-        date: v[0],
-        port: +v[1], sp: +v[2], nas: +v[3],
-        volD: +v[4], volW: +v[5], volM: +v[6],
-        ddC: +v[7], ddM: +v[8],
-        retPD: +v[9], retPW: +v[10], retPM: +v[11],
-        retSD: +v[12], retSW: +v[13], retSM: +v[14],
-        retND: +v[15], retNW: +v[16], retNM: +v[17]
-      };
-    });
+  const txt = await fetch(url).then(r => r.text());
+  const lines = txt.trim().split('\n').slice(1);
+  data = lines.map(l => {
+    const v = l.split(',');
+    return {
+      date: v[0],
+      port: +v[1], sp: +v[2], nas: +v[3],
+      volD: +v[4], volW: +v[5], volM: +v[6],
+      ddC: +v[7], ddM: +v[8],
+      retPD: +v[9], retPW: +v[10], retPM: +v[11],
+      retSD: +v[12], retSW: +v[13], retSM: +v[14],
+      retND: +v[15], retNW: +v[16], retNM: +v[17]
+    };
+  });
 
-    // Composition
-    const comp = await fetch(COMP_CSV).then(r => r.text());
-    const rows = comp.trim().split('\n').slice(1).filter(r => r.startsWith(name));
-    document.getElementById('composition').innerHTML = 
-      `<table style="width:100%;border-collapse:collapse;font-size:1.2rem;">
-        <tbody>
-        ${rows.map(r => {
-          const [_,t,a,w] = r.split(',');
-          return `<tr style="border-bottom:1px solid #eee;">
-            <td style="padding:1.2rem;"><strong>${t}</strong></td>
-            <td style="padding:1.2rem;">${a}</td>
-            <td style="padding:1.2rem;text-align:right;font-weight:700;">${w}</td>
-          </tr>`;
-        }).join('')}
-        </tbody>
-      </table>`;
+  const last = data[data.length-1];
+  document.getElementById('kpi-bar').innerHTML = `
+    <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
+    <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité annualisée</div></div>
+    <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
+    <div class="kpi-big"><strong>1.9</strong><div>Ratio de Sharpe</div></div>
+  `;
 
-    drawCharts();
-  } catch(e) {
-    console.error('Erreur chargement modal:', e);
-    document.getElementById('composition').innerHTML = "<p style='text-align:center;color:red;'>Erreur de chargement des données</p>";
-  }
+  // Composition
+  const comp = await fetch(COMP_CSV).then(r => r.text());
+  document.getElementById('comp').innerHTML = comp.trim().split('\n').slice(1)
+    .filter(r => r.startsWith(name))
+    .map(r => {
+      const [_,actif,ticker,weight] = r.split(',');
+      return `<tr><td><strong>${actif}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
+    }).join('');
+
+  draw();
 }
 
-function drawCharts() {
+function draw() {
   const tf = document.getElementById('granularite').value;
   const showP = document.querySelectorAll('#modal input[type=checkbox]')[0].checked;
   const showSP = document.querySelectorAll('#modal input[type=checkbox]')[1].checked;
   const showNAS = document.querySelectorAll('#modal input[type=checkbox]')[2].checked;
 
-  const volKey = tf === 'daily' ? 'volD' : tf === 'weekly' ? 'volW' : 'volM';
-  const retPKey = tf === 'daily' ? 'retPD' : tf === 'weekly' ? 'retPW' : 'retPM';
-  const retSKey = tf === 'daily' ? 'retSD' : tf === 'weekly' ? 'retSW' : 'retSM';
-  const retNKey = tf === 'daily' ? 'retND' : tf === 'weekly' ? 'retNW' : 'retNM';
+  const volKey = tf==='daily'?'volD':tf==='weekly'?'volW':'volM';
+  const retKey = tf==='daily'?'retPD':tf==='weekly'?'retPW':'retPM';
+  const retSKey = tf==='daily'?'retSD':tf==='weekly'?'retSW':'retSM';
+  const retNKey = tf==='daily'?'retND':tf==='weekly'?'retNW':'retNM';
 
-  const labels = currentData.map(d => d.date.slice(5).replace('-', '/'));
+  const labels = data.map(d => d.date.slice(5));
+
   Object.values(charts).forEach(c => c?.destroy());
-  charts = {};
 
-  // Performance
-  charts.perf = new Chart(document.getElementById('chart-perf'), {
-    type: 'line',
-    data: { labels, datasets: [
-      ...(showP ? [{label:'Portefeuille', data:currentData.map(d=>d.port), borderColor:'#ca8a04', tension:0.3}] : []),
-      ...(showSP ? [{label:'S&P 500', data:currentData.map(d=>d.sp), borderColor:'#dc2626', tension:0.3}] : []),
-      ...(showNAS ? [{label:'NASDAQ', data:currentData.map(d=>d.nas), borderColor:'#3b82f6', tension:0.3}] : [])
-    ] },
-    options: {responsive:true, plugins:{title:{display:true,text:'Performance cumulée (%)'}}, scales:{y:{grid:{color:'#eee'}}}}
-  });
+  charts.perf = new Chart('perf', {type:'line',data:{labels,datasets:[
+    ...(showP ? [{label:'Portefeuille',data:data.map(d=>d.port),borderColor:'#ca8a04',borderWidth:2.5,tension:0.3,pointRadius:0}] : []),
+    ...(showSP ? [{label:'S&P 500',data:data.map(d=>d.sp),borderColor:'#64748b',borderWidth:1.5,tension:0.3,pointRadius:0,borderDash:[5,5]}] : []),
+    ...(showNAS ? [{label:'NASDAQ',data:data.map(d=>d.nas),borderColor:'#94a3b8',borderWidth:1.5,tension:0.3,pointRadius:0,borderDash:[8,8]}] : [])
+  ]},options:{plugins:{legend:{position:'top',labels:{font:{size:14}}}},scales:{y:{grid:{color:'#f1f5f9'},ticks:{font:{size:13}}}}}});
 
-  // Volatilité
-  charts.vol = new Chart(document.getElementById('chart-vol'), {
-    type: 'line',
-    data: { labels, datasets: [{label:'Volatilité', data:currentData.map(d=>d[volKey]), borderColor:'#f59e0b', backgroundColor:'rgba(251,158,11,0.1)', fill:true}] },
-    options: {responsive:true, plugins:{title:{display:true,text:'Volatilité (%)'}}}
-  });
+  charts.vol = new Chart('vol', {type:'line',data:{labels,datasets:[{
+    label:'Volatilité annualisée',data:data.map(d=>d[volKey]),borderColor:'#ca8a04',backgroundColor:'rgba(202,138,4,0.08)',fill:true,borderWidth:2,tension:0.3
+  }]},options:{plugins:{title:{display:true,text:'Volatilité (%)',font:{size:16}}}},scales:{y:{grid:{color:'#f1f5f9'}}}}});
 
-  // Drawdown
-  charts.dd = new Chart(document.getElementById('chart-dd'), {
-    type: 'line',
-    data: { labels, datasets: [
-      {label:'Drawdown actuel', data:currentData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true},
-      {label:'Drawdown max', data:currentData.map(d=>d.ddM), borderColor:'#7f1d1d', borderDash:[6,6]}
-    ] },
-    options: {responsive:true, plugins:{title:{display:true,text:'Drawdown (%)'}}}
-  });
+  charts.dd = new Chart('dd', {type:'line',data:{labels,datasets:[
+    {label:'Drawdown actuel',data:data.map(d=>d.ddC),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.12)',fill:true,borderWidth:2},
+    {label:'Drawdown max',data:data.map(d=>d.ddM),borderColor:'#7f1d1d',borderWidth:1.5,borderDash:[6,6]}
+  ]},options:{plugins:{title:{display:true,text:'Drawdown (%)',font:{size:16}}}},scales:{y:{grid:{color:'#f1f5f9'}}}}});
 
-  // Retours
-  charts.ret = new Chart(document.getElementById('chart-ret'), {
-    type: 'bar',
-    data: { labels, datasets: [
-      ...(showP ? [{label:'Portefeuille', data:currentData.map(d=>d[retPKey]), backgroundColor:'#ca8a04'}] : []),
-      ...(showSP ? [{label:'S&P 500', data:currentData.map(d=>d[retSKey]), backgroundColor:'#dc2626'}] : []),
-      ...(showNAS ? [{label:'NASDAQ', data:currentData.map(d=>d[retNKey]), backgroundColor:'#3b82f6'}] : [])
-    ] },
-    options: {responsive:true, plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`}}}
-  });
+  charts.ret = new Chart('ret', {type:'bar',data:{labels,datasets:[
+    ...(showP ? [{label:'Portefeuille',data:data.map(d=>d[retKey]),backgroundColor:'#ca8a04'}] : []),
+    ...(showSP ? [{label:'S&P 500',data:data.map(d=>d[retSKey]),backgroundColor:'#e2e8f0'}] : []),
+    ...(showNAS ? [{label:'NASDAQ',data:data.map(d=>d[retNKey]),backgroundColor:'#cbd5e1'}] : [])
+  ]},options:{plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`,font:{size:16}}}},scales:{y:{grid:{color:'#f1f5f9'}}}}});
 }
-
-// Fermeture modal
-document.getElementById('modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('modal')) {
-    document.getElementById('modal').style.display = 'none';
-    document.body.style.overflow = '';
-  }
-});
 
 loadCards();
 </script>
