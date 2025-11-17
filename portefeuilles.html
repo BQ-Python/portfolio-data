@@ -191,16 +191,44 @@ async function openModal(name, url) {
   const lines = txt.trim().split('\n').slice(1);
   currentData = lines.map(l => {
     const v = l.split(',');
-    return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3], volM: +v[6], ddC: +v[7], ddM: +v[8] };
+    return { 
+      date: v[0], 
+      port: +v[1], 
+      sp: +v[2], 
+      nas: +v[3], 
+      volM: +v[6], 
+      ddC: +v[7], 
+      ddM: +v[8] 
+    };
   });
 
   const last = currentData[currentData.length-1];
+  const currentYear = new Date().getFullYear();
+
+  // YTD
+  const ytdRow = currentData.find(d => d.date.startsWith(`${currentYear}-01-`)) || currentData[0];
+  const perfYTD = ((last.port / ytdRow.port) - 1) * 100;
+
+  // Perf annualisée (CAGR)
+  const startDate = new Date(currentData[0].date);
+  const endDate = new Date(last.date);
+  const years = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25);
+  const totalReturn = last.port / 100;
+  const perfAnn = (Math.pow(totalReturn + 1, 1/years) - 1) * 100;
+
+  // Sharpe réel
+  const sharpe = last.volM > 0 ? (perfAnn / last.volM).toFixed(2) : "N/A";
+
+  // KPI dans la modal – maintenant TOUT est dynamique
   document.getElementById('kpi-bar').innerHTML = `
     <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
+    <div class="kpi-big"><strong>${perfYTD.toFixed(1)}%</strong><div>YTD ${currentYear}</div></div>
+    <div class="kpi-big"><strong>${perfAnn.toFixed(1)}%</strong><div>Performance annualisée</div></div>
     <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité annualisée</div></div>
     <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-    <div class="kpi-big"><strong>1.9</strong><div>Ratio de Sharpe</div></div>`;
+    <div class="kpi-big"><strong>${sharpe}</strong><div>Ratio de Sharpe</div></div>`;
 
+  // Composition
   const comp = await fetch(COMP_CSV).then(r => r.text());
   document.getElementById('comp').innerHTML = comp.trim().split('\n').slice(1)
     .filter(r => r.startsWith(name))
