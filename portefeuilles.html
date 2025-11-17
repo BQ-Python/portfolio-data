@@ -26,15 +26,12 @@
     .kpi strong{font-size:2.8rem;display:block;color:var(--g);font-weight:700;}
     .kpi.red strong{color:#dc2626;}
     .kpi small{font-size:0.95rem;color:var(--gris);}
-
-    /* Modal */
     #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;}
     #modal.active{display:flex;}
     .modal-content{background:white;border-radius:24px;max-width:1500px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,0.4);}
     .modal-header{background:var(--n);color:white;padding:2rem 3rem;display:flex;justify-content:space-between;align-items:center;border-radius:24px 24px 0 0;}
     .modal-header h2{font-size:2.4rem;margin:0;}
-    .close{font-size:3.5rem;cursor:pointer;opacity:0.8;transition:.3s;}
-    .close:hover{opacity:1;}
+    .close{font-size:3.5rem;cursor:pointer;opacity:0.8;}
     .modal-body{padding:3rem;}
     .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;margin-bottom:3rem;}
     .kpi-big{background:var(--l);padding:1.8rem 2rem;border-radius:16px;text-align:center;border-left:5px solid var(--g);}
@@ -49,7 +46,6 @@
     th,td{padding:1rem;border-bottom:1px solid #e2e8f0;text-align:left;}
     th{background:var(--l);font-weight:700;color:var(--n);}
     tr:last-child td{border-bottom:none;}
-    .error{color:#dc2626;text-align:center;padding:2rem;}
   </style>
 </head>
 <body>
@@ -68,19 +64,17 @@
 
 <div class="container">
   <h1>Nos Portefeuilles</h1>
-  <div class="grid" id="grid"></div>
+  <div class="grid" id="grid">Chargement...</div>
 </div>
 
-<!-- Modal -->
 <div id="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 id="modal-title">Portefeuille</h2>
-      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modal-title"></h2>
+      <span class="close" onclick="document.getElementById('modal').classList.remove('active')">&times;</span>
     </div>
     <div class="modal-body">
       <div class="kpi-bar" id="kpi-bar"></div>
-      
       <div class="controls">
         <select id="granularite" onchange="drawCharts()">
           <option value="daily">Journalier</option>
@@ -91,15 +85,13 @@
         <label><input type="checkbox" checked onchange="drawCharts()"> S&P 500</label>
         <label><input type="checkbox" checked onchange="drawCharts()"> NASDAQ</label>
       </div>
-
       <div class="charts">
         <canvas id="perf"></canvas>
         <canvas id="vol"></canvas>
         <canvas id="dd"></canvas>
         <canvas id="ret"></canvas>
       </div>
-
-      <h3 style="text-align:center;margin:3rem 0 1.5rem;font-size:1.8rem;">Composition actuelle</h3>
+      <h3 style="text-align:center;margin:3rem 0 1.5rem;">Composition actuelle</h3>
       <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="comp"></tbody></table>
     </div>
   </div>
@@ -116,30 +108,19 @@ const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/ref
 let currentData = [];
 let charts = {};
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('active');
-  document.body.style.overflow = '';
-  Object.values(charts).forEach(c => c?.destroy());
-  charts = {};
-}
-
 async function loadCards() {
   const grid = document.getElementById('grid');
-  grid.innerHTML = '<div class="error">Chargement des performances...</div>';
-
   for (const p of PORTFOLIOS) {
     try {
-      const response = await fetch(p.csv);
-      if (!response.ok) throw new Error('CSV introuvable');
-      const txt = await response.text();
+      const txt = await fetch(p.csv).then(r => r.text());
       const lines = txt.trim().split('\n');
       const last = lines[lines.length-1].split(',');
-      const perf = parseFloat(last[1] || 0).toFixed(1);
-      const vol = parseFloat(last[6] || 0).toFixed(1);
-      const dd = parseFloat(last[8] || 0).toFixed(1);
+      const perf = parseFloat(last[1]).toFixed(1);
+      const vol  = parseFloat(last[6]).toFixed(1);
+      const dd   = parseFloat(last[8]).toFixed(1);
 
       grid.innerHTML += `
-        <div class="card" onclick="openModal('${p.name}', '${p.csv}')">
+        <div class="card" onclick="openModal('${p.name}','${p.csv}')">
           <div class="header"><h3>${p.name}</h3></div>
           <div class="metrics">
             <div class="kpi"><strong>${perf}%</strong><small>Perf. cumulée</small></div>
@@ -148,59 +129,44 @@ async function loadCards() {
             <div class="kpi"><strong>1.9</strong><small>Sharpe</small></div>
           </div>
         </div>`;
-    } catch (e) {
-      console.error(e);
-      grid.innerHTML += `<div class="error">Erreur ${p.name}</div>`;
-    }
+    } catch(e) { console.error(e); }
   }
 }
 
 async function openModal(name, url) {
-  closeModal();
   document.getElementById('modal-title').textContent = name;
   document.getElementById('modal').classList.add('active');
-  document.body.style.overflow = 'hidden';
 
-  try {
-    const txt = await fetch(url).then(r => r.text());
-    const lines = txt.trim().split('\n').slice(1);
-    currentData = lines.map(l => {
-      const v = l.split(',');
-      return {
-        date: v[0],
-        port: +v[1], sp: +v[2], nas: +v[3],
-        volD: +v[4], volW: +v[5], volM: +v[6],
-        ddC: +v[7], ddM: +v[8],
-        retPD: +v[9], retPW: +v[10], retPM: +v[11],
-        retSD: +v[12], retSW: +v[13], retSM: +v[14],
-        retND: +v[15], retNW: +v[16], retNM: +v[17]
-      };
-    });
+  const txt = await fetch(url).then(r => r.text());
+  const lines = txt.trim().split('\n').slice(1);
+  currentData = lines.map(l => {
+    const v = l.split(',');
+    return {
+      date: v[0], port: +v[1], sp: +v[2], nas: +v[3],
+      volD: +v[4], volW: +v[5], volM: +v[6],
+      ddC: +v[7], ddM: +v[8],
+      retPD: +v[9], retPW: +v[10], retPM: +v[11],
+      retSD: +v[12], retSW: +v[13], retSM: +v[14],
+      retND: +v[15], retNW: +v[16], retNM: +v[17]
+    };
+  });
 
-    const last = currentData[currentData.length-1];
-    document.getElementById('kpi-bar').innerHTML = `
-      <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
-      <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité annualisée</div></div>
-      <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-      <div class="kpi-big"><strong>1.9</strong><div>Ratio de Sharpe</div></div>`;
+  const last = currentData[currentData.length-1];
+  document.getElementById('kpi-bar').innerHTML = `
+    <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
+    <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité annualisée</div></div>
+    <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
+    <div class="kpi-big"><strong>1.9</strong><div>Ratio de Sharpe</div></div>`;
 
-    // Composition
-    try {
-      const compTxt = await fetch(COMP_CSV).then(r => r.text());
-      const rows = compTxt.trim().split('\n').slice(1).filter(r => r.startsWith(name));
-      document.getElementById('comp').innerHTML = rows.map(r => {
-        const [_,actif,ticker,weight] = r.split(',');
-        return `<tr><td><strong>${actif}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
-      }).join('');
-    } catch(e) {
-      document.getElementById('comp').innerHTML = '<tr><td colspan="3" style="text-align:center;color:#64748b;">Composition non disponible</td></tr>';
-    }
+  const comp = await fetch(COMP_CSV).then(r => r.text());
+  document.getElementById('comp').innerHTML = comp.trim().split('\n').slice(1)
+    .filter(r => r.startsWith(name))
+    .map(r => {
+      const [_,a,t,w] = r.split(',');
+      return `<tr><td><strong>${a}</strong></td><td>${t}</td><td style="text-align:right;font-weight:700;">${w}</td></tr>`;
+    }).join('');
 
-    drawCharts();
-  } catch (e) {
-    console.error(e);
-    document.getElementById('kpi-bar').innerHTML = '<div class="error">Données indisponibles</div>';
-  }
+  drawCharts();
 }
 
 function drawCharts() {
@@ -219,44 +185,27 @@ function drawCharts() {
   Object.values(charts).forEach(c => c?.destroy());
   charts = {};
 
-  // 1. Performance cumulée
-  charts.perf = new Chart('perf', {
-    type: 'line',
-    data: { labels, datasets: [
-      ...(showP  ? [{label:'Portefeuille', data:currentData.map(d=>d.port), borderColor:'#ca8a04', borderWidth:2.5, tension:0.3, pointRadius:0}] : []),
-      ...(showSP ? [{label:'S&P 500',     data:currentData.map(d=>d.sp),   borderColor:'#64748b', borderWidth:1.5, tension:0.3, pointRadius:0, borderDash:[5,5]}] : []),
-      ...(showNAS? [{label:'NASDAQ',      data:currentData.map(d=>d.nas),  borderColor:'#94a3b8', borderWidth:1.5, tension:0.3, pointRadius:0, borderDash:[8,8]}] : [])
-    ]},
-    options: {responsive:true, plugins:{legend:{position:'top',labels:{font:{size:14}}}}, scales:{y:{grid:{color:'#f1f5f9'}}}}
-  });
+  charts.perf = new Chart('perf', {type:'line',data:{labels,datasets:[
+    ...(showP  ? [{label:'Portefeuille',data:currentData.map(d=>d.port),borderColor:'#ca8a04',borderWidth:2.5,tension:0.3,pointRadius:0}] : []),
+    ...(showSP ? [{label:'S&P 500',data:currentData.map(d=>d.sp),borderColor:'#64748b',borderWidth:1.5,tension:0.3,pointRadius:0,borderDash:[5,5]}] : []),
+    ...(showNAS? [{label:'NASDAQ',data:currentData.map(d=>d.nas),borderColor:'#94a3b8',borderWidth:1.5,tension:0.3,pointRadius:0,borderDash:[8,8]}] : [])
+  ]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{grid:{color:'#f1f5f9'}}}}});
 
-  // 2. Volatilité
-  charts.vol = new Chart('vol', {
-    type: 'line',
-    data: { labels, datasets: [{label:'Volatilité annualisée', data:currentData.map(d=>d[volKey]), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.08)', fill:true, borderWidth:2, tension:0.3}]},
-    options: {responsive:true, plugins:{title:{display:true,text:'Volatilité (%)',font:{size:16}}}}
-  });
+  charts.vol = new Chart('vol', {type:'line',data:{labels,datasets:[{
+    label:'Volatilité annualisée',data:currentData.map(d=>d[volKey]),borderColor:'#ca8a04',backgroundColor:'rgba(202,138,4,0.08)',fill:true,borderWidth:2,tension:0.3
+  }]},options:{responsive:true,plugins:{title:{display:true,text:'Volatilité (%)'}}}});
 
-  // 3. Drawdown
-  charts.dd = new Chart('dd', {
-    type: 'line',
-    data: { labels, datasets: [
-      {label:'Drawdown actuel', data:currentData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.12)', fill:true, borderWidth:2},
-      {label:'Drawdown max',    data:currentData.map(d=>d.ddM), borderColor:'#7f1d1d', borderWidth:1.5, borderDash:[6,6]}
-    ]},
-    options: {responsive:true, plugins:{title:{display:true,text:'Drawdown (%)',font:{size:16}}}}
-  });
+  charts.dd = new Chart('dd', {type:'line',data:{labels,datasets:[
+    {label:'Drawdown actuel',data:currentData.map(d=>d.ddC),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.12)',fill:true,borderWidth:2},
+    {label:'Drawdown max',data:currentData.map(d=>d.ddM),borderColor:'#7f1d1d',borderWidth:1.5,borderDash:[6,6]}
+  ]},options:{responsive:true,plugins:{title:{display:true,text:'Drawdown (%)'}}}});
 
-  // 4. Retours périodiques
-  charts.ret = new Chart('ret', {
-    type: 'bar',
-    data: { labels, datasets: [
-      ...(showP  ? [{label:'Portefeuille', data:currentData.map(d=>d[retKey]),  backgroundColor:'#ca8a04'}] : []),
-      ...(showSP ? [{label:'S&P 500',     data:currentData.map(d=>d[retSKey]), backgroundColor:'#e2e8f0'}] : []),
-      ...(showNAS? [{label:'NASDAQ',      data:currentData.map(d=>d[retNKey]), backgroundColor:'#cbd5e1'}] : [])
-    ]},
-    options: {responsive:true, plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`,font:{size:16}}}}
-  });
+  // ← LIGNE CORRIGÉE ICI (une seule accolade de fermeture)
+  charts.ret = new Chart('ret', {type:'bar',data:{labels,datasets:[
+    ...(showP  ? [{label:'Portefeuille',data:currentData.map(d=>d[retKey]),backgroundColor:'#ca8a04'}] : []),
+    ...(showSP ? [{label:'S&P 500',data:currentData.map(d=>d[retSKey]),backgroundColor:'#e2e8f0'}] : []),
+    ...(showNAS? [{label:'NASDAQ',data:currentData.map(d=>d[retNKey]),backgroundColor:'#cbd5e1'}] : [])
+  ]},options:{responsive:true,plugins:{title:{display:true,text:`Retour ${tf==='monthly'?'mensuel':tf==='weekly'?'hebdomadaire':'journalier'} (%)`,font:{size:16}}}}});
 }
 
 loadCards();
