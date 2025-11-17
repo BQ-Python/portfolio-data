@@ -76,7 +76,7 @@
 
 <footer>&copy; 2025 Portefeuilles Financiers</footer>
 
-<script src="https://cdn.jsdelivr.net/npmript>
+https://cdn.jsdelivr.net/npm/chart.js
 <script>
 const portfolios = [
   { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_croissance%20(1).csv" },
@@ -98,7 +98,7 @@ portfolios.forEach(p => {
     <button onclick="openModal('${p.name}', '${p.csv}')">Voir détails</button>`;
   grid.appendChild(card);
   fetch(p.csv).then(r => r.text()).then(text => {
-    const rows = text.split('\\n').slice(1).filter(r => r);
+    const rows = text.split('\n').slice(1).filter(r => r);
     const last = rows[rows.length-1].split(',');
     document.getElementById(`${p.name}-perf`).innerText = `Perf: ${(parseFloat(last[1])*100).toFixed(2)}%`;
     document.getElementById(`${p.name}-vol`).innerText = `Vol: ${(parseFloat(last[4])*100).toFixed(2)}%`;
@@ -112,7 +112,7 @@ function openModal(name, csvUrl) {
   document.getElementById('details-modal').style.display = 'flex';
   document.getElementById('modal-title').innerText = name;
   fetch(csvUrl).then(r => r.text()).then(text => {
-    const rows = text.split('\\n').slice(1).filter(r => r);
+    const rows = text.split('\n').slice(1).filter(r => r);
     currentData = rows.map(row => {
       const cols = row.split(',');
       return {
@@ -169,7 +169,7 @@ function updateCharts() {
 
 function loadComposition(name) {
   fetch(compositionCSV).then(r => r.text()).then(text => {
-    const rows = text.split('\\n').slice(1).filter(r => r);
+    const rows = text.split('\n').slice(1).filter(r => r);
     const filtered = rows.map(row => row.split(',')).filter(cols => cols[0] === name);
     let html = '<tr><th>Ticker</th><th>Action</th><th>Poids (%)</th></tr>';
     filtered.forEach(cols => {
