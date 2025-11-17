@@ -91,7 +91,7 @@ const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/ref
 let currentData = [];
 let charts = {};
 
-// Charge les cartes au démarrage
+// ← Remplace toute la fonction loadCards() actuelle par celle-ci
 async function loadCards() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
@@ -114,7 +114,10 @@ async function loadCards() {
             <div class="m"><strong>1.9</strong>Ratio de Sharpe</div>
           </div>
         </div>`;
-    } catch(e) { console.error(e); }
+    } catch(e) {
+      console.error(e);
+      grid.innerHTML += `<div class="card"><div class="header"><h3>${p.name}</h3></div><div class="metrics"><p style="color:red;grid-column:1/-1;">Erreur chargement</p></div></div>`;
+    }
   }
 }
 
