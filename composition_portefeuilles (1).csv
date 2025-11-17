@@ -1,0 +1,11 @@
+portfolio_name,ticker,nom_action,poids
+Portefeuille Croissance,AAPL,Apple Inc.,25
+Portefeuille Croissance,MSFT,Microsoft Corp.,20
+Portefeuille Croissance,GOOGL,Alphabet Inc.,15
+Portefeuille Croissance,AMZN,Amazon.com Inc.,10
+Portefeuille Croissance,TSLA,Tesla Inc.,30
+Portefeuille Défensif,JNJ,Johnson & Johnson,30
+Portefeuille Défensif,PG,Procter & Gamble,25
+Portefeuille Défensif,KO,Coca-Cola Co.,20
+Portefeuille Défensif,PEP,PepsiCo Inc.,15
+Portefeuille Défensif,MRK,Merck & Co.,10
