@@ -4,105 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AltInvest Capital | Gestion Privée de Patrimoine</title>
-  <meta name="description" content="Gestion de patrimoine indépendante – Portefeuilles institutionnels depuis 2020.">
+  <meta name="description" content="Gestion indépendante de patrimoine - Portefeuilles institutionnels depuis 2020.">
   <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
   <style>
-    :root {
-      --navy: #0f172a;
-      --gold: #ca8a04;
-      --gray: #e2e8f0;
-      --dark: #1e293b;
-      --light: #f8fafc;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: 'Satoshi', sans-serif; background: var(--light); color: var(--dark); line-height: 1.7; }
-    
-    /* NAV */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      background: rgba(15,23,42,0.98);
-      backdrop-filter: blur(12px);
-      z-index: 1000;
-      padding: 1.2rem 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .nav-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 3rem;
-    }
-    .logo {
-      font-size: 1.8rem;
-      font-weight: 900;
-      color: white;
-    }
-    .logo span { color: var(--gold); }
-    .nav-links a {
-      color: white;
-      text-decoration: none;
-      margin: 0 1.8rem;
-      font-weight: 500;
-      font-size: 1.05rem;
-      transition: color 0.3s;
-    }
-    .nav-links a:hover { color: var(--gold); }
-    .nav-links a.active { color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 0.5rem; }
-
-    /* HERO */
-    .hero {
-      height: 100vh;
-      background: linear-gradient(rgba(15,23,42,0.88), rgba(15,23,42,0.92)), url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2670') center/cover;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: white;
-    }
-    .hero-content h1 {
-      font-size: 4.5rem;
-      font-weight: 900;
-      margin-bottom: 1.5rem;
-    }
-    .hero-content p {
-      font-size: 1.5rem;
-      max-width: 800px;
-      margin: 0 auto 3rem;
-      opacity: 0.9;
-    }
-    .btn {
-      background: var(--gold);
-      color: #0f172a;
-      padding: 1.2rem 3rem;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    .btn:hover { background: #f5d28e; transform: translateY(-3px); }
-
-    footer {
-      background: var(--navy);
-      color: white;
-      text-align: center;
-      padding: 3rem;
-      font-size: 0.95rem;
-    }
-    @media (max-width: 768px) {
-      .hero-content h1 { font-size: 3rem; }
-      .nav-container { padding: 0 1.5rem; }
-      .nav-links { gap: 1rem; }
-    }
+    :root{--navy:#0f172a;--gold:#ca8a04;--gray:#e2e8f0;--dark:#1e293b;--light:#f8fafc;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Satoshi',sans-serif;background:var(--light);color:var(--dark);line-height:1.7;}
+    nav{position:fixed;top:0;left:0;right:0;background:rgba(15,23,42,0.98);backdrop-filter:blur(12px);z-index:1000;padding:1.2rem 0;border-bottom:1px solid rgba(255,255,255,0.1);}
+    .nav-container{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 3rem;}
+    .logo{font-size:1.9rem;font-weight:900;color:white;}
+    .logo span{color:var(--gold);}
+    .nav-links a{color:white;text-decoration:none;margin:0 2rem;font-weight:500;transition:.3s;}
+    .nav-links a:hover,.nav-links a.active{color:var(--gold);}
+    .hero{height:100vh;background:linear-gradient(rgba(15,23,42,0.9),rgba(15,23,42,0.95)),url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2670') center/cover;display:flex;align-items:center;justify-content:center;text-align:center;color:white;}
+    .hero h1{font-size:4.8rem;font-weight:900;margin-bottom:1.5rem;}
+    .hero p{font-size:1.5rem;max-width:900px;margin:0 auto 3rem;opacity:0.9;}
+    .btn{background:var(--gold);color:#0f172a;padding:1.3rem 3.5rem;border:none;border-radius:8px;font-weight:700;font-size:1.2rem;cursor:pointer;transition:.4s;}
+    .btn:hover{background:#f5d28e;transform:translateY(-4px);}
+    footer{background:var(--navy);color:white;text-align:center;padding:4rem;font-size:0.95rem;}
+    @media(max-width:768px){.hero h1{font-size:3.2rem;}.nav-container{padding:0 1.5rem;}}
   </style>
 </head>
 <body>
-
 <nav>
   <div class="nav-container">
     <div class="logo">AltInvest<span>.</span></div>
@@ -115,17 +40,20 @@
   </div>
 </nav>
 
-<section class="hero">
-  <div class="hero-content">
+<section class="hero" data-aos="fade-up">
+  <div>
     <h1>Gestion Privée de Patrimoine</h1>
-    <p>Des portefeuilles institutionnels construits avec rigueur quantitative.<br>Indépendance, transparence, performance.</p>
+    <p>Portefeuilles institutionnels construits avec rigueur quantitative.<br>Indépendance • Transparence • Performance mesurable.</p>
     <a href="portefeuilles.html" class="btn">Découvrir nos stratégies</a>
   </div>
 </section>
 
 <footer>
-  <p>&copy; 2025 AltInvest Capital – Conseiller en placement indépendant agréé IIROC</p>
+  <p>© 2025 AltInvest Capital – Conseiller en placement indépendant agréé IIROC</p>
   <p>Montréal, Québec, Canada</p>
 </footer>
+
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>AOS.init({duration:1200});</script>
 </body>
 </html>
