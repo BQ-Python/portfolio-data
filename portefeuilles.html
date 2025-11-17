@@ -236,11 +236,11 @@ async function openModal(name, url) {
     <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
     <div class="kpi-big"><strong>${sharpe}</strong><div>Ratio de Sharpe</div></div>`;
 
-  // Composition – CORRIGÉE (match exact sur nom, sans espace)
+  // Composition – CORRIGÉE (split sur virgule, trim sur nom pour matcher exactement)
   const comp = await fetch(COMP_CSV).then(r => r.text());
   const rows = comp.trim().split('\n').slice(1).filter(r => {
     const [portName] = r.split(',');
-    return portName.trim() === name.trim(); // match exact, sans espace
+    return portName.replace(/^\s+|\s+$/g, '') === name; // trim + match exact
   });
   document.getElementById('comp').innerHTML = rows.map(r => {
     const [_,a,t,w] = r.split(',');
