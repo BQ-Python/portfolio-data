@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portefeuilles Financiers</title>
+  https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
+    header { background: #10b981; color: white; padding: 15px; text-align: center; font-size: 24px; }
+    .container { max-width: 1200px; margin: auto; padding: 20px; }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+    .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 300px; padding: 20px; text-align: center; }
+    .metrics { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
+    .metric-box { background: #f3f4f6; padding: 10px; border-radius: 8px; width: 45%; font-size: 14px; }
+    button { background: #10b981; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+    button:hover { background: #059669; }
+    /* Modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 1000px; overflow-y: auto; max-height: 90%; }
+    .close { float: right; cursor: pointer; font-size: 20px; }
+    .charts { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+    canvas { background: #fff; border-radius: 8px; padding: 10px; }
+    select { margin: 10px 0; padding: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background: #10b981; color: white; }
+    footer { background: #10b981; color: white; text-align: center; padding: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+<header>Portefeuilles Financiers</header>
+<div class="container">
+  <h2>Nos Portefeuilles</h2>
+  <div class="grid" id="portfolio-grid"></div>
+
+  <h2>Demandez un devis</h2>
+  <form style="max-width:500px;margin:auto;">
+    <input type="text" placeholder="Nom" style="width:100%;margin-bottom:10px;padding:8px;">
+    <input type="email" placeholder="Email" style="width:100%;margin-bottom:10px;padding:8px;">
+    <select style="width:100%;margin-bottom:10px;padding:8px;">
+      <option>Portefeuille Croissance</option>
+      <option>Portefeuille Défensif</option>
+    </select>
+    <textarea placeholder="Message" style="width:100%;margin-bottom:10px;padding:8px;"></textarea>
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <h2>Nos Méthodes d’Optimisation</h2>
+  <p style="text-align:center;">Nous utilisons des techniques avancées de diversification, d’optimisation de la volatilité et de gestion du risque pour maximiser vos rendements.</p>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="details-modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2 id="modal-title"></h2>
+    <div>
+      <label for="timeframe">Pas de temps :</label>
+      <select id="timeframe" onchange="updateCharts()">
+        <option value="daily">Journalier</option>
+        <option value="weekly">Hebdomadaire</option>
+        <option value="monthly">Mensuel</option>
+      </select>
+    </div>
+    <div class="charts">
+      <canvas id="chart-performance" width="400" height="300"></canvas>
+      <canvas id="chart-volatility" width="400" height="300"></canvas>
+      <canvas id="chart-drawdown" width="400" height="300"></canvas>
+    </div>
+    <h3>Composition du portefeuille</h3>
+    <table id="composition-table"></table>
+  </div>
+</div>
+
+<footer>&copy; 2025 Portefeuilles Financiers</footer>
+
+<script src="https://cdn.jsdelivr.net/npmript>
+<script>
+const portfolios = [
+  { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/TON_USER/TON_REPO/main/portefeuille_croissance.csv" },
+  { name: "Portefeuille Défensif", csv: "https://raw.githubusercontent.com/TON_USER/TON_REPO/main/portefeuille_defensif.csv" }
+];
+const compositionCSV = "https://raw.githubusercontent.com/TON_USER/TON_REPO/main/composition_portefeuilles.csv";
+
+const grid = document.getElementById('portfolio-grid');
+portfolios.forEach(p => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<h3>${p.name}</h3>
+    <div class="metrics">
+      <div class="metric-box" id="${p.name}-perf">Perf: -</div>
+      <div class="metric-box" id="${p.name}-vol">Vol: -</div>
+      <div class="metric-box" id="${p.name}-draw">Drawdown: -</div>
+      <div class="metric-box" id="${p.name}-sharpe">Sharpe: -</div>
+    </div>
+    <button onclick="openModal('${p.name}', '${p.csv}')">Voir détails</button>`;
+  grid.appendChild(card);
+  fetch(p.csv).then(r => r.text()).then(text => {
+    const rows = text.split('\\n').slice(1).filter(r => r);
+    const last = rows[rows.length-1].split(',');
+    document.getElementById(`${p.name}-perf`).innerText = `Perf: ${(parseFloat(last[1])*100).toFixed(2)}%`;
+    document.getElementById(`${p.name}-vol`).innerText = `Vol: ${(parseFloat(last[4])*100).toFixed(2)}%`;
+    document.getElementById(`${p.name}-draw`).innerText = `Drawdown: ${(parseFloat(last[7])*100).toFixed(2)}%`;
+    document.getElementById(`${p.name}-sharpe`).innerText = `Sharpe: ${parseFloat(last[8]).toFixed(2)}`;
+  });
+});
+
+let perfChart, volChart, drawChart, currentData = [];
+function openModal(name, csvUrl) {
+  document.getElementById('details-modal').style.display = 'flex';
+  document.getElementById('modal-title').innerText = name;
+  fetch(csvUrl).then(r => r.text()).then(text => {
+    const rows = text.split('\\n').slice(1).filter(r => r);
+    currentData = rows.map(row => {
+      const cols = row.split(',');
+      return {
+        date: cols[0],
+        perf: parseFloat(cols[1])*100,
+        sp500: parseFloat(cols[2])*100,
+        nasdaq: parseFloat(cols[3])*100,
+        volDaily: parseFloat(cols[4])*100,
+        volWeekly: parseFloat(cols[5])*100,
+        volMonthly: parseFloat(cols[6])*100,
+        drawdown: parseFloat(cols[7])*100
+      };
+    });
+    updateCharts();
+    loadComposition(name);
+  });
+}
+
+function updateCharts() {
+  const timeframe = document.getElementById('timeframe').value;
+  const labels = currentData.map(d => d.date);
+  const perfData = currentData.map(d => d.perf);
+  const sp500Data = currentData.map(d => d.sp500);
+  const nasdaqData = currentData.map(d => d.nasdaq);
+  const volData = currentData.map(d => timeframe === 'daily' ? d.volDaily : timeframe === 'weekly' ? d.volWeekly : d.volMonthly);
+  const drawData = currentData.map(d => d.drawdown);
+
+  if (perfChart) perfChart.destroy();
+  if (volChart) volChart.destroy();
+  if (drawChart) drawChart.destroy();
+
+  perfChart = new Chart(document.getElementById('chart-performance'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'Portefeuille', data: perfData, borderColor: '#10b981' },
+      { label: 'S&P 500', data: sp500Data, borderColor: '#ef4444' },
+      { label: 'NASDAQ', data: nasdaqData, borderColor: '#3b82f6' }
+    ]},
+    options: { responsive: true, scales: { y: { title: { display: true, text: 'Perf (%)' }}}}
+  });
+
+  volChart = new Chart(document.getElementById('chart-volatility'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Volatilité', data: volData, borderColor: '#f59e0b' }]},
+    options: { responsive: true, scales: { y: { title: { display: true, text: 'Vol (%)' }}}}
+  });
+
+  drawChart = new Chart(document.getElementById('chart-drawdown'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Drawdown', data: drawData, borderColor: '#6b7280' }]},
+    options: { responsive: true, scales: { y: { title: { display: true, text: 'Drawdown (%)' }}}}
+  });
+}
+
+function loadComposition(name) {
+  fetch(compositionCSV).then(r => r.text()).then(text => {
+    const rows = text.split('\\n').slice(1).filter(r => r);
+    const filtered = rows.map(row => row.split(',')).filter(cols => cols[0] === name);
+    let html = '<tr><th>Ticker</th><th>Action</th><th>Poids (%)</th></tr>';
+    filtered.forEach(cols => {
+      html += `<tr><td>${cols[1]}</td><td>${cols[2]}</td><td>${cols[3]}</td></tr>`;
+    });
+    document.getElementById('composition-table').innerHTML = html;
+  });
+}
+
+function closeModal() {
+  document.getElementById('details-modal').style.display = 'none';
+}
+</script>
+</body>
+</html>
