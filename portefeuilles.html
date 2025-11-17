@@ -124,7 +124,6 @@ async function loadCards() {
 
 // Fonction openModal SANS ALERT (vraie modal)
 async function openModal(name, url) {
-  // Pas d'alert ! Directement la modal
   document.getElementById('modal-title').textContent = name;
   document.getElementById('modal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -149,7 +148,7 @@ async function openModal(name, url) {
     const comp = await fetch(COMP_CSV).then(r => r.text());
     const rows = comp.trim().split('\n').slice(1).filter(r => r.startsWith(name));
     document.getElementById('composition').innerHTML = 
-      `<table style="width:100%;border-collapse:collapse;font-size:1.2rem;">
+      `<table style="width:100%;border-collapse:collapse;"><tbody>
         ${rows.map(r => {
           const [_,t,a,w] = r.split(',');
           return `<tr style="border-bottom:1px solid #eee;">
@@ -158,11 +157,11 @@ async function openModal(name, url) {
             <td style="padding:1.2rem;text-align:right;font-weight:700;">${w}</td>
           </tr>`;
         }).join('')}
-      </table>`;
+      </tbody></table>`;
 
     drawCharts();
   } catch(e) {
-    document.getElementById('composition').innerHTML = "<p style='text-align:center;color:red;'>Erreur de chargement des données</p>";
+    console.error(e);
   }
 }
 
