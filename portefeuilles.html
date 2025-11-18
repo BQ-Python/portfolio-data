@@ -19,11 +19,7 @@
       --green: #16a34a;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -39,7 +35,7 @@
       background: var(--navy);
       padding: 1.5rem 0;
       z-index: 1000;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
 
     .nav {
@@ -51,15 +47,8 @@
       padding: 0 5rem;
     }
 
-    .logo {
-      font-size: 2.4rem;
-      font-weight: 900;
-      color: white;
-    }
-
-    .logo span {
-      color: var(--gold);
-    }
+    .logo { font-size: 2.4rem; font-weight: 900; color: white; }
+    .logo span { color: var(--gold); }
 
     .links a {
       color: white;
@@ -69,10 +58,7 @@
       transition: .3s;
     }
 
-    .links a:hover,
-    .links a.active {
-      color: var(--gold);
-    }
+    .links a:hover, .links a.active { color: var(--gold); }
 
     .container {
       max-width: 1400px;
@@ -101,14 +87,14 @@
       background: white;
       border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       transition: all .4s;
       cursor: pointer;
     }
 
     .card:hover {
       transform: translateY(-16px);
-      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 30px 70px rgba(0,0,0,0.15);
     }
 
     .card-header {
@@ -118,10 +104,7 @@
       text-align: center;
     }
 
-    .card-header h3 {
-      font-size: 2.2rem;
-      font-weight: 700;
-    }
+    .card-header h3 { font-size: 2.2rem; font-weight: 700; }
 
     .metrics {
       padding: 2.5rem;
@@ -144,13 +127,8 @@
       color: var(--gold);
     }
 
-    .kpi.red strong {
-      color: var(--red);
-    }
-
-    .kpi.green strong {
-      color: var(--green);
-    }
+    .kpi.red strong { color: var(--red); }
+    .kpi.green strong { color: var(--green); }
 
     .kpi small {
       font-size: 0.85rem;
@@ -163,7 +141,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.97);
+      background: rgba(15,23,42,0.97);
       backdrop-filter: blur(16px);
       z-index: 2000;
       align-items: center;
@@ -172,9 +150,7 @@
       overflow-y: auto;
     }
 
-    #modal.active {
-      display: flex;
-    }
+    #modal.active { display: flex; }
 
     .modal-content {
       background: white;
@@ -183,8 +159,7 @@
       width: 95%;
       max-height: 95vh;
       overflow-y: auto;
-      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
-      scroll-behavior: smooth;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
     }
 
     .modal-header {
@@ -196,10 +171,7 @@
       align-items: center;
     }
 
-    .modal-header h2 {
-      font-size: 2.4rem;
-      font-weight: 800;
-    }
+    .modal-header h2 { font-size: 2.4rem; font-weight: 800; }
 
     .close {
       font-size: 3rem;
@@ -208,14 +180,9 @@
       transition: .3s;
     }
 
-    .close:hover {
-      opacity: 1;
-      transform: rotate(90deg);
-    }
+    .close:hover { opacity: 1; transform: rotate(90deg); }
 
-    .modal-body {
-      padding: 3rem 4rem 4rem;
-    }
+    .modal-body { padding: 3rem 4rem 4rem; }
 
     .kpi-bar {
       display: grid;
@@ -232,13 +199,8 @@
       border-left: 6px solid var(--gold);
     }
 
-    .kpi-big.red {
-      border-left-color: var(--red);
-    }
-
-    .kpi-big.red strong {
-      color: var(--red);
-    }
+    .kpi-big.red { border-left-color: var(--red); }
+    .kpi-big.red strong { color: var(--red); }
 
     .kpi-big strong {
       font-size: 2.5rem;
@@ -256,17 +218,11 @@
     .chart-wrapper {
       position: relative;
       height: 400px !important;
-      width: 100%;
       background: white;
       border-radius: 20px;
       padding: 1.5rem;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.07);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.07);
       margin: 3rem 0;
-    }
-
-    .chart-wrapper canvas {
-      width: 100% !important;
-      height: 100% !important;
     }
 
     .chart-controls {
@@ -304,28 +260,12 @@
     }
 
     @media (max-width: 992px) {
-      .comp-grid {
-        grid-template-columns: 1fr;
-      }
+      .comp-grid { grid-template-columns: 1fr; }
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      padding: 0.9rem;
-      text-align: left;
-      border-bottom: 1px solid var(--gray);
-    }
-
-    th {
-      background: var(--light);
-      font-weight: 600;
-      color: var(--navy);
-    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--gray); }
+    th { background: var(--light); font-weight: 600; color: var(--navy); }
   </style>
 </head>
 <body>
@@ -334,6 +274,7 @@
     <div class="nav">
       <div class="logo">AltInvest<span>.</span></div>
       <div class="links">
+        <a href="index.html">Accueil</a>
         <a href="#" class="active">Portefeuilles</a>
         <a href="devis.html">Devis</a>
         <a href="contact.html">Contact</a>
@@ -385,9 +326,10 @@
   </div>
 
   <script>
+    // URL mise à jour avec le nouveau nom propre du fichier
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
     const PORTFOLIOS_JSON = BASE_URL + "portfolios.json";
-    const COMP_CSV = BASE_URL + "composition_portefeuilles%20(3)%20(1).csv";
+    const COMP_CSV = BASE_URL + "composition_portefeuilles.csv";   // Changement clé !
 
     let PORTFOLIOS = [];
     let rawData = [], mainChart = null, detailChart = null, pieChart = null;
@@ -400,12 +342,7 @@
     }
 
     function resizeCanvas(chart) {
-      if (chart) {
-        setTimeout(() => {
-          chart.resize();
-          chart.update();
-        }, 100);
-      }
+      if (chart) setTimeout(() => { chart.resize(); chart.update(); }, 100);
     }
 
     function parseLine(line) {
@@ -431,7 +368,7 @@
         PORTFOLIOS = PORTFOLIOS.map(p => ({ ...p, csv: BASE_URL + p.file }));
         await loadCards();
       } catch (e) {
-        console.error('Erreur lors du chargement de portfolios.json:', e);
+        console.error('Erreur chargement portfolios.json:', e);
       }
     }
 
@@ -439,6 +376,7 @@
       const grid = document.getElementById('grid');
       grid.innerHTML = '';
       const year = new Date().getFullYear();
+
       for (const p of PORTFOLIOS) {
         try {
           const text = await fetch(p.csv).then(r => r.text());
@@ -466,9 +404,7 @@
               <div class="kpi"><strong>${sharpe}</strong><small>Sharpe</small></div>
             </div>`;
           grid.appendChild(card);
-        } catch (e) {
-          console.error(e);
-        }
+        } catch (e) { console.error(e); }
       }
     }
 
@@ -573,6 +509,7 @@
       resizeCanvas(detailChart);
     }
 
+    // Chargement de la composition avec le nouveau fichier propre
     async function loadComposition(name) {
       try {
         const text = await fetch(COMP_CSV).then(r => r.text());
@@ -580,7 +517,8 @@
         const relevant = rows.filter(r => r.split(',')[0].trim() === name);
         const table = document.getElementById('compTable');
         table.innerHTML = '';
-        const labels = [], values = [], colors = ['#ca8a04', '#e4b94c', '#f5d28a', '#b37a00', '#8c6200', '#6b4d00', '#4a3800', '#ffd700', '#ffcc00', '#ffb300'];
+        const labels = [], values = [], colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00','#4a3800','#ffd700','#ffcc00','#ffb300'];
+
         relevant.forEach(r => {
           const c = r.split(',');
           const asset = c[1]?.trim(), ticker = c[2]?.trim(), weight = c[3]?.trim();
@@ -590,6 +528,7 @@
             values.push(parseFloat(weight.replace('%', '')) || 0);
           }
         });
+
         if (pieChart) pieChart.destroy();
         pieChart = new Chart(document.getElementById('pieChart'), {
           type: 'doughnut',
