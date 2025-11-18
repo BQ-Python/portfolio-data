@@ -9,319 +9,777 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <style>
-    :root{--navy:#0f172a;--gold:#ca8a04;--slate:#64748b;--light:#f8fafc;--gray:#e2e8f0;--red:#dc2626;--green:#16a34a;}
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Inter',sans-serif;background:#fff;color:#1e293b;padding-top:90px;}
-    nav{position:fixed;top:0;width:100%;background:var(--navy);padding:1.5rem 0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
-    .nav{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 5rem;}
-    .logo{font-size:2.4rem;font-weight:900;color:white;}.logo span{color:var(--gold);}
-    .links a{color:white;text-decoration:none;margin:0 2rem;font-weight:500;transition:.3s;}
-    .links a:hover,.links a.active{color:var(--gold);}
-    .container{max-width:1400px;margin:0 auto;padding:120px 2rem 80px;text-align:center;}
-    h1{font-size:3.6rem;font-weight:800;margin-bottom:4rem;background:linear-gradient(90deg,var(--navy),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:2.5rem;margin-top:3rem;}
-    .card{background:white;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);transition:all .4s;cursor:pointer;}
-    .card:hover{transform:translateY(-16px);box-shadow:0 30px 70px rgba(0,0,0,0.15);}
-    .card-header{background:linear-gradient(135deg,var(--navy),#1e40af);padding:3rem 2rem;color:white;text-align:center;}
-    .card-header h3{font-size:2.2rem;font-weight:700;}
-    .metrics{padding:2.5rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;}
-    .kpi{text-align:center;padding:1rem;background:var(--light);border-radius:14px;}
-    .kpi strong{display:block;font-size:2rem;font-weight:800;color:var(--gold);}
-    .kpi.red strong{color:var(--red);}.kpi.green strong{color:var(--green);}
-    .kpi small{font-size:0.85rem;color:var(--slate);display:block;margin-top:4px;}
-
-    #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(16px);z-index:2000;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;}
-    #modal.active{display:flex;}
-    .modal-content{background:white;border-radius:28px;max-width:1400px;width:95%;max-height:95vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,0.5);}
-    .modal-header{background:var(--navy);color:white;padding:2rem 3rem;display:flex;justify-content:space-between;align-items:center;}
-    .modal-header h2{font-size:2.4rem;font-weight:800;}
-    .close{font-size:3rem;cursor:pointer;opacity:0.8;transition:.3s;}
-    .close:hover{opacity:1;transform:rotate(90deg);}
-    .modal-body{padding:3rem 4rem 4rem;}
-    .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1.5rem;margin-bottom:3rem;}
-    .kpi-big{background:var(--light);padding:1.8rem;border-radius:18px;text-align:center;border-left:6px solid var(--gold);}
-    .kpi-big.red{border-left-color:var(--red);}.kpi-big.red strong{color:var(--red);}
-    .kpi-big strong{font-size:2.5rem;font-weight:800;color:var(--gold);display:block;}
-    .kpi-big div{font-size:0.95rem;color:var(--slate);margin-top:6px;}
-
-    /* LA CLÉ : HAUTEUR FIXE + CANVAS 100% */
-    .chart-wrapper{
-      position:relative;
-      height:520px !important;
-      width:100%;
-      background:white;
-      border-radius:20px;
-      padding:1.5rem;
-      box-shadow:0 10px 40px rgba(0,0,0,0.07);
-      margin:3rem 0;
+    :root {
+      --navy: #0f172a;
+      --gold: #ca8a04;
+      --slate: #64748b;
+      --light: #f8fafc;
+      --gray: #e2e8f0;
+      --red: #dc2626;
+      --green: #16a34a;
     }
-    .chart-wrapper canvas{
-      width:100% !important;
-      height:100% !important;
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .chart-controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:15px;}
-    .chart-btn{padding:9px 16px;border:none;border-radius:10px;background:#e2e8f0;color:#1e293b;font-size:0.95rem;cursor:pointer;transition:.2s;font-weight:600;}
-    .chart-btn.active,.chart-btn:hover{background:var(--gold);color:white;}
-    .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-top:3rem;align-items:start;}
-    @media (max-width:992px){.comp-grid{grid-template-columns:1fr;}}
-    table{width:100%;border-collapse:collapse;}
-    th,td{padding:0.9rem;text-align:left;border-bottom:1px solid var(--gray);}
-    th{background:var(--light);font-weight:600;color:var(--navy);}
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #1e293b;
+      padding-top: 90px;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: var(--navy);
+      padding: 1.5rem 0;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5rem;
+    }
+
+    .logo {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: white;
+    }
+
+    .logo span {
+      color: var(--gold);
+    }
+
+    .links a {
+      color: white;
+      text-decoration: none;
+      margin: 0 2rem;
+      font-weight: 500;
+      transition: .3s;
+    }
+
+    .links a:hover,
+    .links a.active {
+      color: var(--gold);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 120px 2rem 80px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3.6rem;
+      font-weight: 800;
+      margin-bottom: 4rem;
+      background: linear-gradient(90deg, var(--navy), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 2.5rem;
+      margin-top: 3rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      transition: all .4s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-16px);
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--navy), #1e40af);
+      padding: 3rem 2rem;
+      color: white;
+      text-align: center;
+    }
+
+    .card-header h3 {
+      font-size: 2.2rem;
+      font-weight: 700;
+    }
+
+    .metrics {
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+    }
+
+    .kpi {
+      text-align: center;
+      padding: 1rem;
+      background: var(--light);
+      border-radius: 14px;
+    }
+
+    .kpi strong {
+      display: block;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gold);
+    }
+
+    .kpi.red strong {
+      color: var(--red);
+    }
+
+    .kpi.green strong {
+      color: var(--green);
+    }
+
+    .kpi small {
+      font-size: 0.85rem;
+      color: var(--slate);
+      display: block;
+      margin-top: 4px;
+    }
+
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.97);
+      backdrop-filter: blur(16px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    #modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 28px;
+      max-width: 1400px;
+      width: 95%;
+      max-height: 95vh;
+      overflow-y: auto;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+      scroll-behavior: smooth;
+    }
+
+    .modal-header {
+      background: var(--navy);
+      color: white;
+      padding: 2rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 2.4rem;
+      font-weight: 800;
+    }
+
+    .close {
+      font-size: 3rem;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: .3s;
+    }
+
+    .close:hover {
+      opacity: 1;
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 3rem 4rem 4rem;
+    }
+
+    .kpi-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .kpi-big {
+      background: var(--light);
+      padding: 1.8rem;
+      border-radius: 18px;
+      text-align: center;
+      border-left: 6px solid var(--gold);
+    }
+
+    .kpi-big.red {
+      border-left-color: var(--red);
+    }
+
+    .kpi-big.red strong {
+      color: var(--red);
+    }
+
+    .kpi-big strong {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--gold);
+      display: block;
+    }
+
+    .kpi-big div {
+      font-size: 0.95rem;
+      color: var(--slate);
+      margin-top: 6px;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 400px !important;
+      width: 100%;
+      background: white;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.07);
+      margin: 3rem 0;
+    }
+
+    .chart-wrapper canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .chart-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+
+    .chart-btn {
+      padding: 9px 16px;
+      border: none;
+      border-radius: 10px;
+      background: #e2e8f0;
+      color: #1e293b;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: .2s;
+      font-weight: 600;
+    }
+
+    .chart-btn.active,
+    .chart-btn:hover {
+      background: var(--gold);
+      color: white;
+    }
+
+    .comp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      margin-top: 3rem;
+      align-items: start;
+    }
+
+    @media (max-width: 992px) {
+      .comp-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 0.9rem;
+      text-align: left;
+      border-bottom: 1px solid var(--gray);
+    }
+
+    th {
+      background: var(--light);
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    #admin-section {
+      display: none;
+      padding: 2rem;
+      background: var(--light);
+      border-radius: 20px;
+      margin: 2rem auto;
+      max-width: 800px;
+    }
+
+    #admin-section.active {
+      display: block;
+    }
+
+    #admin-form {
+      display: grid;
+      gap: 1rem;
+    }
+
+    #admin-form label {
+      font-weight: 600;
+    }
+
+    #admin-form input,
+    #admin-form select {
+      padding: 0.5rem;
+      border: 1px solid var(--gray);
+      border-radius: 8px;
+    }
+
+    #admin-form button {
+      background: var(--gold);
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #admin-message {
+      color: var(--red);
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav">
-    <div class="logo">AltInvest<span>.</span></div>
-    <div class="links">
-      <a href="#" class="active">Portefeuilles</a>
-      <a href="devis.html">Devis</a>
-      <a href="contact.html">Contact</a>
+  <nav>
+    <div class="nav">
+      <div class="logo">AltInvest<span>.</span></div>
+      <div class="links">
+        <a href="#" class="active">Portefeuilles</a>
+        <a href="devis.html">Devis</a>
+        <a href="contact.html">Contact</a>
+        <a href="#" id="admin-link">Admin</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Nos Portefeuilles d'Investissement</h1>
+    <div class="grid" id="grid"></div>
+    <div id="admin-section">
+      <h2>Admin: Mise à jour des Portefeuilles</h2>
+      <form id="admin-form">
+        <label for="pat">Token d'accès personnel GitHub (avec scope repo):</label>
+        <input type="password" id="pat" required>
+
+        <label for="action">Action:</label>
+        <select id="action" required>
+          <option value="update">Mettre à jour un portefeuille existant</option>
+          <option value="add">Ajouter un nouveau portefeuille</option>
+        </select>
+
+        <div id="existing-portfolio" style="display: block;">
+          <label for="portfolio-select">Sélectionner le portefeuille:</label>
+          <select id="portfolio-select" required></select>
+        </div>
+
+        <div id="new-portfolio" style="display: none;">
+          <label for="new-name">Nom du nouveau portefeuille:</label>
+          <input type="text" id="new-name" placeholder="Portefeuille XYZ" required>
+        </div>
+
+        <label for="csv-file">Fichier CSV (format attendu):</label>
+        <input type="file" id="csv-file" accept=".csv" required>
+
+        <button type="submit">Envoyer</button>
+      </form>
+      <p id="admin-message"></p>
     </div>
   </div>
-</nav>
 
-<div class="container">
-  <h1>Nos Portefeuilles d'Investissement</h1>
-  <div class="grid" id="grid"></div>
-</div>
-
-<div id="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="modal-title"></h2>
-      <span class="close" onclick="closeModal()">x</span>
-    </div>
-    <div class="modal-body">
-      <div class="kpi-bar" id="kpi-bar"></div>
-
-      <div class="chart-wrapper">
-        <div class="chart-controls" id="mainControls"></div>
-        <canvas id="mainChart"></canvas>
+  <div id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title"></h2>
+        <span class="close" onclick="closeModal()">x</span>
       </div>
+      <div class="modal-body">
+        <div class="kpi-bar" id="kpi-bar"></div>
 
-      <div class="chart-wrapper">
-        <div class="chart-controls" id="detailControls"></div>
-        <canvas id="detailChart"></canvas>
-      </div>
+        <div class="chart-wrapper">
+          <div class="chart-controls" id="mainControls"></div>
+          <canvas id="mainChart"></canvas>
+        </div>
 
-      <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;font-weight:700;">Composition Actuelle</h3>
-      <div class="comp-grid">
-        <div class="chart-wrapper" style="height:420px;"><canvas id="pieChart"></canvas></div>
-        <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="compTable"></tbody></table>
+        <div class="chart-wrapper">
+          <div class="chart-controls" id="detailControls"></div>
+          <canvas id="detailChart"></canvas>
+        </div>
+
+        <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;font-weight:700;">Composition Actuelle</h3>
+        <div class="comp-grid">
+          <div class="chart-wrapper" style="height:350px;"><canvas id="pieChart"></canvas></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Actif</th>
+                <th>Ticker</th>
+                <th style="text-align:right;">Pondération</th>
+              </tr>
+            </thead>
+            <tbody id="compTable"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-const PORTFOLIOS = [
-  { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_croissance_v2.csv" },
-  { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_defensif_v2.csv" },
-  { name: "Portefeuille Europe",     csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_europe_v2.csv" }
-];
-const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3)%20(1).csv";
+  <script>
+    const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
+    const PORTFOLIOS_JSON = BASE_URL + "portfolios.json";
+    const COMP_CSV = BASE_URL + "composition_portefeuilles%20(3)%20(1).csv";
+    const GITHUB_API = "https://api.github.com/repos/BQ-Python/portfolio-data/contents/";
 
-let rawData = [], mainChart = null, detailChart = null, pieChart = null;
-let currentPortfolioName = "";
+    let PORTFOLIOS = [];
+    let rawData = [], mainChart = null, detailChart = null, pieChart = null;
+    let currentPortfolioName = "";
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('active');
-  document.body.style.overflow = '';
-  [mainChart, detailChart, pieChart].forEach(c => c?.destroy());
-}
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+      document.body.style.overflow = '';
+      [mainChart, detailChart, pieChart].forEach(c => c?.destroy());
+    }
 
-// Force le redimensionnement des canvas après création
-function resizeCanvas(chart) {
-  if (chart) {
-    setTimeout(() => {
-      chart.resize();
-      chart.update();
-    }, 100);
-  }
-}
+    function resizeCanvas(chart) {
+      if (chart) {
+        setTimeout(() => {
+          chart.resize();
+          chart.update();
+        }, 100);
+      }
+    }
 
-function parseLine(line) {
-  const cols = line.split(/\t|,/).map(s => s.trim().replace(/^"|"$/g, ''));
-  if (cols.length < 18) return null;
-  const date = new Date(cols[0]);
-  if (isNaN(date)) return null;
-  return {
-    date,
-    port: parseFloat(cols[1]) || 0,
-    sp: parseFloat(cols[2]) || 0,
-    nas: parseFloat(cols[3]) || 0,
-    volM: parseFloat(cols[6]) || 0,
-    ddC: parseFloat(cols[7]) || 0,
-    ddM: parseFloat(cols[8]) || 0
-  };
-}
+    function parseLine(line) {
+      const cols = line.split(/\t|,/).map(s => s.trim().replace(/^"|"$/g, ''));
+      if (cols.length < 18) return null;
+      const date = new Date(cols[0]);
+      if (isNaN(date)) return null;
+      return {
+        date,
+        port: parseFloat(cols[1]) || 0,
+        sp: parseFloat(cols[2]) || 0,
+        nas: parseFloat(cols[3]) || 0,
+        volM: parseFloat(cols[6]) || 0,
+        ddC: parseFloat(cols[7]) || 0,
+        ddM: parseFloat(cols[8]) || 0
+      };
+    }
 
-async function loadCards() {
-  const grid = document.getElementById('grid');
-  const year = new Date().getFullYear();
-  for (const p of PORTFOLIOS) {
-    try {
-      const text = await fetch(p.csv).then(r => r.text());
-      const data = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
-      if (data.length === 0) continue;
+    async function loadPortfolios() {
+      try {
+        const res = await fetch(PORTFOLIOS_JSON);
+        PORTFOLIOS = await res.json();
+        PORTFOLIOS = PORTFOLIOS.map(p => ({ ...p, csv: BASE_URL + p.file }));
+        await loadCards();
+        populateAdminSelect();
+      } catch (e) {
+        console.error('Erreur lors du chargement de portfolios.json:', e);
+      }
+    }
 
-      const last = data[data.length-1];
-      const firstY = data.find(d => d.date.getFullYear() === year) || data[0];
+    async function loadCards() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      const year = new Date().getFullYear();
+      for (const p of PORTFOLIOS) {
+        try {
+          const text = await fetch(p.csv).then(r => r.text());
+          const data = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
+          if (data.length === 0) continue;
+
+          const last = data[data.length - 1];
+          const firstY = data.find(d => d.date.getFullYear() === year) || data[0];
+          const ytd = ((last.port / firstY.port) - 1) * 100;
+          const years = (last.date - data[0].date) / (86400000 * 365.25);
+          const cagr = years > 0 ? (Math.pow(last.port / 100 + 1, 1 / years) - 1) * 100 : 0;
+          const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.onclick = () => openModal(p.name, p.csv);
+          card.innerHTML = `
+            <div class="card-header"><h3>${p.name}</h3></div>
+            <div class="metrics">
+              <div class="kpi"><strong>${last.port.toFixed(1)}%</strong><small>Perf. cumulée</small></div>
+              <div class="kpi"><strong class="${ytd >= 0 ? 'green' : 'red'}">${ytd.toFixed(1)}%</strong><small>YTD ${year}</small></div>
+              <div class="kpi"><strong>${cagr.toFixed(1)}%</strong><small>Perf. annualisée</small></div>
+              <div class="kpi"><strong>${last.volM.toFixed(1)}%</strong><small>Volatilité</small></div>
+              <div class="kpi red"><strong>${last.ddM.toFixed(1)}%</strong><small>Drawdown max</small></div>
+              <div class="kpi"><strong>${sharpe}</strong><small>Sharpe</small></div>
+            </div>`;
+          grid.appendChild(card);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    async function openModal(name, url) {
+      closeModal();
+      currentPortfolioName = name;
+      document.getElementById('modal-title').textContent = name;
+      document.getElementById('modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+
+      const text = await fetch(url).then(r => r.text());
+      rawData = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
+
+      updateKPIs();
+      drawMainChart();
+      drawDetailChart();
+      await loadComposition(name);
+    }
+
+    function updateKPIs() {
+      const last = rawData[rawData.length - 1];
+      const year = new Date().getFullYear();
+      const firstY = rawData.find(d => d.date.getFullYear() === year) || rawData[0];
       const ytd = ((last.port / firstY.port) - 1) * 100;
-      const years = (last.date - data[0].date) / (86400000 * 365.25);
-      const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years) - 1) * 100 : 0;
+      const years = (last.date - rawData[0].date) / (86400000 * 365.25);
+      const cagr = years > 0 ? (Math.pow(last.port / 100 + 1, 1 / years) - 1) * 100 : 0;
       const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
 
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.onclick = () => openModal(p.name, p.csv);
-      card.innerHTML = `
-        <div class="card-header"><h3>${p.name}</h3></div>
-        <div class="metrics">
-          <div class="kpi"><strong>${last.port.toFixed(1)}%</strong><small>Perf. cumulée</small></div>
-          <div class="kpi"><strong class="${ytd>=0?'green':'red'}">${ytd.toFixed(1)}%</strong><small>YTD ${year}</small></div>
-          <div class="kpi"><strong>${cagr.toFixed(1)}%</strong><small>Perf. annualisée</small></div>
-          <div class="kpi"><strong>${last.volM.toFixed(1)}%</strong><small>Volatilité</small></div>
-          <div class="kpi red"><strong>${last.ddM.toFixed(1)}%</strong><small>Drawdown max</small></div>
-          <div class="kpi"><strong>${sharpe}</strong><small>Sharpe</small></div>
-        </div>`;
-      grid.appendChild(card);
-    } catch (e) { console.error(e); }
-  }
-}
+      document.getElementById('kpi-bar').innerHTML = `
+        <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Perf. cumulée</div></div>
+        <div class="kpi-big"><strong class="${ytd >= 0 ? '' : 'red'}">${ytd.toFixed(1)}%</strong><div>YTD ${year}</div></div>
+        <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Perf. annualisée</div></div>
+        <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité</div></div>
+        <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
+        <div class="kpi-big"><strong>${sharpe}</strong><div>Sharpe</div></div>`;
+    }
 
-async function openModal(name, url) {
-  closeModal();
-  currentPortfolioName = name;
-  document.getElementById('modal-title').textContent = name;
-  document.getElementById('modal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+    function createButtons(id, chart) {
+      const div = document.getElementById(id);
+      div.innerHTML = '';
+      ['1M', '3M', '6M', 'YTD', '1A', '3A', 'Tout'].forEach((l, i) => {
+        const b = document.createElement('button');
+        b.className = 'chart-btn' + (i === 0 ? ' active' : '');
+        b.textContent = l;
+        b.onclick = () => {
+          div.querySelectorAll('.chart-btn').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          if (l === 'Tout') chart.resetZoom();
+          else if (l === 'YTD') chart.zoomScale('x', { min: new Date(`${new Date().getFullYear()}-01-01`).getTime(), max: Date.now() });
+          else {
+            const days = { '1M': 30, '3M': 90, '6M': 180, '1A': 365, '3A': 1095 }[l];
+            const end = Date.now();
+            chart.zoomScale('x', { min: end - days * 86400000, max: end });
+          }
+        };
+        div.appendChild(b);
+      });
+    }
 
-  const text = await fetch(url).then(r => r.text());
-  rawData = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
+    function drawMainChart() {
+      if (mainChart) mainChart.destroy();
+      mainChart = new Chart(document.getElementById('mainChart'), {
+        type: 'line',
+        data: {
+          labels: rawData.map(d => d.date),
+          datasets: [
+            { label: currentPortfolioName, data: rawData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.07)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 0 },
+            { label: 'S&P 500', data: rawData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2.5, borderDash: [8, 6], tension: 0.4, pointRadius: 0 },
+            { label: 'NASDAQ 100', data: rawData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2, borderDash: [12, 8], tension: 0.4, pointRadius: 0 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' }, zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
+          scales: { x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } } }, y: { ticks: { callback: v => v + '%' } } }
+        }
+      });
+      createButtons('mainControls', mainChart);
+      resizeCanvas(mainChart);
+    }
 
-  updateKPIs();
-  drawMainChart();
-  drawDetailChart();
-  await loadComposition(name);
-}
+    function drawDetailChart() {
+      if (detailChart) detailChart.destroy();
+      detailChart = new Chart(document.getElementById('detailChart'), {
+        type: 'line',
+        data: {
+          labels: rawData.map(d => d.date),
+          datasets: [
+            { label: 'Volatilité mensuelle (%)', data: rawData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.15)', fill: true, tension: 0.4, pointRadius: 2 },
+            { label: 'Drawdown actuel (%)', data: rawData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true, tension: 0.4, pointRadius: 2 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' }, title: { display: true, text: 'Risque : Volatilité & Drawdown' }, zoom: { zoom: { wheel: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
+          scales: { x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } } }, y: { ticks: { callback: v => v + '%' } } }
+        }
+      });
+      createButtons('detailControls', detailChart);
+      resizeCanvas(detailChart);
+    }
 
-function updateKPIs() {
-  const last = rawData[rawData.length-1];
-  const year = new Date().getFullYear();
-  const firstY = rawData.find(d => d.date.getFullYear() === year) || rawData[0];
-  const ytd = ((last.port / firstY.port)-1)*100;
-  const years = (last.date - rawData[0].date) / (86400000 * 365.25);
-  const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years)-1)*100 : 0;
-  const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
-
-  document.getElementById('kpi-bar').innerHTML = `
-    <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Perf. cumulée</div></div>
-    <div class="kpi-big"><strong class="${ytd>=0?'':'red'}">${ytd.toFixed(1)}%</strong><div>YTD ${year}</div></div>
-    <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Perf. annualisée</div></div>
-    <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité</div></div>
-    <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-    <div class="kpi-big"><strong>${sharpe}</strong><div>Sharpe</div></div>`;
-}
-
-function createButtons(id, chart) {
-  const div = document.getElementById(id);
-  div.innerHTML = '';
-  ['1M','3M','6M','YTD','1A','3A','Tout'].forEach((l,i) => {
-    const b = document.createElement('button');
-    b.className = 'chart-btn' + (i===0?' active':'');
-    b.textContent = l;
-    b.onclick = () => {
-      div.querySelectorAll('.chart-btn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      if (l==='Tout') chart.resetZoom();
-      else if (l==='YTD') chart.zoomScale('x',{min:new Date(`${new Date().getFullYear()}-01-01`).getTime(), max:Date.now()});
-      else {
-        const days = { '1M':30, '3M':90, '6M':180, '1A':365, '3A':1095 }[l];
-        const end = Date.now();
-        chart.zoomScale('x',{min:end-days*86400000, max:end});
+    async function loadComposition(name) {
+      try {
+        const text = await fetch(COMP_CSV).then(r => r.text());
+        const rows = text.trim().split('\n').slice(1);
+        const relevant = rows.filter(r => r.split(',')[0].trim() === name);
+        const table = document.getElementById('compTable');
+        table.innerHTML = '';
+        const labels = [], values = [], colors = ['#ca8a04', '#e4b94c', '#f5d28a', '#b37a00', '#8c6200', '#6b4d00', '#4a3800', '#ffd700', '#ffcc00', '#ffb300'];
+        relevant.forEach(r => {
+          const c = r.split(',');
+          const asset = c[1]?.trim(), ticker = c[2]?.trim(), weight = c[3]?.trim();
+          if (asset && weight) {
+            table.innerHTML += `<tr><td><strong>${asset}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
+            labels.push(asset);
+            values.push(parseFloat(weight.replace('%', '')) || 0);
+          }
+        });
+        if (pieChart) pieChart.destroy();
+        pieChart = new Chart(document.getElementById('pieChart'), {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: '#fff' }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+        resizeCanvas(pieChart);
+      } catch (e) {
+        document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">Composition en cours de mise à jour...</td></tr>';
       }
-    };
-    div.appendChild(b);
-  });
-}
-
-function drawMainChart() {
-  if (mainChart) mainChart.destroy();
-  mainChart = new Chart(document.getElementById('mainChart'), {
-    type: 'line',
-    data: {
-      labels: rawData.map(d => d.date),
-      datasets: [
-        { label: currentPortfolioName, data: rawData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.07)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 0 },
-        { label: 'S&P 500', data: rawData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2.5, borderDash: [8,6], tension: 0.4, pointRadius: 0 },
-        { label: 'NASDAQ 100', data: rawData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2, borderDash: [12,8], tension: 0.4, pointRadius: 0 }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' }, zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
-      scales: { x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } } }, y: { ticks: { callback: v => v + '%' } } }
     }
-  });
-  createButtons('mainControls', mainChart);
-  resizeCanvas(mainChart);
-}
 
-function drawDetailChart() {
-  if (detailChart) detailChart.destroy();
-  detailChart = new Chart(document.getElementById('detailChart'), {
-    type: 'line',
-    data: {
-      labels: rawData.map(d => d.date),
-      datasets: [
-        { label: 'Volatilité mensuelle (%)', data: rawData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.15)', fill: true, tension: 0.4, pointRadius: 2 },
-        { label: 'Drawdown actuel (%)', data: rawData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true, tension: 0.4, pointRadius: 2 }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' }, title: { display: true, text: 'Risque : Volatilité & Drawdown' }, zoom: { zoom: { wheel: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
-      scales: { x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } } }, y: { ticks: { callback: v => v + '%' } } }
+    // Admin functionality
+    document.getElementById('admin-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      const adminSection = document.getElementById('admin-section');
+      adminSection.classList.toggle('active');
+    });
+
+    document.getElementById('action').addEventListener('change', (e) => {
+      const action = e.target.value;
+      document.getElementById('existing-portfolio').style.display = action === 'update' ? 'block' : 'none';
+      document.getElementById('new-portfolio').style.display = action === 'add' ? 'block' : 'none';
+    });
+
+    function populateAdminSelect() {
+      const select = document.getElementById('portfolio-select');
+      select.innerHTML = '';
+      PORTFOLIOS.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.name;
+        option.textContent = p.name;
+        select.appendChild(option);
+      });
     }
-  });
-  createButtons('detailControls', detailChart);
-  resizeCanvas(detailChart);
-}
 
-async function loadComposition(name) {
-  try {
-    const text = await fetch(COMP_CSV).then(r => r.text());
-    const rows = text.trim().split('\n').slice(1);
-    const relevant = rows.filter(r => r.split(',')[0].trim() === name);
-    const table = document.getElementById('compTable'); table.innerHTML = '';
-    const labels = [], values = [], colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00'];
-    relevant.forEach(r => {
-      const c = r.split(',');
-      const asset = c[1]?.trim(), ticker = c[2]?.trim(), weight = c[3]?.trim();
-      if (asset && weight) {
-        table.innerHTML += `<tr><td><strong>${asset}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
-        labels.push(asset);
-        values.push(parseFloat(weight.replace('%','')) || 0);
+    document.getElementById('admin-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const messageEl = document.getElementById('admin-message');
+      messageEl.textContent = 'En cours...';
+      const pat = document.getElementById('pat').value;
+      const action = document.getElementById('action').value;
+      const file = document.getElementById('csv-file').files[0];
+
+      if (!pat || !file) {
+        messageEl.textContent = 'Token et fichier requis.';
+        return;
+      }
+
+      try {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64Content = reader.result.split(',')[1]; // Remove data:base64 prefix
+          const headers = {
+            'Authorization': `token ${pat}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          };
+
+          if (action === 'update') {
+            const name = document.getElementById('portfolio-select').value;
+            const portfolio = PORTFOLIOS.find(p => p.name === name);
+            const path = portfolio.file;
+
+            // Get SHA
+            const shaRes = await fetch(GITHUB_API + path, { headers });
+            if (!shaRes.ok) throw new Error('Erreur lors de la récupération du SHA');
+            const { sha } = await shaRes.json();
+
+            // Update file
+            const body = JSON.stringify({
+              message: `Mise à jour du CSV pour ${name}`,
+              content: base64Content,
+              sha
+            });
+            const updateRes = await fetch(GITHUB_API + path, { method: 'PUT', headers, body });
+            if (!updateRes.ok) throw new Error('Erreur lors de la mise à jour');
+            messageEl.textContent = 'Mise à jour réussie ! Rechargez la page.';
+          } else if (action === 'add') {
+            const name = document.getElementById('new-name').value.trim();
+            if (!name) throw new Error('Nom requis');
+            const slug = `portefeuille_${name.toLowerCase().replace(/\s+/g, '_')}.csv`;
+            // Upload new CSV
+            const bodyCsv = JSON.stringify({
+              message: `Ajout du CSV pour ${name}`,
+              content: base64Content
+            });
+            const addRes = await fetch(GITHUB_API + slug, { method: 'PUT', headers, body: bodyCsv });
+            if (!addRes.ok) throw new Error('Erreur lors de l\'ajout du CSV');
+
+            // Update portfolios.json
+            const jsonPath = 'portfolios.json';
+            const jsonShaRes = await fetch(GITHUB_API + jsonPath, { headers });
+            if (!jsonShaRes.ok) throw new Error('Erreur lors de la récupération de portfolios.json');
+            const { sha: jsonSha, content: currentJsonBase64 } = await jsonShaRes.json();
+            const currentJson = JSON.parse(atob(currentJsonBase64));
+            currentJson.push({ name, file: slug });
+
+            const bodyJson = JSON.stringify({
+              message: `Ajout de ${name} à portfolios.json`,
+              content: btoa(JSON.stringify(currentJson, null, 2)),
+              sha: jsonSha
+            });
+            const updateJsonRes = await fetch(GITHUB_API + jsonPath, { method: 'PUT', headers, body: bodyJson });
+            if (!updateJsonRes.ok) throw new Error('Erreur lors de la mise à jour de portfolios.json');
+            messageEl.textContent = 'Ajout réussi ! Rechargez la page.';
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        messageEl.textContent = `Erreur: ${err.message}`;
+        console.error(err);
       }
     });
-    if (pieChart) pieChart.destroy();
-    pieChart = new Chart(document.getElementById('pieChart'), {
-      type: 'doughnut',
-      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: '#fff' }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-    });
-    resizeCanvas(pieChart);
-  } catch (e) {
-    document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">Composition en cours de mise à jour...</td></tr>';
-  }
-}
 
-loadCards();
-</script>
+    loadPortfolios();
+  </script>
 </body>
 </html>
