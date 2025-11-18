@@ -5,12 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AltInvest Capital - Portefeuilles</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <!-- LES BONNES VERSIONS QUI MARCHENT À COUP SÛR -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <style>
     :root{--navy:#0f172a;--gold:#ca8a04;--slate:#64748b;--light:#f8fafc;--gray:#e2e8f0;--red:#dc2626;--green:#16a34a;}
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -47,8 +44,21 @@
     .kpi-big strong{font-size:2.5rem;font-weight:800;color:var(--gold);display:block;}
     .kpi-big div{font-size:0.95rem;color:var(--slate);margin-top:6px;}
 
-    .chart-wrapper{position:relative;height:520px;width:100%;background:white;border-radius:20px;padding:1.5rem;box-shadow:0 10px 40px rgba(0,0,0,0.07);margin:3rem 0;}
-    .chart-wrapper canvas{width:100%!important;height:100%!important;}
+    /* LA CLÉ : HAUTEUR FIXE + CANVAS 100% */
+    .chart-wrapper{
+      position:relative;
+      height:520px !important;
+      width:100%;
+      background:white;
+      border-radius:20px;
+      padding:1.5rem;
+      box-shadow:0 10px 40px rgba(0,0,0,0.07);
+      margin:3rem 0;
+    }
+    .chart-wrapper canvas{
+      width:100% !important;
+      height:100% !important;
+    }
     .chart-controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:15px;}
     .chart-btn{padding:9px 16px;border:none;border-radius:10px;background:#e2e8f0;color:#1e293b;font-size:0.95rem;cursor:pointer;transition:.2s;font-weight:600;}
     .chart-btn.active,.chart-btn:hover{background:var(--gold);color:white;}
@@ -81,7 +91,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2 id="modal-title"></h2>
-      <span class="close" onclick="closeModal()">×</span>
+      <span class="close" onclick="closeModal()">x</span>
     </div>
     <div class="modal-body">
       <div class="kpi-bar" id="kpi-bar"></div>
@@ -120,6 +130,16 @@ function closeModal() {
   document.getElementById('modal').classList.remove('active');
   document.body.style.overflow = '';
   [mainChart, detailChart, pieChart].forEach(c => c?.destroy());
+}
+
+// Force le redimensionnement des canvas après création
+function resizeCanvas(chart) {
+  if (chart) {
+    setTimeout(() => {
+      chart.resize();
+      chart.update();
+    }, 100);
+  }
 }
 
 function parseLine(line) {
@@ -219,7 +239,7 @@ function createButtons(id, chart) {
       if (l==='Tout') chart.resetZoom();
       else if (l==='YTD') chart.zoomScale('x',{min:new Date(`${new Date().getFullYear()}-01-01`).getTime(), max:Date.now()});
       else {
-        const days = {'1M':30,'3M':90,'6M':180,'1A':365,'3A':1095}[l];
+        const days = { '1M':30, '3M':90, '6M':180, '1A':365, '3A':1095 }[l];
         const end = Date.now();
         chart.zoomScale('x',{min:end-days*86400000, max:end});
       }
@@ -248,6 +268,7 @@ function drawMainChart() {
     }
   });
   createButtons('mainControls', mainChart);
+  resizeCanvas(mainChart);
 }
 
 function drawDetailChart() {
@@ -257,8 +278,8 @@ function drawDetailChart() {
     data: {
       labels: rawData.map(d => d.date),
       datasets: [
-        { label: 'Volatilité mensuelle (%)', data: rawData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.15)', fill: true, tension: 0.4 },
-        { label: 'Drawdown actuel (%)', data: rawData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true, tension: 0.4 }
+        { label: 'Volatilité mensuelle (%)', data: rawData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.15)', fill: true, tension: 0.4, pointRadius: 2 },
+        { label: 'Drawdown actuel (%)', data: rawData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true, tension: 0.4, pointRadius: 2 }
       ]
     },
     options: {
@@ -269,6 +290,7 @@ function drawDetailChart() {
     }
   });
   createButtons('detailControls', detailChart);
+  resizeCanvas(detailChart);
 }
 
 async function loadComposition(name) {
@@ -293,8 +315,9 @@ async function loadComposition(name) {
       data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: '#fff' }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
     });
+    resizeCanvas(pieChart);
   } catch (e) {
-    document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">Composition temporairement indisponible</td></tr>';
+    document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">Composition en cours de mise à jour...</td></tr>';
   }
 }
 
