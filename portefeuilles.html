@@ -39,8 +39,7 @@
     .close:hover{opacity:1;transform:rotate(90deg);}
     .modal-body{padding:3rem 4rem 4rem;}
     .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1.5rem;margin-bottom:3rem;}
-    .kpi-big{background:var(--light);padding:1.8rem;border-radius:18px;text-align:center;border-left:6px solid var(--gold);transition:all .3s;}
-    .kpi-big:hover{transform:translateY(-6px);box-shadow:0 15px 30px rgba(0,0,0,0.1);}
+    .kpi-big{background:var(--light);padding:1.8rem;border-radius:18px;text-align:center;border-left:6px solid var(--gold);}
     .kpi-big.red{border-left-color:var(--red);}.kpi-big.red strong{color:var(--red);}
     .kpi-big strong{font-size:2.5rem;font-weight:800;color:var(--gold);display:block;}
     .kpi-big div{font-size:0.95rem;color:var(--slate);margin-top:6px;}
@@ -50,9 +49,6 @@
     .chart-btn.active,.chart-btn:hover{background:var(--gold);color:white;}
     .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-top:3rem;align-items:start;}
     @media (max-width:992px){.comp-grid{grid-template-columns:1fr;}}
-    table{width:100%;border-collapse:collapse;}
-    th,td{padding:0.9rem;text-align:left;border-bottom:1px solid var(--gray);}
-    th{background:var(--light);font-weight:600;color:var(--navy);}
   </style>
 </head>
 <body>
@@ -118,12 +114,14 @@ function closeModal() {
   [mainChart, detailChart, pieChart].forEach(c => c?.destroy());
 }
 
-// === Parsing robuste des 18 colonnes ===
-function parseCSVLine(line) {
+// Parsing robuste + conversion date
+function parseLine(line) {
   const cols = line.split(/\t|,/).map(s => s.trim().replace(/^"|"$/g, ''));
   if (cols.length < 18) return null;
+  const date = new Date(cols[0]); // ← IMPORTANT : conversion directe
+  if (isNaN(date)) return null;
   return {
-    date: cols[0],
+    date,
     port: parseFloat(cols[1]) || 0,
     sp: parseFloat(cols[2]) || 0,
     nas: parseFloat(cols[3]) || 0,
@@ -133,21 +131,21 @@ function parseCSVLine(line) {
   };
 }
 
-// === Cartes ===
+// Cartes
 async function loadCards() {
   const grid = document.getElementById('grid');
   const year = new Date().getFullYear();
-
   for (const p of PORTFOLIOS) {
     try {
       const text = await fetch(p.csv).then(r => r.text());
       const lines = text.trim().split('\n');
-      const data = lines.slice(1).map(parseCSVLine).filter(Boolean);
+      const data = lines.slice(1).map(parseLine).filter(Boolean);
+      if (data.length === 0) continue;
 
       const last = data[data.length-1];
-      const firstY = data.find(d => d.date.startsWith(year+'-01')) || data[0];
+      const firstY = data.find(d => d.date.getFullYear() === year) || data[0];
       const ytd = ((last.port / firstY.port) - 1) * 100;
-      const years = (new Date(last.date) - new Date(data[0].date)) / (86400000 * 365.25);
+      const years = (last.date - data[0].date) / (86400000 * 365.25);
       const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years) - 1) * 100 : 0;
       const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
 
@@ -165,11 +163,10 @@ async function loadCards() {
           <div class="kpi"><strong>${sharpe}</strong><small>Sharpe</small></div>
         </div>`;
       grid.appendChild(card);
-    } catch (e) { console.error(p.name, e); }
+    } catch (e) { console.error(e); }
   }
 }
 
-// === Modale ===
 async function openModal(name, url) {
   closeModal();
   currentPortfolioName = name;
@@ -179,7 +176,7 @@ async function openModal(name, url) {
 
   const text = await fetch(url).then(r => r.text());
   const lines = text.trim().split('\n');
-  rawData = lines.slice(1).map(parseCSVLine).filter(Boolean);
+  rawData = lines.slice(1).map(parseLine).filter(Boolean);
 
   updateKPIs();
   drawMainChart();
@@ -190,24 +187,11 @@ async function openModal(name, url) {
 function updateKPIs() {
   const last = rawData[rawData.length-1];
   const year = new Date().getFullYear();
-  const firstY = rawData.find(d => d.date.startsWith(year+'-01')) || rawData[0];
+  const firstY = rawData.find(d => d.date.getFullYear() === year) || rawData[0];
   const ytd = ((last.port / firstY.port)-1)*100;
-  const years = (new Date(last.date) - new Date(rawData[0].date)) / (86400000 * 365.25);
+  const years = (last.date - rawData[0].date) / (86400000 * 365.25);
   const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years)-1)*100 : 0;
   const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
-
-  // Métriques avancées
-  const portRets = rawData.slice(1).map((d,i) => (d.port / rawData[i].port) - 1);
-  const spRets = rawData.slice(1).map((d,i) => (d.sp / rawData[i].sp) - 1);
-  const avgPort = portRets.reduce((a,b)=>a+b,0)/portRets.length;
-  const avgSP = spRets.reduce((a,b)=>a+b,0)/spRets.length;
-  const cov = portRets.reduce((s,r,i)=>s + (r-avgPort)*(spRets[i]-avgSP),0)/portRets.length;
-  const varSP = spRets.reduce((s,r)=>s + (r-avgSP)**2,0)/portRets.length;
-  const beta = varSP > 0 ? cov/varSP : 0;
-  const alphaDaily = avgPort - beta*avgSP;
-  const alpha = (Math.pow(1+alphaDaily,252)-1)*100;
-  const te = Math.sqrt(portRets.reduce((s,r,i)=>s + (r - (alphaDaily + beta*spRets[i]))**2,0)/portRets.length)*Math.sqrt(252)*100;
-  const ir = te > 0 ? alpha/te : 0;
 
   document.getElementById('kpi-bar').innerHTML = `
     <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Perf. cumulée</div></div>
@@ -215,45 +199,33 @@ function updateKPIs() {
     <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Perf. annualisée</div></div>
     <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité</div></div>
     <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-    <div class="kpi-big"><strong>${sharpe}</strong><div>Sharpe</div></div>
-    <div class="kpi-big"><strong>${alpha.toFixed(2)}%</strong><div>Alpha</div></div>
-    <div class="kpi-big"><strong>${beta.toFixed(2)}</strong><div>Bêta</div></div>
-    <div class="kpi-big"><strong>${te.toFixed(2)}%</strong><div>Tracking Error</div></div>
-    <div class="kpi-big"><strong>${ir.toFixed(2)}</strong><div>Information Ratio</div></div>
-  `;
+    <div class="kpi-big"><strong>${sharpe}</strong><div>Sharpe</div></div>`;
 }
 
-// === Boutons période ===
-function createPeriodButtons(containerId, chart) {
-  const div = document.getElementById(containerId);
+function createButtons(id, chart) {
+  const div = document.getElementById(id);
   div.innerHTML = '';
-  const periods = [
-    {label:'1M', days:30}, {label:'3M', days:90}, {label:'6M', days:180},
-    {label:'YTD', ytd:true}, {label:'1A', days:365}, {label:'3A', days:1095}, {label:'Tout', all:true}
-  ];
-  periods.forEach(p => {
-    const btn = document.createElement('button');
-    btn.className = 'chart-btn';
-    btn.textContent = p.label;
-    btn.onclick = () => {
-      div.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (p.all) chart.resetZoom();
-      else if (p.ytd) {
-        const y = new Date().getFullYear();
-        chart.zoomScale('x', {min: new Date(`${y}-01-01`).getTime(), max: Date.now()});
-      } else {
+  ['1M','3M','6M','YTD','1A','3A','Tout'].forEach((l,i) => {
+    const b = document.createElement('button');
+    b.className = 'chart-btn';
+    b.textContent = l;
+    b.onclick = () => {
+      div.querySelectorAll('.chart-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      if (l==='Tout') chart.resetZoom();
+      else if (l==='YTD') chart.zoomScale('x',{min:new Date(`${new Date().getFullYear()}-01-01`).getTime(), max:Date.now()});
+      else {
+        const days = { '1M':30, '3M':90, '6M':180, '1A':365, '3A':1095 }[l];
         const end = Date.now();
-        const start = new Date(end - p.days * 86400000);
-        chart.zoomScale('x', {min: start.getTime(), max: end.getTime()});
+        chart.zoomScale('x',{min:end-days*86400000, max:end});
       }
     };
-    div.appendChild(btn);
+    div.appendChild(b);
   });
   div.firstChild.classList.add('active');
 }
 
-// === Graphiques ===
+// Graphiques corrigés
 function drawMainChart() {
   if (mainChart) mainChart.destroy();
   mainChart = new Chart(document.getElementById('mainChart'), {
@@ -261,18 +233,21 @@ function drawMainChart() {
     data: {
       labels: rawData.map(d => d.date),
       datasets: [
-        {label: currentPortfolioName, data: rawData.map(d=>d.port), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.07)', fill:true, tension:0.4, borderWidth:4},
-        {label:'S&P 500', data: rawData.map(d=>d.sp), borderColor:'#64748b', borderWidth:2.5, borderDash:[8,6], tension:0.4},
-        {label:'NASDAQ 100', data: rawData.map(d=>d.nas), borderColor:'#94a3b8', borderWidth:2, borderDash:[12,8], tension:0.4}
+        {label: currentPortfolioName, data: rawData.map(d=>d.port), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.07)', fill:true, tension:0.4, borderWidth:4, pointRadius:0},
+        {label:'S&P 500', data: rawData.map(d=>d.sp), borderColor:'#64748b', borderWidth:2.5, borderDash:[8,6], tension:0.4, pointRadius:0},
+        {label:'NASDAQ 100', data: rawData.map(d=>d.nas), borderColor:'#94a3b8', borderWidth:2, borderDash:[12,8], tension:0.4, pointRadius:0}
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {legend:{position:'top'}, zoom:{zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}},
-      scales: {x:{type:'time', time:{unit:'month', displayFormats:{month:'MMM YYYY'}}}, y:{ticks:{callback:v=>v+'%'}}}
+      scales: {
+        x: {type:'time', time:{unit:'month', displayFormats:{month:'MMM yyyy'}}, grid:{display:false}},
+        y: {ticks:{callback:v=>v+'%'}}
+      }
     }
   });
-  createPeriodButtons('mainControls', mainChart);
+  createButtons('mainControls', mainChart);
 }
 
 function drawDetailChart() {
@@ -282,34 +257,35 @@ function drawDetailChart() {
     data: {
       labels: rawData.map(d => d.date),
       datasets: [
-        {label:'Volatilité mensuelle (%)', data: rawData.map(d=>d.volM), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.15)', fill:true},
-        {label:'Drawdown actuel (%)', data: rawData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true}
+        {label:'Volatilité mensuelle (%)', data: rawData.map(d=>d.volM), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.15)', fill:true, pointRadius:0},
+        {label:'Drawdown actuel (%)', data: rawData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true, pointRadius:0}
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {legend:{position:'top'}, title:{display:true, text:'Risque'}, zoom:{zoom:{wheel:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}},
-      scales: {x:{type:'time', time:{unit:'month'}}, y:{ticks:{callback:v=>v+'%'}}}
+      scales: {
+        x: {type:'time', time:{unit:'month', displayFormats:{month:'MMM yyyy'}}},
+        y: {ticks:{callback:v=>v+'%'}}
+      }
     }
   });
-  createPeriodButtons('detailControls', detailChart);
+  createButtons('detailControls', detailChart);
 }
 
-// === Composition ===
 async function loadComposition(name) {
   try {
-    const text = await fetch(COMP_CSV).then(r => r.text());
+    const text = await fetch(COMP_CSV).then(r=>r.text());
     const rows = text.trim().split('\n').slice(1);
     const relevant = rows.filter(r => r.split(',')[0].includes(name));
     const table = document.getElementById('compTable'); table.innerHTML = '';
-    const labels = [], values = [], colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00'];
+    const labels=[], values=[], colors=['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200'];
     relevant.forEach(r => {
-      const cols = r.split(',');
-      const asset = cols[1]?.trim(), ticker = cols[2]?.trim(), weight = cols[3]?.trim();
+      const c = r.split(',');
+      const asset = c[1]?.trim(), weight = c[3]?.trim();
       if (asset && weight) {
-        table.innerHTML += `<tr><td><strong>${asset}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
-        labels.push(asset);
-        values.push(parseFloat(weight));
+        table.innerHTML += `<tr><td><strong>${asset}</strong></td><td>${c[2]?.trim()}</td><td style="text-align:right;">${weight}</td></tr>`;
+        labels.push(asset); values.push(parseFloat(weight));
       }
     });
     if (pieChart) pieChart.destroy();
