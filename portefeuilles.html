@@ -43,7 +43,22 @@
     .kpi-big.red{border-left-color:var(--red);}.kpi-big.red strong{color:var(--red);}
     .kpi-big strong{font-size:2.5rem;font-weight:800;color:var(--gold);display:block;}
     .kpi-big div{font-size:0.95rem;color:var(--slate);margin-top:6px;}
-    .chart-wrapper{position:relative;height:520px;margin:3rem 0;background:white;border-radius:20px;padding:1.5rem;box-shadow:0 10px 40px rgba(0,0,0,0.07);}
+
+    /* LA CLÉ : HAUTEUR FIXE + CANVAS 100% */
+    .chart-wrapper{
+      position:relative;
+      height:520px !important;
+      width:100%;
+      background:white;
+      border-radius:20px;
+      padding:1.5rem;
+      box-shadow:0 10px 40px rgba(0,0,0,0.07);
+      margin:3rem 0;
+    }
+    .chart-wrapper canvas{
+      width:100% !important;
+      height:100% !important;
+    }
     .chart-controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:15px;}
     .chart-btn{padding:9px 16px;border:none;border-radius:10px;background:#e2e8f0;color:#1e293b;font-size:0.95rem;cursor:pointer;transition:.2s;font-weight:600;}
     .chart-btn.active,.chart-btn:hover{background:var(--gold);color:white;}
@@ -76,7 +91,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2 id="modal-title"></h2>
-      <span class="close" onclick="closeModal()">×</span>
+      <span class="close" onclick="closeModal()">x</span>
     </div>
     <div class="modal-body">
       <div class="kpi-bar" id="kpi-bar"></div>
@@ -106,8 +121,6 @@ const PORTFOLIOS = [
   { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_defensif_v2.csv" },
   { name: "Portefeuille Europe",     csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_europe_v2.csv" }
 ];
-
-// TON VRAI FICHIER (avec (3) (1))
 const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3)%20(1).csv";
 
 let rawData = [], mainChart = null, detailChart = null, pieChart = null;
@@ -117,6 +130,16 @@ function closeModal() {
   document.getElementById('modal').classList.remove('active');
   document.body.style.overflow = '';
   [mainChart, detailChart, pieChart].forEach(c => c?.destroy());
+}
+
+// Force le redimensionnement des canvas après création
+function resizeCanvas(chart) {
+  if (chart) {
+    setTimeout(() => {
+      chart.resize();
+      chart.update();
+    }, 100);
+  }
 }
 
 function parseLine(line) {
@@ -181,7 +204,7 @@ async function openModal(name, url) {
 
   updateKPIs();
   drawMainChart();
-  drawDetailChart();        // CORRIGÉ : maintenant ça marche
+  drawDetailChart();
   await loadComposition(name);
 }
 
@@ -208,18 +231,17 @@ function createButtons(id, chart) {
   div.innerHTML = '';
   ['1M','3M','6M','YTD','1A','3A','Tout'].forEach((l,i) => {
     const b = document.createElement('button');
-    b.className = 'chart-btn' + (i===0 ? ' active' : '');
+    b.className = 'chart-btn' + (i===0?' active':'');
     b.textContent = l;
     b.onclick = () => {
-      div.querySelectorAll('.chart-btn').forEach(x => x.classList.remove('active'));
+      div.querySelectorAll('.chart-btn').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
-      if (l === 'Tout') chart.resetZoom();
-      else if (l === 'YTD') {
-        chart.zoomScale('x', { min: new Date(`${new Date().getFullYear()}-01-01`).getTime(), max: Date.now() });
-      } else {
+      if (l==='Tout') chart.resetZoom();
+      else if (l==='YTD') chart.zoomScale('x',{min:new Date(`${new Date().getFullYear()}-01-01`).getTime(), max:Date.now()});
+      else {
         const days = { '1M':30, '3M':90, '6M':180, '1A':365, '3A':1095 }[l];
         const end = Date.now();
-        chart.zoomScale('x', { min: end - days*86400000, max: end });
+        chart.zoomScale('x',{min:end-days*86400000, max:end});
       }
     };
     div.appendChild(b);
@@ -239,12 +261,14 @@ function drawMainChart() {
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { position: 'top' }, zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
       scales: { x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } } }, y: { ticks: { callback: v => v + '%' } } }
     }
   });
   createButtons('mainControls', mainChart);
+  resizeCanvas(mainChart);
 }
 
 function drawDetailChart() {
@@ -259,12 +283,14 @@ function drawDetailChart() {
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' }, title: { display: true, text: 'Volatilité & Drawdown' }, zoom: { zoom: { wheel: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' }, title: { display: true, text: 'Risque : Volatilité & Drawdown' }, zoom: { zoom: { wheel: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
       scales: { x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } } }, y: { ticks: { callback: v => v + '%' } } }
     }
   });
   createButtons('detailControls', detailChart);
+  resizeCanvas(detailChart);
 }
 
 async function loadComposition(name) {
@@ -287,8 +313,9 @@ async function loadComposition(name) {
     pieChart = new Chart(document.getElementById('pieChart'), {
       type: 'doughnut',
       data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: '#fff' }] },
-      options: { responsive: true, plugins: { legend: { position: 'right' } } }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
     });
+    resizeCanvas(pieChart);
   } catch (e) {
     document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">Composition en cours de mise à jour...</td></tr>';
   }
