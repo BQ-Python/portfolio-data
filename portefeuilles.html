@@ -9,70 +9,55 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <style>
-    :root {
-      --navy: #0f172a; --gold: #ca8a04; --gold-light: #f5d28a;
-      --slate: #64748b; --light: #f8fafc; --gray: #e2e8f0; --red: #dc2626; --green: #16a34a;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Inter',sans-serif; background:#fff; color:#1e293b; line-height:1.6; padding-top:90px; }
-    nav { position:fixed; top:0; width:100%; background:var(--navy); padding:1.5rem 0; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
-    .nav { max-width:1400px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:0 5rem; }
-    .logo { font-size:2.4rem; font-weight:900; color:white; }
-    .logo span { color:var(--gold); }
-    .links a { color:white; text-decoration:none; margin:0 2rem; font-weight:500; transition:.3s; }
-    .links a:hover, .links a.active { color:var(--gold); }
+    :root { --navy:#0f172a; --gold:#ca8a04; --slate:#64748b; --light:#f8fafc; --gray:#e2e8f0; --red:#dc2626; --green:#16a34a; }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:#fff;color:#1e293b;line-height:1.6;padding-top:90px;}
+    nav{position:fixed;top:0;width:100%;background:var(--navy);padding:1.5rem 0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+    .nav{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 5rem;}
+    .logo{font-size:2.4rem;font-weight:900;color:white;}.logo span{color:var(--gold);}
+    .links a{color:white;text-decoration:none;margin:0 2rem;font-weight:500;transition:.3s;}
+    .links a:hover,.links a.active{color:var(--gold);}
 
-    .container { max-width:1400px; margin:0 auto; padding:120px 2rem 80px; text-align:center; }
-    h1 { font-size:3.6rem; font-weight:800; margin-bottom:4rem;
-         background:linear-gradient(90deg,var(--navy),var(--gold));
-         -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .container{max-width:1400px;margin:0 auto;padding:120px 2rem 80px;text-align:center;}
+    h1{font-size:3.6rem;font-weight:800;margin-bottom:4rem;background:linear-gradient(90deg,var(--navy),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(460px,1fr)); gap:2.5rem; margin-top:3rem; }
-    .card { background:white; border-radius:24px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);
-            transition:all .4s; cursor:pointer; }
-    .card:hover { transform:translateY(-16px); box-shadow:0 30px 70px rgba(0,0,0,0.15); }
-    .card-header { background:linear-gradient(135deg,var(--navy),#1e40af); padding:3rem 2rem; color:white; }
-    .card-header h3 { font-size:2.2rem; font-weight:700; }
-    .metrics { padding:2.5rem; display:grid; grid-template-columns:repeat(3,1fr); gap:1.2rem; }
-    .kpi { text-align:center; padding:1rem; background:var(--light); border-radius:14px; }
-    .kpi strong { display:block; font-size:2rem; font-weight:800; color:var(--gold); }
-    .kpi.red strong { color:var(--red); }
-    .kpi.green strong { color:var(--green); }
-    .kpi small { font-size:0.85rem; color:var(--slate); display:block; margin-top:4px; }
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:2.5rem;margin-top:3rem;}
+    .card{background:white;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);transition:all .4s;cursor:pointer;}
+    .card:hover{transform:translateY(-16px);box-shadow:0 30px 70px rgba(0,0,0,0.15);}
+    .card-header{background:linear-gradient(135deg,var(--navy),#1e40af);padding:3rem 2rem;color:white;text-align:center;}
+    .card-header h3{font-size:2.2rem;font-weight:700;}
+    .metrics{padding:2.5rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;}
+    .kpi{text-align:center;padding:1rem;background:var(--light);border-radius:14px;}
+    .kpi strong{display:block;font-size:2rem;font-weight:800;color:var(--gold);}
+    .kpi.red strong{color:var(--red);}.kpi.green strong{color:var(--green);}
+    .kpi small{font-size:0.85rem;color:var(--slate);display:block;margin-top:4px;}
 
-    #modal { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.97); backdrop-filter:blur(16px);
-             z-index:2000; align-items:center; justify-content:center; padding:2rem; overflow-y:auto; }
-    #modal.active { display:flex; }
-    .modal-content { background:white; border-radius:28px; max-width:1400px; width:95%; max-height:95vh; overflow:hidden;
-                     box-shadow:0 40px 100px rgba(0,0,0,0.5); }
-    .modal-header { background:var(--navy); color:white; padding:2rem 3rem; display:flex; justify-content:space-between; align-items:center; }
-    .modal-header h2 { font-size:2.4rem; font-weight:800; }
-    .close { font-size:3rem; cursor:pointer; opacity:0.8; transition:.3s; }
-    .close:hover { opacity:1; transform:rotate(90deg); }
-    .modal-body { padding:3rem 4rem 4rem; }
+    #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(16px);z-index:2000;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;}
+    #modal.active{display:flex;}
+    .modal-content{background:white;border-radius:28px;max-width:1400px;width:95%;max-height:95vh;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,0.5);}
+    .modal-header{background:var(--navy);color:white;padding:2rem 3rem;display:flex;justify-content:space-between;align-items:center;}
+    .modal-header h2{font-size:2.4rem;font-weight:800;}
+    .close{font-size:3rem;cursor:pointer;opacity:0.8;transition:.3s;}
+    .close:hover{opacity:1;transform:rotate(90deg);}
+    .modal-body{padding:3rem 4rem 4rem;}
 
-    .kpi-bar { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1.5rem; margin-bottom:3rem; }
-    .kpi-big { background:var(--light); padding:1.8rem; border-radius:18px; text-align:center;
-               border-left:6px solid var(--gold); transition:all .3s; }
-    .kpi-big:hover { transform:translateY(-6px); box-shadow:0 15px 30px rgba(0,0,0,0.1); }
-    .kpi-big.red { border-left-color:var(--red); }
-    .kpi-big.red strong { color:var(--red); }
-    .kpi-big strong { font-size:2.5rem; font-weight:800; color:var(--gold); display:block; }
-    .kpi-big div { font-size:0.95rem; color:var(--slate); margin-top:6px; }
+    .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1.5rem;margin-bottom:3rem;}
+    .kpi-big{background:var(--light);padding:1.8rem;border-radius:18px;text-align:center;border-left:6px solid var(--gold);transition:all .3s;}
+    .kpi-big:hover{transform:translateY(-6px);box-shadow:0 15px 30px rgba(0,0,0,0.1);}
+    .kpi-big.red{border-left-color:var(--red);}.kpi-big.red strong{color:var(--red);}
+    .kpi-big strong{font-size:2.5rem;font-weight:800;color:var(--gold);display:block;}
+    .kpi-big div{font-size:0.95rem;color:var(--slate);margin-top:6px;}
 
-    .chart-container { position:relative; height:480px; margin:3rem 0; background:white; border-radius:20px;
-                       padding:1.5rem; box-shadow:0 10px 40px rgba(0,0,0,0.07); }
-    .date-range { display:flex; justify-content:center; gap:1rem; margin:2rem 0; flex-wrap:wrap; align-items:center; }
-    .date-range input, .date-range button { padding:0.8rem 1.4rem; border:2px solid var(--gray); border-radius:12px; font-size:1rem; }
-    .date-range button { border:none; background:var(--gold); color:white; cursor:pointer; font-weight:600; }
-    .date-range button:hover { background:#b37a00; }
-    .date-range button:nth-child(4) { background:#64748b; }
+    .chart-wrapper{position:relative;height:500px;margin:3rem 0;background:white;border-radius:20px;padding:1.5rem;box-shadow:0 10px 40px rgba(0,0,0,0.07);}
+    .chart-controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;}
+    .chart-btn{padding:8px 14px;border:none;border-radius:8px;background:#e2e8f0;color:#1e293b;font-size:0.9rem;cursor:pointer;transition:.2s;}
+    .chart-btn.active,.chart-btn:hover{background:var(--gold);color:white;}
 
-    .comp-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; margin-top:3rem; align-items:center; }
-    @media (max-width:992px) { .comp-grid { grid-template-columns:1fr; } }
-    table { width:100%; border-collapse:collapse; margin-top:1rem; }
-    th, td { padding:0.9rem; text-align:left; border-bottom:1px solid var(--gray); }
-    th { background:var(--light); font-weight:600; color:var(--navy); }
+    .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-top:3rem;align-items:center;}
+    @media (max-width:992px){.comp-grid{grid-template-columns:1fr;}}
+    table{width:100%;border-collapse:collapse;margin-top:1rem;}
+    th,td{padding:0.9rem;text-align:left;border-bottom:1px solid var(--gray);}
+    th{background:var(--light);font-weight:600;color:var(--navy);}
   </style>
 </head>
 <body>
@@ -81,7 +66,7 @@
   <div class="nav">
     <div class="logo">AltInvest<span>.</span></div>
     <div class="links">
-      <a href="index.html" class="active">Portefeuilles</a>
+      <a href="#" class="active">Portefeuilles</a>
       <a href="devis.html">Devis</a>
       <a href="contact.html">Contact</a>
     </div>
@@ -103,26 +88,21 @@
 
       <div class="kpi-bar" id="kpi-bar"></div>
 
-      <div class="date-range">
-        <input type="date" id="startDate">
-        <input type="date" id="endDate">
-        <button onclick="applyDateFilter()">Appliquer</button>
-        <button onclick="resetDateFilter()">Tout afficher</button>
+      <!-- Performance Chart -->
+      <div class="chart-wrapper">
+        <div class="chart-controls" id="mainControls"></div>
+        <canvas id="mainChart"></canvas>
       </div>
 
-      <div class="chart-container"><canvas id="mainChart"></canvas></div>
-
-      <div style="text-align:center; margin:2rem 0;">
-        <select id="metricSelect" onchange="updateDetailChart()" style="padding:1rem 2rem; font-size:1.1rem; border-radius:12px; border:2px solid #cbd5e1;">
-          <option value="dd">Drawdown</option>
-          <option value="vol">Volatilité</option>
-        </select>
+      <!-- Detail Chart -->
+      <div class="chart-wrapper">
+        <div class="chart-controls" id="detailControls"></div>
+        <canvas id="detailChart"></canvas>
       </div>
-      <div class="chart-container"><canvas id="detailChart"></canvas></ LOOKS GOOD>
 
-      <h3 style="text-align:center; margin:4rem 0 2rem; font-size:2rem; font-weight:700;">Composition Actuelle</h3>
+      <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;font-weight:700;">Composition Actuelle</h3>
       <div class="comp-grid">
-        <div class="chart-container" style="height:400px;"><canvas id="pieChart"></canvas></div>
+        <div class="chart-wrapper" style="height:400px;"><canvas id="pieChart"></canvas></div>
         <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="compTable"></tbody></table>
       </div>
     </div>
@@ -137,8 +117,7 @@ const PORTFOLIOS = [
 ];
 const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
 
-let rawData = [], filteredData = [];
-let mainChart = null, detailChart = null, pieChart = null;
+let rawData = [], mainChart = null, detailChart = null, pieChart = null;
 let currentPortfolioName = "";
 
 function closeModal() {
@@ -147,50 +126,24 @@ function closeModal() {
   [mainChart, detailChart, pieChart].forEach(c => c?.destroy());
 }
 
-// === Calculs avancés (inchangés mais fiables) ===
-function dailyReturns(values) {
-  const rets = [];
-  for (let i = 1; i < values.length; i++) rets.push(values[i] / values[i-1] - 1);
-  return rets;
-}
-function calculateAdvancedMetrics(portRets, benchRets) {
-  if (portRets.length < 10) return { alpha:"N/A", beta:"N/A", te:"N/A", ir:"N/A", r2:"N/A" };
-  const n = portRets.length;
-  const mp = portRets.reduce((a,b)=>a+b,0)/n;
-  const mb = benchRets.reduce((a,b)=>a+b,0)/n;
-  let cov = 0, varb = 0;
-  for (let i=0;i<n;i++) { cov += (portRets[i]-mp)*(benchRets[i]-mb); varb += (benchRets[i]-mb)**2; }
-  const beta = varb > 0 ? cov/varb : 0;
-  const alphaDaily = mp - beta*mb;
-  const alphaAnn = (Math.pow(1+alphaDaily,252)-1)*100;
-  let te2 = 0;
-  for (let i=0;i<n;i++) { const act = portRets[i] - (alphaDaily + beta*benchRets[i]); te2 += act*act; }
-  const teAnn = Math.sqrt(te2/n)*Math.sqrt(252)*100;
-  const ir = teAnn > 0 ? alphaAnn/teAnn : 0;
-  const r2 = 1 - (te2 / portRets.reduce((s,v)=>s+(v-mp)**2,0));
-  return { alpha:alphaAnn.toFixed(2), beta:beta.toFixed(2), te:teAnn.toFixed(2), ir:ir.toFixed(2), r2:(r2*100).toFixed(1) };
-}
-
-// === Chargement des cartes avec tous les KPI ===
+// === KPI complets sur les cartes ===
 async function loadCards() {
   const grid = document.getElementById('grid');
   const year = new Date().getFullYear();
-
   for (const p of PORTFOLIOS) {
     try {
       const text = await fetch(p.csv).then(r => r.text());
       const lines = text.trim().split('\n').slice(1);
       const data = lines.map(l => {
         const [date, port, sp, nas, , , volM, , ddM] = l.split(',');
-        return { date, port:+port, sp:+sp, volM:+volM, ddM:+ddM };
+        return {date, port:+port, sp:+sp, volM:+volM, ddM:+ddM};
       }).filter(d => d.date);
 
       const last = data[data.length-1];
-      const firstThisYear = data.find(d => d.date.startsWith(year+'-01')) || data[0];
-      const ytd = ((last.port / firstThisYear.port) - 1) * 100;
-      const days = (new Date(last.date) - new Date(data[0].date)) / 86400000;
-      const years = days / 365.25;
-      const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years) - 1)*100 : 0;
+      const firstY = data.find(d => d.date.startsWith(year+'-01')) || data[0];
+      const ytd = ((last.port / firstY.port)-1)*100;
+      const years = (new Date(last.date) - new Date(data[0].date)) / (86400000 * 365.25);
+      const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years)-1)*100 : 0;
       const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
 
       const card = document.createElement('div');
@@ -211,7 +164,7 @@ async function loadCards() {
   }
 }
 
-// === Ouverture modale + tout charge immédiatement ===
+// === Ouverture modale + tout s'affiche immédiatement ===
 async function openModal(name, url) {
   closeModal();
   currentPortfolioName = name;
@@ -223,54 +176,24 @@ async function openModal(name, url) {
   const lines = text.trim().split('\n').slice(1);
   rawData = lines.map(l => {
     const [date, port, sp, nas, , , volM, ddC, ddM] = l.split(',');
-    return { date, port:+port, sp:+sp, nas:+nas, volM:+volM, ddC:+ddC, ddM:+ddM };
+    return {date, port:+port, sp:+sp, nas:+nas, volM:+volM, ddC:+ddC, ddM:+ddM};
   }).filter(d => d.date && !isNaN(d.port));
 
-  filteredData = [...rawData];
-  setupDateInputs();
-  updateAllChartsAndKPIs();
+  updateKPIs();
+  drawMainChart();
+  drawDetailChart();
   await loadComposition(name);
 }
 
-function setupDateInputs() {
-  const dates = rawData.map(d => d.date).sort();
-  document.getElementById('startDate').value = dates[0];
-  document.getElementById('endDate').value = dates[dates.length-1];
-}
-function applyDateFilter() {
-  const s = document.getElementById('startDate').value;
-  const e = document.getElementById('endDate').value;
-  filteredData = rawData.filter(d => d.date >= s && d.date <= e);
-  if (filteredData.length < 2) { alert("Période trop courte"); return; }
-  updateAllChartsAndKPIs();
-}
-function resetDateFilter() {
-  filteredData = [...rawData];
-  setupDateInputs();
-  updateAllChartsAndKPIs();
-}
-
-function updateAllChartsAndKPIs() {
-  updateKPIs();
-  drawMainChart();
-  updateDetailChart();
-}
-
+// === KPI modale ===
 function updateKPIs() {
-  if (filteredData.length < 2) return;
-  const last = filteredData[filteredData.length-1];
-  const first = filteredData[0];
+  const last = rawData[rawData.length-1];
   const year = new Date().getFullYear();
-  const firstY = filteredData.find(d => d.date.startsWith(year+'-01')) || first;
+  const firstY = rawData.find(d => d.date.startsWith(year+'-01')) || rawData[0];
   const ytd = ((last.port / firstY.port)-1)*100;
-  const days = (new Date(last.date) - new Date(first.date)) / 86400000;
-  const years = days / 365.25;
+  const years = (new Date(last.date) - new Date(rawData[0].date)) / (86400000 * 365.25);
   const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years)-1)*100 : 0;
   const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
-
-  const portVals = filteredData.map(d => d.port/100 + 1);
-  const benchVals = filteredData.map(d => d.sp/100 + 1);
-  const adv = calculateAdvancedMetrics(dailyReturns(portVals), dailyReturns(benchVals));
 
   document.getElementById('kpi-bar').innerHTML = `
     <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
@@ -279,63 +202,96 @@ function updateKPIs() {
     <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité</div></div>
     <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
     <div class="kpi-big"><strong>${sharpe}</strong><div>Ratio de Sharpe</div></div>
-    <div class="kpi-big"><strong>${adv.alpha}%</strong><div>Alpha annualisé</div></div>
-    <div class="kpi-big"><strong>${adv.beta}</strong><div>Bêta</div></div>
-    <div class="kpi-big"><strong>${adv.te}%</strong><div>Tracking Error</div></div>
-    <div class="kpi-big"><strong>${adv.ir}</strong><div>Information Ratio</div></div>
-    <div class="kpi-big"><strong>${adv.r2}%</strong><div>R²</div></div>
   `;
 }
 
+// === Boutons de période ===
+function createPeriodButtons(containerId, chartInstance) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  const periods = [
+    {label:'1M', days:30}, {label:'3M', days:90}, {label:'6M', days:180},
+    {label:'YTD', ytd:true}, {label:'1A', days:365}, {label:'3A', days:1095}, {label:'Tout', all:true}
+  ];
+  periods.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'chart-btn';
+    btn.textContent = p.label;
+    btn.onclick = () => {
+      container.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      if (p.all) { chartInstance.zoomScale('x', {min:0, max:100}); chartInstance.resetZoom(); }
+      else if (p.ytd) {
+        const year = new Date().getFullYear();
+        const start = new Date(`${year}-01-01`);
+        chartInstance.zoomScale('x', {min: start.getTime(), max: Date.now()});
+      } else {
+        const end = new Date();
+        const start = new Date(end - p.days * 86400000);
+        chartInstance.zoomScale('x', {min: start.getTime(), max: end.getTime()});
+      }
+    };
+    container.appendChild(btn);
+  });
+  container.querySelector('.chart-btn').classList.add('active'); // active "1M" par défaut
+}
+
+// === Graphiques avec contrôles intégrés ===
 function drawMainChart() {
   if (mainChart) mainChart.destroy();
   mainChart = new Chart(document.getElementById('mainChart'), {
     type: 'line',
     data: {
-      labels: filteredData.map(d => d.date),
+      labels: rawData.map(d => d.date),
       datasets: [
-        { label: currentPortfolioName, data: filteredData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.07)', fill: true, tension: 0.4, borderWidth: 4 },
-        { label: 'S&P 500', data: filteredData.map(d => d.sp), borderColor: 'rgba(100,116,139,0.6)', borderWidth: 2.5, borderDash: [10,8], tension: 0.4 },
-        { label: 'NASDAQ 100', data: filteredData.map(d => d.nas), borderColor: 'rgba(148,163,184,0.5)', borderWidth: 2, borderDash: [15,10], tension: 0.4 }
+        {label: currentPortfolioName, data: rawData.map(d=>d.port), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.07)', fill:true, tension:0.4, borderWidth:4},
+        {label:'S&P 500', data: rawData.map(d=>d.sp), borderColor:'rgba(100,116,139,0.6)', borderWidth:2.5, borderDash:[10,8], tension:0.4},
+        {label:'NASDAQ 100', data: rawData.map(d=>d.nas), borderColor:'rgba(148,163,184,0.5)', borderWidth:2, borderDash:[15,10], tension:0.4}
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend: { position: 'top', labels: { font: { size: 15, weight: '600' } } },
-        zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } }
+        legend:{position:'top', labels:{font:{size:15,weight:'600'}}},
+        zoom:{zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}
       },
       scales: {
-        x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM YYYY' } }, grid: { display: false } },
-        y: { grid: { color: '#f1f5f9' }, ticks: { callback: v => v + '%' } }
+        x:{type:'time', time:{unit:'month', displayFormats:{month:'MMM YYYY'}}, grid:{display:false}},
+        y:{grid:{color:'#f1f5f9'}, ticks:{callback:v=>v+'%'}}
       }
     }
   });
+  createPeriodButtons('mainControls', mainChart);
 }
 
-function updateDetailChart() {
+function drawDetailChart() {
   if (detailChart) detailChart.destroy();
-  const metric = document.getElementById('metricSelect').value;
-  const isVol = metric === 'vol';
   detailChart = new Chart(document.getElementById('detailChart'), {
     type: 'line',
     data: {
-      labels: filteredData.map(d => d.date),
-      datasets: [{
-        label: isVol ? 'Volatilité annualisée (%)' : 'Drawdown actuel (%)',
-        data: isVol ? filteredData.map(d => d.volM) : filteredData.map(d => d.ddC),
-        borderColor: isVol ? '#ca8a04' : '#dc2626',
-        backgroundColor: (isVol ? '#ca8a04' : '#dc2626') + '22',
-        fill: true, tension: 0.3
-      }]
+      labels: rawData.map(d => d.date),
+      datasets: [
+        {label:'Volatilité annualisée (%)', data: rawData.map(d=>d.volM), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.12)', fill:true, tension:0.3},
+        {label:'Drawdown actuel (%)', data: rawData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true, tension:0.3}
+      ]
     },
-    options: { responsive: true, maintainAspectRatio: false,
-      plugins: { title: { display: true, text: isVol ? 'Volatilité annualisée' : 'Drawdown', font: { size: 18 } } },
-      scales: { x: { type: 'time', time: { unit: 'month' } } }
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend:{position:'top'},
+        title:{display:true, text:'Volatilité & Drawdown', font:{size:18}},
+        zoom:{zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}
+      },
+      scales: {
+        x:{type:'time', time:{unit:'month'}},
+        y:{grid:{color:'#f1f5f9'}, ticks:{callback:v=>v+'%'}}
+      }
     }
   });
+  createPeriodButtons('detailControls', detailChart);
 }
 
+// === Composition ===
 async function loadComposition(name) {
   try {
     const text = await fetch(COMP_CSV).then(r => r.text());
@@ -343,22 +299,18 @@ async function loadComposition(name) {
     const relevant = rows.filter(r => r.split(',')[0].trim() === name);
     const table = document.getElementById('compTable');
     table.innerHTML = '';
-    const labels = [], values = [];
-    const colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00','#4a3700'];
-
+    const labels = [], values = [], colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00','#4a3700'];
     relevant.forEach(row => {
       const [_, asset, ticker, weight] = row.split(',');
-      const w = parseFloat(weight.replace('%','').trim());
       table.innerHTML += `<tr><td><strong>${asset.trim()}</strong></td><td>${ticker.trim()}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
       labels.push(asset.trim());
-      values.push(w);
+      values.push(parseFloat(weight.replace('%','')));
     });
-
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
       type: 'doughnut',
-      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: '#fff' }] },
-      options: { responsive: true, plugins: { legend: { position: 'right' } } }
+      data: {labels, datasets:[{data:values, backgroundColor:colors, borderWidth:4, borderColor:'#fff'}]},
+      options: {responsive:true, plugins:{legend:{position:'right'}}}
     });
   } catch (e) { console.error(e); }
 }
