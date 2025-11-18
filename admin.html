@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AltInvest Capital - Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0f172a;
+      --gold: #ca8a04;
+      --slate: #64748b;
+      --light: #f8fafc;
+      --gray: #e2e8f0;
+      --red: #dc2626;
+      --green: #16a34a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #1e293b;
+      padding-top: 90px;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: var(--navy);
+      padding: 1.5rem 0;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5rem;
+    }
+
+    .logo {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: white;
+    }
+
+    .logo span {
+      color: var(--gold);
+    }
+
+    .links a {
+      color: white;
+      text-decoration: none;
+      margin: 0 2rem;
+      font-weight: 500;
+      transition: .3s;
+    }
+
+    .links a:hover,
+    .links a.active {
+      color: var(--gold);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 120px 2rem 80px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3.6rem;
+      font-weight: 800;
+      margin-bottom: 4rem;
+      background: linear-gradient(90deg, var(--navy), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #admin-section {
+      padding: 2rem;
+      background: var(--light);
+      border-radius: 20px;
+      margin: 2rem auto;
+      max-width: 800px;
+    }
+
+    #admin-form {
+      display: grid;
+      gap: 1rem;
+    }
+
+    #admin-form label {
+      font-weight: 600;
+    }
+
+    #admin-form input,
+    #admin-form select {
+      padding: 0.5rem;
+      border: 1px solid var(--gray);
+      border-radius: 8px;
+    }
+
+    #admin-form button {
+      background: var(--gold);
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #admin-message {
+      color: var(--red);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav">
+      <div class="logo">AltInvest<span>.</span></div>
+      <div class="links">
+        <a href="index.html">Portefeuilles</a>
+        <a href="devis.html">Devis</a>
+        <a href="contact.html">Contact</a>
+        <a href="#" class="active">Admin</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Administration</h1>
+    <div id="admin-section">
+      <h2>Admin: Mise à jour des Portefeuilles</h2>
+      <form id="admin-form">
+        <label for="pat">Token d'accès personnel GitHub (avec scope repo):</label>
+        <input type="password" id="pat" required>
+
+        <label for="action">Action:</label>
+        <select id="action" required>
+          <option value="update">Mettre à jour un portefeuille existant</option>
+          <option value="add">Ajouter un nouveau portefeuille</option>
+        </select>
+
+        <div id="existing-portfolio" style="display: block;">
+          <label for="portfolio-select">Sélectionner le portefeuille:</label>
+          <select id="portfolio-select" required></select>
+        </div>
+
+        <div id="new-portfolio" style="display: none;">
+          <label for="new-name">Nom du nouveau portefeuille:</label>
+          <input type="text" id="new-name" placeholder="Portefeuille XYZ" required>
+        </div>
+
+        <label for="csv-file">Fichier CSV (format attendu):</label>
+        <input type="file" id="csv-file" accept=".csv" required>
+
+        <button type="submit">Envoyer</button>
+      </form>
+      <p id="admin-message"></p>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
+    const PORTFOLIOS_JSON = BASE_URL + "portfolios.json";
+    const GITHUB_API = "https://api.github.com/repos/BQ-Python/portfolio-data/contents/";
+
+    let PORTFOLIOS = [];
+
+    async function loadPortfolios() {
+      try {
+        const res = await fetch(PORTFOLIOS_JSON);
+        PORTFOLIOS = await res.json();
+        populateAdminSelect();
+      } catch (e) {
+        console.error('Erreur lors du chargement de portfolios.json:', e);
+      }
+    }
+
+    document.getElementById('action').addEventListener('change', (e) => {
+      const action = e.target.value;
+      document.getElementById('existing-portfolio').style.display = action === 'update' ? 'block' : 'none';
+      document.getElementById('new-portfolio').style.display = action === 'add' ? 'block' : 'none';
+    });
+
+    function populateAdminSelect() {
+      const select = document.getElementById('portfolio-select');
+      select.innerHTML = '';
+      PORTFOLIOS.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.name;
+        option.textContent = p.name;
+        select.appendChild(option);
+      });
+    }
+
+    document.getElementById('admin-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const messageEl = document.getElementById('admin-message');
+      messageEl.textContent = 'En cours...';
+      const pat = document.getElementById('pat').value;
+      const action = document.getElementById('action').value;
+      const file = document.getElementById('csv-file').files[0];
+
+      if (!pat || !file) {
+        messageEl.textContent = 'Token et fichier requis.';
+        return;
+      }
+
+      try {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64Content = reader.result.split(',')[1]; // Remove data:base64 prefix
+          const headers = {
+            'Authorization': `token ${pat}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          };
+
+          if (action === 'update') {
+            const name = document.getElementById('portfolio-select').value;
+            const portfolio = PORTFOLIOS.find(p => p.name === name);
+            const path = portfolio.file;
+
+            // Get SHA
+            const shaRes = await fetch(GITHUB_API + path, { headers });
+            if (!shaRes.ok) throw new Error('Erreur lors de la récupération du SHA');
+            const { sha } = await shaRes.json();
+
+            // Update file
+            const body = JSON.stringify({
+              message: `Mise à jour du CSV pour ${name}`,
+              content: base64Content,
+              sha
+            });
+            const updateRes = await fetch(GITHUB_API + path, { method: 'PUT', headers, body });
+            if (!updateRes.ok) throw new Error('Erreur lors de la mise à jour');
+            messageEl.textContent = 'Mise à jour réussie ! Rechargez la page.';
+          } else if (action === 'add') {
+            const name = document.getElementById('new-name').value.trim();
+            if (!name) throw new Error('Nom requis');
+            const slug = `portefeuille_${name.toLowerCase().replace(/\s+/g, '_')}.csv`;
+            // Upload new CSV
+            const bodyCsv = JSON.stringify({
+              message: `Ajout du CSV pour ${name}`,
+              content: base64Content
+            });
+            const addRes = await fetch(GITHUB_API + slug, { method: 'PUT', headers, body: bodyCsv });
+            if (!addRes.ok) throw new Error('Erreur lors de l\'ajout du CSV');
+
+            // Update portfolios.json
+            const jsonPath = 'portfolios.json';
+            const jsonShaRes = await fetch(GITHUB_API + jsonPath, { headers });
+            if (!jsonShaRes.ok) throw new Error('Erreur lors de la récupération de portfolios.json');
+            const { sha: jsonSha, content: currentJsonBase64 } = await jsonShaRes.json();
+            const currentJson = JSON.parse(atob(currentJsonBase64));
+            currentJson.push({ name, file: slug });
+
+            const bodyJson = JSON.stringify({
+              message: `Ajout de ${name} à portfolios.json`,
+              content: btoa(JSON.stringify(currentJson, null, 2)),
+              sha: jsonSha
+            });
+            const updateJsonRes = await fetch(GITHUB_API + jsonPath, { method: 'PUT', headers, body: bodyJson });
+            if (!updateJsonRes.ok) throw new Error('Erreur lors de la mise à jour de portfolios.json');
+            messageEl.textContent = 'Ajout réussi ! Rechargez la page.';
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        messageEl.textContent = `Erreur: ${err.message}`;
+        console.error(err);
+      }
+    });
+
+    loadPortfolios();
+  </script>
+</body>
+</html>
