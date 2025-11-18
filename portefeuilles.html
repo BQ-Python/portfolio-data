@@ -4,276 +4,70 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nos Portefeuilles | AltInvest Capital</title>
-  <meta name="description" content="Découvrez nos portefeuilles d'investissement performants : Croissance, Défensif, Europe. Performances, composition et analyses détaillées.">
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <!-- Chart.js + Plugins -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
   <style>
     :root {
-      --navy: #0f172a;
-      --gold: #ca8a04;
-      --slate: #64748b;
-      --light-slate: #94a3b8;
-      --light: #f8fafc;
-      --gray: #e2e8f0;
-      --red: #dc2626;
-      --green: #16a34a;
+      --navy: #0f172a; --gold: #ca8a04; --slate: #64748b; --light-slate: #94a3b8;
+      --light: #f8fafc; --gray: #e2e8f0; --red: #dc2626; --green: #16a34a;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #fff;
-      color: #1e293b;
-      line-height: 1.6;
-      padding-top: 90px;
-      transition: background 0.4s;
-    }
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      background: var(--navy);
-      padding: 1.5rem 0;
-      z-index: 1000;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-    .nav {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 5rem;
-    }
-    .logo {
-      font-size: 2.4rem;
-      font-weight: 900;
-      color: white;
-    }
-    .logo span { color: var(--gold); }
-    .links a {
-      color: white;
-      text-decoration: none;
-      margin: 0 2rem;
-      font-weight: 500;
-      font-size: 1.05rem;
-      transition: color .3s;
-    }
-    .links a:hover, .links a.active { color: var(--gold); }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#fff; color:#1e293b; line-height:1.6; padding-top:90px; }
+    nav { position:fixed; top:0; left:0; right:0; background:var(--navy); padding:1.5rem 0; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+    .nav { max-width:1400px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:0 5rem; }
+    .logo { font-size:2.4rem; font-weight:900; color:white; }
+    .logo span { color:var(--gold); }
+    .links a { color:white; text-decoration:none; margin:0 2rem; font-weight:500; transition:.3s; }
+    .links a:hover, .links a.active { color:var(--gold); }
 
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 120px 2rem 80px;
-    }
-    h1 {
-      text-align: center;
-      font-size: 3.6rem;
-      font-weight: 800;
-      margin-bottom: 4rem;
-      background: linear-gradient(90deg, var(--navy), var(--gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    .container { max-width:1400px; margin:0 auto; padding:120px 2rem 80px; }
+    h1 { text-align:center; font-size:3.6rem; font-weight:800; margin-bottom:4rem;
+         background:linear-gradient(90deg,var(--navy),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-    /* Cards */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-      gap: 2.5rem;
-    }
-    .card {
-      background: white;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      transition: all 0.4s ease;
-      cursor: pointer;
-    }
-    .card:hover {
-      transform: translateY(-16px);
-      box-shadow: 0 30px 70px rgba(0,0,0,0.15);
-    }
-    .card-header {
-      background: linear-gradient(135deg, var(--navy), #1e40af);
-      padding: 3rem 2rem;
-      text-align: center;
-      color: white;
-    }
-    .card-header h3 {
-      font-size: 2.2rem;
-      font-weight: 700;
-    }
-    .metrics {
-      padding: 2.5rem;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-    }
-    .kpi {
-      text-align: center;
-      padding: 1.2rem;
-      background: var(--light);
-      border-radius: 16px;
-    }
-    .kpi strong {
-      display: block;
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: var(--gold);
-    }
-    .kpi.red strong { color: var(--red); }
-    .kpi.green strong { color: var(--green); }
-    .kpi small {
-      font-size: 0.9rem;
-      color: var(--slate);
-      margin-top: 0.3rem;
-      display: block;
-    }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(460px,1fr)); gap:2.5rem; }
+    .card { background:white; border-radius:24px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);
+            transition:all .4s; cursor:pointer; }
+    .card:hover { transform:translateY(-16px); box-shadow:0 30px 70px rgba(0,0,0,0.15); }
+    .card-header { background:linear-gradient(135deg,var(--navy),#1e40af); padding:3rem 2rem; text-align:center; color:white; }
+    .card-header h3 { font-size:2.2rem; font-weight:700; }
+    .metrics { padding:2.5rem; display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
+    .kpi { text-align:center; padding:1.2rem; background:var(--light); border-radius:16px; }
+    .kpi strong { display:block; font-size:2.2rem; font-weight:800; color:var(--gold); }
+    .kpi.red strong { color:var(--red); }
+    .kpi.green strong { color:var(--green); }
+    .kpi small { font-size:0.9rem; color:var(--slate); margin-top:0.3rem; display:block; }
 
-    /* Modal */
-    #modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.97);
-      backdrop-filter: blur(16px);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      overflow-y: auto;
-    }
-    #modal.active { display: flex; }
-    .modal-content {
-      background: white;
-      border-radius: 28px;
-      max-width: 1400px;
-      width: 95%;
-      max-height: 95vh;
-      overflow: hidden;
-      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-    }
-    .modal-header {
-      background: var(--navy);
-      color: white;
-      padding: 2rem 3rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .modal-header h2 {
-      font-size: 2.4rem;
-      font-weight: 800;
-    }
-    .close {
-      font-size: 3rem;
-      cursor: pointer;
-      opacity: 0.8;
-      transition: 0.3s;
-    }
-    .close:hover { opacity: 1; transform: rotate(90deg); }
+    #modal { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.97); backdrop-filter:blur(16px);
+             z-index:2000; align-items:center; justify-content:center; padding:2rem; overflow-y:auto; }
+    #modal.active { display:flex; }
+    .modal-content { background:white; border-radius:28px; max-width:1400px; width:95%; max-height:95vh; overflow:hidden;
+                     box-shadow:0 40px 100px rgba(0,0,0,0.5); }
+    .modal-header { background:var(--navy); color:white; padding:2rem 3rem; display:flex; justify-content:space-between; align-items:center; }
+    .modal-header h2 { font-size:2.4rem; font-weight:800; }
+    .close { font-size:3rem; cursor:pointer; opacity:0.8; transition:.3s; }
+    .close:hover { opacity:1; transform:rotate(90deg); }
+    .modal-body { padding:3rem 4rem 4rem; }
 
-    .modal-body { padding: 3rem 4rem 4rem; }
+    .kpi-bar { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1.5rem; margin-bottom:3rem; }
+    .kpi-big { background:var(--light); padding:1.8rem; border-radius:18px; text-align:center;
+               border-left:6px solid var(--gold); transition:all .3s; }
+    .kpi-big:hover { transform:translateY(-6px); box-shadow:0 15px 30px rgba(0,0,0,0.1); }
+    .kpi-big.red { border-left-color:var(--red); }
+    .kpi-big.red strong { color:var(--red); }
+    .kpi-big strong { font-size:2.6rem; font-weight:800; color:var(--gold); display:block; }
+    .kpi-big div { font-size:1rem; color:var(--slate); margin-top:0.5rem; }
 
-    /* KPI Bar */
-    .kpi-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-    .kpi-big {
-      background: var(--light);
-      padding: 1.8rem;
-      border-radius: 18px;
-      text-align: center;
-      border-left: 6px solid var(--gold);
-      transition: all 0.3s;
-    }
-    .kpi-big:hover { transform: translateY(-6px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-    .kpi-big.red { border-left-color: var(--red); }
-    .kpi-big.red strong { color: var(--red); }
-    .kpi-big strong {
-      font-size: 2.6rem;
-      font-weight: 800;
-      color: var(--gold);
-      display: block;
-    }
-    .kpi-big div {
-      font-size: 1rem;
-      color: var(--slate);
-      margin-top: 0.5rem;
-    }
+    .chart-container { position:relative; height:480px; margin:3rem 0; background:white; border-radius:20px;
+                       padding:1.5rem; box-shadow:0 10px 40px rgba(0,0,0,0.07); }
+    .date-range { display:flex; justify-content:center; gap:1.5rem; margin:2rem 0; flex-wrap:wrap; }
+    .date-range input, .date-range button { padding:0.8rem 1.2rem; border:2px solid var(--gray); border-radius:12px; font-size:1rem; }
+    .date-range button { border:none; background:var(--gold); color:white; cursor:pointer; font-weight:600; }
 
-    /* Charts */
-    .chart-container:before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, rgba(202,138,4,0.03), transparent);
-      border-radius: 20px;
-      pointer-events: none;
-    }
-    .chart-container {
-      position: relative;
-      height: 480px;
-      margin: 3rem 0;
-      background: white;
-      border-radius: 20px;
-      padding: 1.5rem;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.07);
-    }
-
-    /* Date Range */
-    .date-range {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      margin: 2rem 0;
-      flex-wrap: wrap;
-    }
-    .date-range input {
-      padding: 0.8rem 1.2rem;
-      border: 2px solid var(--gray);
-      border-radius: 12px;
-      font-size: 1rem;
-    }
-
-    /* Composition Donut */
-    .comp-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-      margin-top: 3rem;
-      align-items: center;
-    }
-    @media (max-width: 992px) {
-      .comp-grid { grid-template-columns: 1fr; }
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1.5rem;
-      font-size: 1rem;
-    }
-    th, td {
-      padding: 1rem 0.8rem;
-      text-align: left;
-      border-bottom: 1px solid var(--gray);
-    }
-    th {
-      background: var(--light);
-      font-weight: 600;
-      color: var(--navy);
-    }
-    tr:hover td { background: #fafafa; }
+    .comp-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; margin-top:3rem; align-items:center; }
+    @media (max-width:992px) { .comp-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -295,7 +89,6 @@
   <div class="grid" id="grid"></div>
 </div>
 
-<!-- Modal -->
 <div id="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -306,42 +99,28 @@
 
       <div class="kpi-bar" id="kpi-bar"></div>
 
-      <!-- Date Range Filter -->
       <div class="date-range">
         <input type="date" id="startDate">
         <input type="date" id="endDate">
-        <button onclick="applyDateFilter()" style="padding:0.8rem 2rem;border:none;background:var(--gold);color:white;border-radius:12px;cursor:pointer;font-weight:600;">Appliquer</button>
+        <button onclick="applyDateFilter()">Appliquer le filtre</button>
       </div>
 
-      <!-- Performance Chart -->
-      <div class="chart-container">
-        <canvas id="mainChart"></canvas>
-      </div>
+      <div class="chart-container"><canvas id="mainChart"></canvas></div>
 
-      <!-- Secondary Chart (Vol / DD) -->
       <div style="text-align:center;margin:2rem 0;">
         <select id="metricSelect" onchange="updateDetailChart()" style="padding:1rem 2rem;font-size:1.1rem;border-radius:12px;border:2px solid #cbd5e1;">
           <option value="dd">Drawdown</option>
-          <option value="vol">Volatilité annualisée</option>
+          <option value="vol">Volatilité</option>
         </select>
       </div>
-      <div class="chart-container">
-        <canvas id="detailChart"></canvas>
-      </div>
+      <div class="chart-container"><canvas id="detailChart"></canvas></div>
 
-      <!-- Composition -->
-      <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;font-weight:700;">Composition Actuelle du Portefeuille</h3>
+      <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;font-weight:700;">Composition Actuelle</h3>
       <div class="comp-grid">
-        <div class="chart-container" style="height:400px;">
-          <canvas id="pieChart"></canvas>
-        </div>
+        <div class="chart-container" style="height:400px;"><canvas id="pieChart"></canvas></div>
         <div>
-          <table>
-            <thead>
-              <tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr>
-            </thead>
-            <tbody id="compTable"></tbody>
-          </table>
+          <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead>
+                 <tbody id="compTable"></tbody></table>
         </div>
       </div>
     </div>
@@ -360,6 +139,51 @@ let rawData = [], filteredData = [];
 let mainChart = null, detailChart = null, pieChart = null;
 let currentPortfolioName = "";
 
+// === FONCTIONS DE CALCUL AVANCÉES ===
+function calculateAdvancedMetrics(portReturns, benchReturns) {
+  if (portReturns.length < 2) return { alpha: 0, beta: 0, te: 0, ir: 0, r2: 0 };
+
+  const n = portReturns.length;
+  const meanPort = portReturns.reduce((a,b)=>a+b,0)/n;
+  const meanBench = benchReturns.reduce((a,b)=>a+b,0)/n;
+
+  let cov = 0, varBench = 0, residuals = 0;
+  for (let i = 0; i < n; i++) {
+    cov += (portReturns[i] - meanPort) * (benchReturns[i] - meanBench);
+    varBench += Math.pow(benchReturns[i] - meanBench, 2);
+    const predicted = meanPort + (cov/varBench)*(benchReturns[i]-meanBench);
+    residuals += Math.pow(portReturns[i] - predicted, 2);
+  }
+
+  const beta = varBench !== 0 ? cov / varBench : 0;
+  const alphaDaily = meanPort - beta * meanBench;
+  const alphaAnnual = (Math.pow(1 + alphaDaily, 252) - 1) * 100;
+
+  const teAnnual = Math.sqrt(residuals / (n-2)) * Math.sqrt(252) * 100;
+  const ir = teAnnual !== 0 ? alphaAnnual / teAnnual : 0;
+
+  const r2 = 1 - (residuals / portReturns.reduce((s,v)=>s+Math.pow(v-meanPort,2),0));
+
+  return {
+    alpha: alphaAnnual.toFixed(2),
+    beta: beta.toFixed(2),
+    te: teAnnual.toFixed(2),
+    ir: ir.toFixed(2),
+    r2: r2.toFixed(3)
+  };
+}
+
+// Retours quotidiens en %
+function dailyReturns(values) {
+  const rets = [];
+  for (let i = 1; i < values.length; i++) {
+    rets.push((values[i] / values[i-1] - 1));
+  }
+  return rets;
+}
+
+// === FIN MÉTRIQUES AVANCÉES ===
+
 function closeModal() {
   document.getElementById('modal').classList.remove('active');
   document.body.style.overflow = '';
@@ -374,8 +198,6 @@ async function loadCards() {
     try {
       const text = await fetch(p.csv).then(r => r.text());
       const lines = text.trim().split('\n').slice(1);
-      if (lines.length < 10) continue;
-
       const data = lines.map(l => {
         const [date, port, sp, nas, , , volM, ddC, ddM] = l.split(',');
         return { date, port: +port, sp: +sp, nas: +nas, volM: +volM, ddC: +ddC, ddM: +ddM };
@@ -395,16 +217,14 @@ async function loadCards() {
         <div class="card-header"><h3>${p.name}</h3></div>
         <div class="metrics">
           <div class="kpi"><strong>${last.port.toFixed(1)}%</strong><small>Perf. cumulée</small></div>
-          <div class="kpi"><strong ${ytd >= 0 ? 'class="green"' : 'class="red'}>${ytd.toFixed(1)}%</strong><small>YTD ${year}</small></div>
+          <div class="kpi"><strong class="${ytd>=0?'green':'red'}">${ytd.toFixed(1)}%</strong><small>YTD ${year}</small></div>
           <div class="kpi"><strong>${cagr.toFixed(1)}%</strong><small>Perf. annualisée</small></div>
           <div class="kpi"><strong>${last.volM.toFixed(1)}%</strong><small>Volatilité</small></div>
           <div class="kpi red"><strong>${last.ddM.toFixed(1)}%</strong><small>Drawdown max</small></div>
-          <div class="kpi"><strong>${(cagr / last.volM).toFixed(2)}</strong><small>Sharpe</small></div>
+          <div class="kpi"><strong>${(cagr/last.volM).toFixed(2)}</strong><small>Sharpe</small></div>
         </div>`;
       grid.appendChild(card);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   }
 }
 
@@ -423,27 +243,25 @@ async function openModal(name, url) {
   });
 
   filteredData = [...rawData];
-  updateAllCharts();
-  await loadComposition(name);
   setupDateInputs();
+  updateAll();
+  await loadComposition(name);
 }
 
 function setupDateInputs() {
   const dates = rawData.map(d => d.date);
-  const min = dates[0];
-  const max = dates[dates,retain length - 1];
-  document.getElementById('startDate').value = min;
-  document.getElementById('endDate').value = max;
+  document.getElementById('startDate').value = dates[0];
+  document.getElementById('endDate').value = dates[dates.length-1];
 }
 
 function applyDateFilter() {
   const start = document.getElementById('startDate').value;
   const end = document.getElementById('endDate').value;
   filteredData = rawData.filter(d => d.date >= start && d.date <= end);
-  updateAllCharts();
+  updateAll();
 }
 
-function updateAllCharts() {
+function updateAll() {
   updateKPIs();
   drawMainChart();
   updateDetailChart();
@@ -457,23 +275,35 @@ function updateKPIs() {
 
   const years = (new Date(last.date) - new Date(filteredData[0].date)) / (1000 * 3600 * 24 * 365.25);
   const cagr = years > 0 ? (Math.pow(last.port / 100, 1 / years) - 1) * 100 : 0;
-
   const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : 'N/A';
+
+  // === Calcul métriques avancées ===
+  const portVals = filteredData.map(d => d.port / 100 + 1); // valeurs cumulées
+  const benchVals = filteredData.map(d => d.sp / 100 + 1);
+  const portRets = dailyReturns(portVals);
+  const benchRets = dailyReturns(benchVals);
+  const adv = calculateAdvancedMetrics(portRets, benchRets);
 
   document.getElementById('kpi-bar').innerHTML = `
     <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
-    <div class="kpi-big"><strong ${ytd >= 0 ? '' : 'class="red"'}>${ytd.toFixed(1)}%</strong><div>YTD ${year}</div></div>
+    <div class="kpi-big"><strong class="${ytd>=0?'':'red'}">${ytd.toFixed(1)}%</strong><div>YTD ${year}</div></div>
     <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Perf. annualisée</div></div>
-    <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité</div></div>
+    <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité annualisée</div></div>
     <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
     <div class="kpi-big"><strong>${sharpe}</strong><div>Ratio de Sharpe</div></div>
+
+    <div class="kpi-big"><strong>${adv.alpha}%</strong><div>Alpha annualisé (vs S&P 500)</div></div>
+    <div class="kpi-big"><strong>${adv.beta}</strong><div>Bêta (vs S&P 500)</div></div>
+    <div class="kpi-big"><strong>${adv.te}%</strong><div>Tracking Error</div></div>
+    <div class="kpi-big"><strong>${adv.ir}</strong><div>Information Ratio</div></div>
+    <div class="kpi-big"><strong>${adv.r2}</strong><div>R²</div></div>
   `;
 }
 
+// === Graphiques (inchangés, juste plus propres) ===
 function drawMainChart() {
   if (mainChart) mainChart.destroy();
-  const ctx = document.getElementById('mainChart').getContext('2d');
-  mainChart = new Chart(ctx, {
+  mainChart = new Chart(document.getElementById('mainChart'), {
     type: 'line',
     data: {
       labels: filteredData.map(d => d.date),
@@ -484,8 +314,7 @@ function drawMainChart() {
       ]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { position: 'top', labels: { font: { size: 14, weight: '600' } } },
@@ -506,61 +335,41 @@ function updateDetailChart() {
   const ctx = document.getElementById('detailChart').getContext('2d');
 
   if (metric === 'vol') {
-    detailChart = new Chart(ctx, {
-      type: 'line',
-      data: { labels: filteredData.map(d => d.date), datasets: [{ label: 'Volatilité annualisée (%)', data: filteredData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.12)', fill: true, tension: 0.3 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Volatilité annualisée', font: { size: 18 } } }, scales: { x: { type: 'time', time: { unit: 'month' } } } }
+    detailChart = new Chart(ctx, { type: 'line', data: { labels: filteredData.map(d=>d.date), datasets: [{ label: 'Volatilité annualisée (%)', data: filteredData.map(d=>d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.12)', fill: true }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Volatilité annualisée', font: { size: 18 } } }, scales: { x: { type: 'time', time: { unit: 'month' } } } }
     });
   } else {
-    detailChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: filteredData.map(d => d.date),
-        datasets: [
-          { label: 'Drawdown actuel', data: filteredData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.2)', fill: true },
-          { label: 'Drawdown max historique', data: filteredData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Drawdown (%)', font: { size: 18 } } }, scales: { x: { type: 'time', time: { unit: 'month' } } } }
+    detailChart = new Chart(ctx, { type: 'line', data: { labels: filteredData.map(d=>d.date), datasets: [
+      { label: 'Drawdown actuel', data: filteredData.map(d=>d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.2)', fill: true },
+      { label: 'Drawdown max', data: filteredData.map(d=>d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
+    ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Drawdown (%)', font: { size: 18 } } }, scales: { x: { type: 'time', time: { unit: 'month' } } } }
     });
   }
 }
 
-async function loadComposition(portfolioName) {
+async function loadComposition(name) {
   const text = await fetch(COMP_CSV).then(r => r.text());
   const rows = text.trim().split('\n').slice(1);
-  const relevant = rows.filter(r => r.split(',')[0].trim() === portfolioName);
+  const relevant = rows.filter(r => r.split(',')[0].trim() === name);
 
-  const tableBody = document.getElementById('compTable');
-  tableBody.innerHTML = '';
-  const pieData = [];
-  const pieLabels = [];
+  const table = document.getElementById('compTable');
+  table.innerHTML = '';
+  const labels = [], data = [];
   const colors = ['#ca8a04','#1e40af','#64748b','#94a3b8','#dc2626','#16a34a','#7c3aed','#ec4899','#f59e0b','#10b981'];
 
   relevant.forEach(row => {
     const [_, asset, ticker, weight] = row.split(',');
-    const w = parseFloat(weight.replace('%', ''));
-    tableBody.innerHTML += `<tr><td><strong>${asset.trim()}</strong></td><td>${ticker.trim()}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
-    pieLabels.push(asset.trim());
-    pieData.push(w);
+    const w = parseFloat(weight.replace('%',''));
+    table.innerHTML += `<tr><td><strong>${asset.trim()}</strong></td><td>${ticker.trim()}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
+    labels.push(asset.trim());
+    data.push(w);
   });
 
   if (pieChart) pieChart.destroy();
-  const pieCtx = document.getElementById('pieChart').getContext('2d');
-  pieChart = new Chart(pieCtx, {
+  pieChart = new Chart(document.getElementById('pieChart'), {
     type: 'doughnut',
-    data: {
-      labels: pieLabels,
-      datasets: [{ data: pieData, backgroundColor: colors, borderWidth: 3, borderColor: '#fff' }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'right', labels: { padding: 20, font: { size: 13 } } },
-        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed.toFixed(2)}%` } }
-      }
-    }
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 3, borderColor: '#fff' }] },
+    options: { responsive: true, plugins: { legend: { position: 'right' } } }
   });
 }
 
