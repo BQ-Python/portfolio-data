@@ -71,16 +71,14 @@
       max-width: 900px;
       text-align: left;
     }
-    #admin-form, .comp-section {
-      display: grid;
-      gap: 1.2rem;
-    }
-    label { font-weight: 600; }
+    label { font-weight: 600; margin-top: 1rem; display: block; }
     input, select {
       padding: 0.7rem;
       border: 1px solid var(--gray);
       border-radius: 8px;
       font-size: 1rem;
+      width: 100%;
+      margin-top: 0.4rem;
     }
     button {
       background: var(--gold);
@@ -91,6 +89,7 @@
       cursor: pointer;
       font-weight: 600;
       transition: .3s;
+      margin-top: 1.5rem;
     }
     button:hover { background: #e4b94c; }
     #admin-message, #comp-message {
@@ -134,9 +133,11 @@
           <option value="add">Ajouter un nouveau portefeuille</option>
         </select>
 
-        <div id="existing-portfolio">
+        <div id="existing-portfolio" style="display:none;">
           <label for="portfolio-select">Portefeuille à mettre à jour :</label>
-          <select id="portfolio-select" required></select>
+          <select id="portfolio-select" required>
+            <option value="">Chargement en cours...</option>
+          </select>
         </div>
 
         <div id="new-portfolio" style="display:none;">
@@ -151,7 +152,6 @@
       </form>
       <p id="admin-message"></p>
 
-      <!-- ==================== MISE À JOUR DE LA COMPOSITION ==================== -->
       <div class="comp-section">
         <h2>Mise à jour de la composition globale</h2>
         <p>Cette action remplacera le fichier <code>composition_portefeuilles.csv</code> utilisé par le site.</p>
@@ -169,41 +169,47 @@
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
     const PORTFOLIOS_JSON = BASE_URL + "portfolios.json";
     const GITHUB_API = "https://api.github.com/repos/BQ-Python/portfolio-data/contents/";
-    const COMP_FILE_NAME = "composition_portefeuilles.csv"; // nom exact sur GitHub
+    const COMP_FILE_NAME = "composition_portefeuilles.csv";
 
     let PORTFOLIOS = [];
 
     // Chargement de la liste des portefeuilles
     async function loadPortfolios() {
+      const messageEl = document.getElementById('admin-message');
+      const select = document.getElementById('portfolio-select');
+
       try {
-        const res = await fetch(PORTFOLIOS_JSON);
+        const res = await fetch(PORTFOLIOS_JSON + '?t=' + Date.now()); // anti-cache
+        if (!res.ok) throw new Error(`HTTP ${res.status} – Vérifiez l’URL`);
         PORTFOLIOS = await res.json();
-        populateAdminSelect();
-      } catch (e) {
-        console.error("Impossible de charger portfolios.json', e);
+
+        select.innerHTML = '<option value="">-- Choisir un portefeuille --</option>';
+        PORTFOLIOS.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.name;
+          opt.textContent = p.name;
+          select.appendChild(opt);
+        });
+
+        messageEl.textContent = `Liste chargée : ${PORTFOLIOS.length} portefeuille(s) trouvé(s).`;
+        messageEl.style.color = 'var(--green)';
+      } catch (err) {
+        select.innerHTML = '<option value="">Erreur de chargement</option>';
+        messageEl.textContent = `Impossible de charger la liste : ${err.message}`;
+        messageEl.style.color = 'var(--red)';
+        console.error(err);
       }
     }
 
-    // Affichage/masquage des champs selon l’action
-    document.getElementById('action').addEventListener('change', (e) => {
-      const val = e.target.value;
-      document.getElementById('existing-portfolio').style.display = val === 'update' ? 'block' : 'none';
-      document.getElementById('new-portfolio').style.display = val === 'add' ? 'block' : 'none';
+    // Affichage conditionnel des champs
+    document.getElementById('action').addEventListener('change', function () {
+      const isUpdate = this.value === 'update';
+      document.getElementById('existing-portfolio').style.display = isUpdate ? 'block' : 'none';
+      document.getElementById('new-portfolio').style.display = isUpdate ? 'none' : 'block';
     });
 
-    function populateAdminSelect() {
-      const select = document.getElementById('portfolio-select');
-      select.innerHTML = '';
-      PORTFOLIOS.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.name;
-        opt.textContent = p.name;
-        select.appendChild(opt);
-      });
-    }
-
     // ======================= GESTION DES PERFORMANCES =======================
-    document.getElementById('admin-form').addEventListener('submit', async (e) => {
+    document.getElementById('admin-form').addEventListener('submit', async function (e) {
       e.preventDefault();
       const messageEl = document.getElementById('admin-message');
       messageEl.textContent = 'Vérification en cours...';
@@ -220,24 +226,20 @@
       }
 
       try {
-        // Lecture du fichier pour vérification
         const text = await file.text();
         const lines = text.trim().split('\n');
-        if (lines.length < 2) throw new Error('Fichier vide ou sans données');
+        if (lines.length < 2) throw new Error('Fichier vide');
 
         const headers = lines[0].split(/\t|,/).map(h => h.trim().replace(/^"|"$/g, ''));
         if (headers.length < 18) throw new Error('Le CSV doit avoir au moins 18 colonnes');
 
-        const requiredHeaders = ['Date', 'Portfolio', 'Vol Mensuelle', 'DD Courant', 'DD Max'];
-        const missing = requiredHeaders.filter(h => !headers.includes(h));
-        if (missing.length > 0) {
-          throw new Error(`En-têtes manquants : ${missing.join(', ')}`);
-        }
+        const required = ['Date', 'Portfolio', 'Vol Mensuelle', 'DD Courant', 'DD Max'];
+        const missing = required.filter(h => !headers.includes(h));
+        if (missing.length) throw new Error(`En-têtes manquants : ${missing.join(', ')}`);
 
-        // Encodage correct pour GitHub
         const base64Content = btoa(unescape(encodeURIComponent(text)));
 
-        const headers = {
+        const authHeaders = {
           'Authorization': `token ${pat}`,
           'Accept': 'application/vnd.github.v3+json',
           'Content-Type': 'application/json'
@@ -245,55 +247,55 @@
 
         if (action === 'update') {
           const name = document.getElementById('portfolio-select').value;
+          if (!name) throw new Error('Sélectionnez un portefeuille');
           const portfolio = PORTFOLIOS.find(p => p.name === name);
           const path = portfolio.file;
 
-          const shaRes = await fetch(GITHUB_API + path, { headers });
+          const shaRes = await fetch(GITHUB_API + path, { headers: authHeaders });
           if (!shaRes.ok) throw new Error('Impossible de récupérer le SHA');
           const { sha } = await shaRes.json();
 
           const body = JSON.stringify({
-            message: `Mise à jour performance – ${name} – ${new Date().toLocaleDateString()}`,
+            message: `Mise à jour – ${name} – ${new Date().toLocaleDateString()}`,
             content: base64Content,
             sha
           });
 
-          const res = await fetch(GITHUB_API + path, { method: 'PUT', headers, body });
-          if (!res.ok) throw new Error('Échec de la mise à jour');
+          const res = await fetch(GITHUB_API + path, { method: 'PUT', headers: authHeaders, body });
+          if (!res.ok) throw new Error('Échec mise à jour');
           messageEl.style.color = 'var(--green)';
-          messageEl.textContent = `Performance de "${name}" mise à jour !`;
+          messageEl.textContent = `Performance "${name}" mise à jour !`;
 
         } else { // add
           let name = document.getElementById('new-name').value.trim();
-          if (!name) throw new Error('Nom du portefeuille requis');
-          const slug = `portefeuille_${name.toLowerCase().replace(/\s+/g, '_')}.csv`;
+          if (!name) throw new Error('Nom requis');
+          const slug = `portefeuille_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.csv`;
 
-          // Upload nouveau CSV
           const bodyCsv = JSON.stringify({
-            message: `Ajout nouveau portefeuille – ${name}`,
+            message: `Ajout – ${name}`,
             content: base64Content
           });
-          const addRes = await fetch(GITHUB_API + slug, { method: 'PUT', headers, body: bodyCsv });
+          const addRes = await fetch(GITHUB_API + slug, { method: 'PUT', headers: authHeaders, body: bodyCsv });
           if (!addRes.ok) throw new Error('Échec création CSV');
 
-          // Mise à jour de portfolios.json
-          const jsonRes = await fetch(GITHUB_API + 'portfolios.json', { headers });
+          // Mise à jour portfolios.json
+          const jsonRes = await fetch(GITHUB_API + 'portfolios.json', { headers: authHeaders });
           const { sha: jsonSha, content: b64 } = await jsonRes.json();
           const current = JSON.parse(atob(b64));
           current.push({ name, file: slug });
-          const updateJsonBody = JSON.stringify({
+
+          const updateJson = JSON.stringify({
             message: `Ajout ${name} dans portfolios.json`,
             content: btoa(JSON.stringify(current, null, 2)),
             sha: jsonSha
           });
-          const jsonUpdate = await fetch(GITHUB_API + 'portfolios.json', { method: 'PUT', headers, body: updateJsonBody });
-          if (!jsonUpdate.ok) throw new Error('Échec mise à jour portfolios.json');
+          const final = await fetch(GITHUB_API + 'portfolios.json', { method: 'PUT', headers: authHeaders, body: updateJson });
+          if (!final.ok) throw new Error('Échec mise à jour portfolios.json');
 
           messageEl.style.color = 'var(--green)';
-          messageEl.textContent = `Portefeuille "${name}" ajouté avec succès !`;
-          loadPortfolios(); // rafraîchir la liste
+          messageEl.textContent = `Portefeuille "${name}" ajouté !`;
+          loadPortfolios(); // refresh liste
         }
-
       } catch (err) {
         messageEl.style.color = 'var(--red)';
         messageEl.textContent = 'Erreur : ' + err.message;
@@ -301,24 +303,19 @@
       }
     });
 
-    // ======================= MISE À JOUR DE LA COMPOSITION GLOBALE =======================
+    // ======================= COMPOSITION GLOBALE =======================
     document.getElementById('update-composition').addEventListener('click', async () => {
       const compFile = document.getElementById('comp-file').files[0];
       const pat = document.getElementById('pat').value.trim();
       const msg = document.getElementById('comp-message');
 
-      if (!pat) {
-        msg.textContent = "Token GitHub requis pour cette action.";
-        msg.style.color = 'var(--red)';
-        return;
-      }
-      if (!compFile) {
-        msg.textContent = "Sélectionne un fichier de composition.";
+      if (!pat || !compFile) {
+        msg.textContent = pat ? 'Sélectionne un fichier' : 'Token requis';
         msg.style.color = 'var(--red)';
         return;
       }
 
-      msg.textContent = "Envoi en cours...";
+      msg.textContent = 'Envoi en cours...';
       msg.style.color = 'black';
 
       try {
@@ -331,36 +328,29 @@
           'Content-Type': 'application/json'
         };
 
-        // Récupérer le SHA actuel du fichier de composition (s’il existe)
         const shaRes = await fetch(GITHUB_API + COMP_FILE_NAME, { headers });
         const sha = shaRes.ok ? (await shaRes.json()).sha : null;
 
         const body = JSON.stringify({
-          message: `Mise à jour composition globale – ${new Date().toLocaleDateString()}`,
+          message: `Mise à jour composition – ${new Date().toLocaleDateString()}`,
           content: base64,
           sha: sha || undefined
         });
 
-        const res = await fetch(GITHUB_API + COMP_FILE_NAME, {
-          method: 'PUT',
-          headers,
-          body
-        });
-
+        const res = await fetch(GITHUB_API + COMP_FILE_NAME, { method: 'PUT', headers, body });
         if (res.ok) {
           msg.style.color = 'var(--green)';
-          msg.textContent = "Fichier composition_portefeuilles.csv mis à jour avec succès !";
+          msg.textContent = 'Composition mise à jour avec succès !';
         } else {
           throw new Error(await res.text());
         }
       } catch (err) {
         msg.style.color = 'var(--red)';
-        msg.textContent = "Erreur composition : " + err.message;
-        console.error(err);
+        msg.textContent = 'Erreur : ' + err.message;
       }
     });
 
-    // Lancement
+    // Démarrage
     loadPortfolios();
   </script>
 </body>
