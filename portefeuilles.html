@@ -3,24 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nos Portefeuilles | AltInvest Capital</title>
+  <title>AltInvest Capital - Portefeuilles</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <style>
-    :root { --navy:#0f172a; --gold:#ca8a04; --slate:#64748b; --light:#f8fafc; --gray:#e2e8f0; --red:#dc2626; --green:#16a34a; }
+    :root{--navy:#0f172a;--gold:#ca8a04;--slate:#64748b;--light:#f8fafc;--gray:#e2e8f0;--red:#dc2626;--green:#16a34a;}
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Inter',sans-serif;background:#fff;color:#1e293b;line-height:1.6;padding-top:90px;}
+    body{font-family:'Inter',sans-serif;background:#fff;color:#1e293b;padding-top:90px;}
     nav{position:fixed;top:0;width:100%;background:var(--navy);padding:1.5rem 0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
     .nav{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 5rem;}
     .logo{font-size:2.4rem;font-weight:900;color:white;}.logo span{color:var(--gold);}
     .links a{color:white;text-decoration:none;margin:0 2rem;font-weight:500;transition:.3s;}
     .links a:hover,.links a.active{color:var(--gold);}
-
     .container{max-width:1400px;margin:0 auto;padding:120px 2rem 80px;text-align:center;}
     h1{font-size:3.6rem;font-weight:800;margin-bottom:4rem;background:linear-gradient(90deg,var(--navy),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:2.5rem;margin-top:3rem;}
     .card{background:white;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);transition:all .4s;cursor:pointer;}
     .card:hover{transform:translateY(-16px);box-shadow:0 30px 70px rgba(0,0,0,0.15);}
@@ -40,22 +38,19 @@
     .close{font-size:3rem;cursor:pointer;opacity:0.8;transition:.3s;}
     .close:hover{opacity:1;transform:rotate(90deg);}
     .modal-body{padding:3rem 4rem 4rem;}
-
     .kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1.5rem;margin-bottom:3rem;}
     .kpi-big{background:var(--light);padding:1.8rem;border-radius:18px;text-align:center;border-left:6px solid var(--gold);transition:all .3s;}
     .kpi-big:hover{transform:translateY(-6px);box-shadow:0 15px 30px rgba(0,0,0,0.1);}
     .kpi-big.red{border-left-color:var(--red);}.kpi-big.red strong{color:var(--red);}
     .kpi-big strong{font-size:2.5rem;font-weight:800;color:var(--gold);display:block;}
     .kpi-big div{font-size:0.95rem;color:var(--slate);margin-top:6px;}
-
-    .chart-wrapper{position:relative;height:500px;margin:3rem 0;background:white;border-radius:20px;padding:1.5rem;box-shadow:0 10px 40px rgba(0,0,0,0.07);}
-    .chart-controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;}
-    .chart-btn{padding:8px 14px;border:none;border-radius:8px;background:#e2e8f0;color:#1e293b;font-size:0.9rem;cursor:pointer;transition:.2s;}
+    .chart-wrapper{position:relative;height:520px;margin:3rem 0;background:white;border-radius:20px;padding:1.5rem;box-shadow:0 10px 40px rgba(0,0,0,0.07);}
+    .chart-controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:15px;}
+    .chart-btn{padding:9px 16px;border:none;border-radius:10px;background:#e2e8f0;color:#1e293b;font-size:0.95rem;cursor:pointer;transition:.2s;font-weight:600;}
     .chart-btn.active,.chart-btn:hover{background:var(--gold);color:white;}
-
-    .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-top:3rem;align-items:center;}
+    .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-top:3rem;align-items:start;}
     @media (max-width:992px){.comp-grid{grid-template-columns:1fr;}}
-    table{width:100%;border-collapse:collapse;margin-top:1rem;}
+    table{width:100%;border-collapse:collapse;}
     th,td{padding:0.9rem;text-align:left;border-bottom:1px solid var(--gray);}
     th{background:var(--light);font-weight:600;color:var(--navy);}
   </style>
@@ -85,16 +80,13 @@
       <span class="close" onclick="closeModal()">×</span>
     </div>
     <div class="modal-body">
-
       <div class="kpi-bar" id="kpi-bar"></div>
 
-      <!-- Performance Chart -->
       <div class="chart-wrapper">
         <div class="chart-controls" id="mainControls"></div>
         <canvas id="mainChart"></canvas>
       </div>
 
-      <!-- Detail Chart -->
       <div class="chart-wrapper">
         <div class="chart-controls" id="detailControls"></div>
         <canvas id="detailChart"></canvas>
@@ -102,7 +94,7 @@
 
       <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;font-weight:700;">Composition Actuelle</h3>
       <div class="comp-grid">
-        <div class="chart-wrapper" style="height:400px;"><canvas id="pieChart"></canvas></div>
+        <div class="chart-wrapper" style="height:420px;"><canvas id="pieChart"></canvas></div>
         <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="compTable"></tbody></table>
       </div>
     </div>
@@ -126,24 +118,37 @@ function closeModal() {
   [mainChart, detailChart, pieChart].forEach(c => c?.destroy());
 }
 
-// === KPI complets sur les cartes ===
+// === Parsing robuste des 18 colonnes ===
+function parseCSVLine(line) {
+  const cols = line.split(/\t|,/).map(s => s.trim().replace(/^"|"$/g, ''));
+  if (cols.length < 18) return null;
+  return {
+    date: cols[0],
+    port: parseFloat(cols[1]) || 0,
+    sp: parseFloat(cols[2]) || 0,
+    nas: parseFloat(cols[3]) || 0,
+    volM: parseFloat(cols[6]) || 0,
+    ddC: parseFloat(cols[7]) || 0,
+    ddM: parseFloat(cols[8]) || 0
+  };
+}
+
+// === Cartes ===
 async function loadCards() {
   const grid = document.getElementById('grid');
   const year = new Date().getFullYear();
+
   for (const p of PORTFOLIOS) {
     try {
       const text = await fetch(p.csv).then(r => r.text());
-      const lines = text.trim().split('\n').slice(1);
-      const data = lines.map(l => {
-        const [date, port, sp, nas, , , volM, , ddM] = l.split(',');
-        return {date, port:+port, sp:+sp, volM:+volM, ddM:+ddM};
-      }).filter(d => d.date);
+      const lines = text.trim().split('\n');
+      const data = lines.slice(1).map(parseCSVLine).filter(Boolean);
 
       const last = data[data.length-1];
       const firstY = data.find(d => d.date.startsWith(year+'-01')) || data[0];
-      const ytd = ((last.port / firstY.port)-1)*100;
+      const ytd = ((last.port / firstY.port) - 1) * 100;
       const years = (new Date(last.date) - new Date(data[0].date)) / (86400000 * 365.25);
-      const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years)-1)*100 : 0;
+      const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years) - 1) * 100 : 0;
       const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
 
       const card = document.createElement('div');
@@ -160,11 +165,11 @@ async function loadCards() {
           <div class="kpi"><strong>${sharpe}</strong><small>Sharpe</small></div>
         </div>`;
       grid.appendChild(card);
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error(p.name, e); }
   }
 }
 
-// === Ouverture modale + tout s'affiche immédiatement ===
+// === Modale ===
 async function openModal(name, url) {
   closeModal();
   currentPortfolioName = name;
@@ -173,11 +178,8 @@ async function openModal(name, url) {
   document.body.style.overflow = 'hidden';
 
   const text = await fetch(url).then(r => r.text());
-  const lines = text.trim().split('\n').slice(1);
-  rawData = lines.map(l => {
-    const [date, port, sp, nas, , , volM, ddC, ddM] = l.split(',');
-    return {date, port:+port, sp:+sp, nas:+nas, volM:+volM, ddC:+ddC, ddM:+ddM};
-  }).filter(d => d.date && !isNaN(d.port));
+  const lines = text.trim().split('\n');
+  rawData = lines.slice(1).map(parseCSVLine).filter(Boolean);
 
   updateKPIs();
   drawMainChart();
@@ -185,7 +187,6 @@ async function openModal(name, url) {
   await loadComposition(name);
 }
 
-// === KPI modale ===
 function updateKPIs() {
   const last = rawData[rawData.length-1];
   const year = new Date().getFullYear();
@@ -195,20 +196,37 @@ function updateKPIs() {
   const cagr = years > 0 ? (Math.pow(last.port/100 + 1, 1/years)-1)*100 : 0;
   const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : "N/A";
 
+  // Métriques avancées
+  const portRets = rawData.slice(1).map((d,i) => (d.port / rawData[i].port) - 1);
+  const spRets = rawData.slice(1).map((d,i) => (d.sp / rawData[i].sp) - 1);
+  const avgPort = portRets.reduce((a,b)=>a+b,0)/portRets.length;
+  const avgSP = spRets.reduce((a,b)=>a+b,0)/spRets.length;
+  const cov = portRets.reduce((s,r,i)=>s + (r-avgPort)*(spRets[i]-avgSP),0)/portRets.length;
+  const varSP = spRets.reduce((s,r)=>s + (r-avgSP)**2,0)/portRets.length;
+  const beta = varSP > 0 ? cov/varSP : 0;
+  const alphaDaily = avgPort - beta*avgSP;
+  const alpha = (Math.pow(1+alphaDaily,252)-1)*100;
+  const te = Math.sqrt(portRets.reduce((s,r,i)=>s + (r - (alphaDaily + beta*spRets[i]))**2,0)/portRets.length)*Math.sqrt(252)*100;
+  const ir = te > 0 ? alpha/te : 0;
+
   document.getElementById('kpi-bar').innerHTML = `
-    <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
+    <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Perf. cumulée</div></div>
     <div class="kpi-big"><strong class="${ytd>=0?'':'red'}">${ytd.toFixed(1)}%</strong><div>YTD ${year}</div></div>
     <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Perf. annualisée</div></div>
     <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité</div></div>
     <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-    <div class="kpi-big"><strong>${sharpe}</strong><div>Ratio de Sharpe</div></div>
+    <div class="kpi-big"><strong>${sharpe}</strong><div>Sharpe</div></div>
+    <div class="kpi-big"><strong>${alpha.toFixed(2)}%</strong><div>Alpha</div></div>
+    <div class="kpi-big"><strong>${beta.toFixed(2)}</strong><div>Bêta</div></div>
+    <div class="kpi-big"><strong>${te.toFixed(2)}%</strong><div>Tracking Error</div></div>
+    <div class="kpi-big"><strong>${ir.toFixed(2)}</strong><div>Information Ratio</div></div>
   `;
 }
 
-// === Boutons de période ===
-function createPeriodButtons(containerId, chartInstance) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
+// === Boutons période ===
+function createPeriodButtons(containerId, chart) {
+  const div = document.getElementById(containerId);
+  div.innerHTML = '';
   const periods = [
     {label:'1M', days:30}, {label:'3M', days:90}, {label:'6M', days:180},
     {label:'YTD', ytd:true}, {label:'1A', days:365}, {label:'3A', days:1095}, {label:'Tout', all:true}
@@ -218,25 +236,24 @@ function createPeriodButtons(containerId, chartInstance) {
     btn.className = 'chart-btn';
     btn.textContent = p.label;
     btn.onclick = () => {
-      container.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));
+      div.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      if (p.all) { chartInstance.zoomScale('x', {min:0, max:100}); chartInstance.resetZoom(); }
+      if (p.all) chart.resetZoom();
       else if (p.ytd) {
-        const year = new Date().getFullYear();
-        const start = new Date(`${year}-01-01`);
-        chartInstance.zoomScale('x', {min: start.getTime(), max: Date.now()});
+        const y = new Date().getFullYear();
+        chart.zoomScale('x', {min: new Date(`${y}-01-01`).getTime(), max: Date.now()});
       } else {
-        const end = new Date();
+        const end = Date.now();
         const start = new Date(end - p.days * 86400000);
-        chartInstance.zoomScale('x', {min: start.getTime(), max: end.getTime()});
+        chart.zoomScale('x', {min: start.getTime(), max: end.getTime()});
       }
     };
-    container.appendChild(btn);
+    div.appendChild(btn);
   });
-  container.querySelector('.chart-btn').classList.add('active'); // active "1M" par défaut
+  div.firstChild.classList.add('active');
 }
 
-// === Graphiques avec contrôles intégrés ===
+// === Graphiques ===
 function drawMainChart() {
   if (mainChart) mainChart.destroy();
   mainChart = new Chart(document.getElementById('mainChart'), {
@@ -245,20 +262,14 @@ function drawMainChart() {
       labels: rawData.map(d => d.date),
       datasets: [
         {label: currentPortfolioName, data: rawData.map(d=>d.port), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.07)', fill:true, tension:0.4, borderWidth:4},
-        {label:'S&P 500', data: rawData.map(d=>d.sp), borderColor:'rgba(100,116,139,0.6)', borderWidth:2.5, borderDash:[10,8], tension:0.4},
-        {label:'NASDAQ 100', data: rawData.map(d=>d.nas), borderColor:'rgba(148,163,184,0.5)', borderWidth:2, borderDash:[15,10], tension:0.4}
+        {label:'S&P 500', data: rawData.map(d=>d.sp), borderColor:'#64748b', borderWidth:2.5, borderDash:[8,6], tension:0.4},
+        {label:'NASDAQ 100', data: rawData.map(d=>d.nas), borderColor:'#94a3b8', borderWidth:2, borderDash:[12,8], tension:0.4}
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
-      plugins: {
-        legend:{position:'top', labels:{font:{size:15,weight:'600'}}},
-        zoom:{zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}
-      },
-      scales: {
-        x:{type:'time', time:{unit:'month', displayFormats:{month:'MMM YYYY'}}, grid:{display:false}},
-        y:{grid:{color:'#f1f5f9'}, ticks:{callback:v=>v+'%'}}
-      }
+      plugins: {legend:{position:'top'}, zoom:{zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}},
+      scales: {x:{type:'time', time:{unit:'month', displayFormats:{month:'MMM YYYY'}}}, y:{ticks:{callback:v=>v+'%'}}}
     }
   });
   createPeriodButtons('mainControls', mainChart);
@@ -271,21 +282,14 @@ function drawDetailChart() {
     data: {
       labels: rawData.map(d => d.date),
       datasets: [
-        {label:'Volatilité annualisée (%)', data: rawData.map(d=>d.volM), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.12)', fill:true, tension:0.3},
-        {label:'Drawdown actuel (%)', data: rawData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true, tension:0.3}
+        {label:'Volatilité mensuelle (%)', data: rawData.map(d=>d.volM), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.15)', fill:true},
+        {label:'Drawdown actuel (%)', data: rawData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true}
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
-      plugins: {
-        legend:{position:'top'},
-        title:{display:true, text:'Volatilité & Drawdown', font:{size:18}},
-        zoom:{zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}
-      },
-      scales: {
-        x:{type:'time', time:{unit:'month'}},
-        y:{grid:{color:'#f1f5f9'}, ticks:{callback:v=>v+'%'}}
-      }
+      plugins: {legend:{position:'top'}, title:{display:true, text:'Risque'}, zoom:{zoom:{wheel:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}},
+      scales: {x:{type:'time', time:{unit:'month'}}, y:{ticks:{callback:v=>v+'%'}}}
     }
   });
   createPeriodButtons('detailControls', detailChart);
@@ -296,21 +300,23 @@ async function loadComposition(name) {
   try {
     const text = await fetch(COMP_CSV).then(r => r.text());
     const rows = text.trim().split('\n').slice(1);
-    const relevant = rows.filter(r => r.split(',')[0].trim() === name);
-    const table = document.getElementById('compTable');
-    table.innerHTML = '';
-    const labels = [], values = [], colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00','#4a3700'];
-    relevant.forEach(row => {
-      const [_, asset, ticker, weight] = row.split(',');
-      table.innerHTML += `<tr><td><strong>${asset.trim()}</strong></td><td>${ticker.trim()}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
-      labels.push(asset.trim());
-      values.push(parseFloat(weight.replace('%','')));
+    const relevant = rows.filter(r => r.split(',')[0].includes(name));
+    const table = document.getElementById('compTable'); table.innerHTML = '';
+    const labels = [], values = [], colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00'];
+    relevant.forEach(r => {
+      const cols = r.split(',');
+      const asset = cols[1]?.trim(), ticker = cols[2]?.trim(), weight = cols[3]?.trim();
+      if (asset && weight) {
+        table.innerHTML += `<tr><td><strong>${asset}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
+        labels.push(asset);
+        values.push(parseFloat(weight));
+      }
     });
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
-      type: 'doughnut',
-      data: {labels, datasets:[{data:values, backgroundColor:colors, borderWidth:4, borderColor:'#fff'}]},
-      options: {responsive:true, plugins:{legend:{position:'right'}}}
+      type:'doughnut',
+      data:{labels, datasets:[{data:values, backgroundColor:colors, borderWidth:4, borderColor:'#fff'}]},
+      options:{responsive:true, plugins:{legend:{position:'right'}}}
     });
   } catch (e) { console.error(e); }
 }
