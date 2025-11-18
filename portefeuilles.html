@@ -106,7 +106,8 @@ const PORTFOLIOS = [
   { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_defensif_v2.csv" },
   { name: "Portefeuille Europe",     csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_europe_v2.csv" }
 ];
-// URL EXACTE de ton fichier (avec espace → %20 et (3))
+
+// TON VRAI FICHIER (avec (3) (1))
 const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3)%20(1).csv";
 
 let rawData = [], mainChart = null, detailChart = null, pieChart = null;
@@ -180,8 +181,8 @@ async function openModal(name, url) {
 
   updateKPIs();
   drawMainChart();
-  drawDetailChart();           // Maintenant ça marche à 100%
-  await loadComposition(name); // Et la composition aussi
+  drawDetailChart();        // CORRIGÉ : maintenant ça marche
+  await loadComposition(name);
 }
 
 function updateKPIs() {
@@ -207,17 +208,18 @@ function createButtons(id, chart) {
   div.innerHTML = '';
   ['1M','3M','6M','YTD','1A','3A','Tout'].forEach((l,i) => {
     const b = document.createElement('button');
-    b.className = 'chart-btn' + (i===0?' active':'');
+    b.className = 'chart-btn' + (i===0 ? ' active' : '');
     b.textContent = l;
     b.onclick = () => {
-      div.querySelectorAll('.chart-btn').forEach(x=>x.classList.remove('active'));
+      div.querySelectorAll('.chart-btn').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
-      if (l==='Tout') chart.resetZoom();
-      else if (l==='YTD') chart.zoomScale('x',{min:new Date(`${new Date().get434FullYear()}-01-01`).getTime(), max:Date.now()});
-      else {
+      if (l === 'Tout') chart.resetZoom();
+      else if (l === 'YTD') {
+        chart.zoomScale('x', { min: new Date(`${new Date().getFullYear()}-01-01`).getTime(), max: Date.now() });
+      } else {
         const days = { '1M':30, '3M':90, '6M':180, '1A':365, '3A':1095 }[l];
         const end = Date.now();
-        chart.zoomScale('x',{min:end-days*86400000, max:end});
+        chart.zoomScale('x', { min: end - days*86400000, max: end });
       }
     };
     div.appendChild(b);
@@ -231,15 +233,15 @@ function drawMainChart() {
     data: {
       labels: rawData.map(d => d.date),
       datasets: [
-        {label: currentPortfolioName, data: rawData.map(d=>d.port), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.07)', fill:true, tension:0.4, borderWidth:4, pointRadius: 0},
-        {label:'S&P 500', data: rawData.map(d=>d.sp), borderColor:'#64748b', borderWidth:2.5, borderDash:[8,6], tension:0.4, pointRadius: 0},
-        {label:'NASDAQ 100', data: rawData.map(d=>d.nas), borderColor:'#94a3b8', borderWidth:2, borderDash:[12,8], tension:0.4, pointRadius: 0}
+        { label: currentPortfolioName, data: rawData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.07)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 0 },
+        { label: 'S&P 500', data: rawData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2.5, borderDash: [8,6], tension: 0.4, pointRadius: 0 },
+        { label: 'NASDAQ 100', data: rawData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2, borderDash: [12,8], tension: 0.4, pointRadius: 0 }
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins: {legend:{position:'top'}, zoom:{zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}},
-      scales: {x:{type:'time', time:{unit:'month', displayFormats:{month:'MMM yyyy'}}}, y:{ticks:{callback:v=>v+'%'}}}
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' }, zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
+      scales: { x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } } }, y: { ticks: { callback: v => v + '%' } } }
     }
   });
   createButtons('mainControls', mainChart);
@@ -252,14 +254,14 @@ function drawDetailChart() {
     data: {
       labels: rawData.map(d => d.date),
       datasets: [
-        {label:'Volatilité mensuelle (%)', data: rawData.map(d=>d.volM), borderColor:'#ca8a04', backgroundColor:'rgba(202,138,4,0.15)', fill:true, tension:0.4, pointRadius: 2},
-        {label:'Drawdown actuel (%)', data: rawData.map(d=>d.ddC), borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.15)', fill:true, tension:0.4, pointRadius: 2}
+        { label: 'Volatilité mensuelle (%)', data: rawData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.15)', fill: true, tension: 0.4, pointRadius: 2 },
+        { label: 'Drawdown actuel (%)', data: rawData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true, tension: 0.4, pointRadius: 2 }
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins: {legend:{position:'top'}, title:{display:true, text:'Volatilité & Drawdown'}, zoom:{zoom:{wheel:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}},
-      scales: {x:{type:'time', time:{unit:'month', displayFormats:{month:'MMM yyyy'}}}, y:{ticks:{callback:v=>v+'%'}}}
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' }, title: { display: true, text: 'Volatilité & Drawdown' }, zoom: { zoom: { wheel: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
+      scales: { x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } } }, y: { ticks: { callback: v => v + '%' } } }
     }
   });
   createButtons('detailControls', detailChart);
@@ -283,12 +285,12 @@ async function loadComposition(name) {
     });
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
-      type:'doughnut',
-      data:{labels, datasets:[{data:values, backgroundColor:colors, borderWidth:4, borderColor:'#fff'}]},
-      options:{responsive:true, plugins:{legend:{position:'right'}}}
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: '#fff' }] },
+      options: { responsive: true, plugins: { legend: { position: 'right' } } }
     });
   } catch (e) {
-    document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">Composition temporairement indisponible</td></tr>';
+    document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">Composition en cours de mise à jour...</td></tr>';
   }
 }
 
