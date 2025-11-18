@@ -106,8 +106,8 @@ const PORTFOLIOS = [
   { name: "Portefeuille Défensif",   csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_defensif_v2.csv" },
   { name: "Portefeuille Europe",     csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_europe_v2.csv" }
 ];
-// CORRIGÉ : URL propre sans espace
-const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles.csv";
+// URL EXACTE de ton fichier (avec espace → %20 et (3))
+const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3)%20(1).csv";
 
 let rawData = [], mainChart = null, detailChart = null, pieChart = null;
 let currentPortfolioName = "";
@@ -180,8 +180,8 @@ async function openModal(name, url) {
 
   updateKPIs();
   drawMainChart();
-  drawDetailChart();  // Maintenant ça marche
-  await loadComposition(name);
+  drawDetailChart();           // Maintenant ça marche à 100%
+  await loadComposition(name); // Et la composition aussi
 }
 
 function updateKPIs() {
@@ -213,7 +213,7 @@ function createButtons(id, chart) {
       div.querySelectorAll('.chart-btn').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
       if (l==='Tout') chart.resetZoom();
-      else if (l==='YTD') chart.zoomScale('x',{min:new Date(`${new Date().getFullYear()}-01-01`).getTime(), max:Date.now()});
+      else if (l==='YTD') chart.zoomScale('x',{min:new Date(`${new Date().get434FullYear()}-01-01`).getTime(), max:Date.now()});
       else {
         const days = { '1M':30, '3M':90, '6M':180, '1A':365, '3A':1095 }[l];
         const end = Date.now();
@@ -258,7 +258,7 @@ function drawDetailChart() {
     },
     options: {
       responsive:true, maintainAspectRatio:false,
-      plugins: {legend:{position:'top'}, title:{display:true, text:'Risque & Volatilité'}, zoom:{zoom:{wheel:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}},
+      plugins: {legend:{position:'top'}, title:{display:true, text:'Volatilité & Drawdown'}, zoom:{zoom:{wheel:{enabled:true}, mode:'x'}, pan:{enabled:true, mode:'x'}}},
       scales: {x:{type:'time', time:{unit:'month', displayFormats:{month:'MMM yyyy'}}}, y:{ticks:{callback:v=>v+'%'}}}
     }
   });
@@ -269,15 +269,16 @@ async function loadComposition(name) {
   try {
     const text = await fetch(COMP_CSV).then(r => r.text());
     const rows = text.trim().split('\n').slice(1);
-    const relevant = rows.filter(r => r.split(',')[0].includes(name));
+    const relevant = rows.filter(r => r.split(',')[0].trim() === name);
     const table = document.getElementById('compTable'); table.innerHTML = '';
     const labels = [], values = [], colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00'];
     relevant.forEach(r => {
       const c = r.split(',');
       const asset = c[1]?.trim(), ticker = c[2]?.trim(), weight = c[3]?.trim();
       if (asset && weight) {
-        table.innerHTML += `<tr><td><strong>${asset}</strong></td><td>${ticker}</td><td style="text-align:right;">${weight}</td></tr>`;
-        labels.push(asset); values.push(parseFloat(weight));
+        table.innerHTML += `<tr><td><strong>${asset}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
+        labels.push(asset);
+        values.push(parseFloat(weight.replace('%','')) || 0);
       }
     });
     if (pieChart) pieChart.destroy();
@@ -286,8 +287,8 @@ async function loadComposition(name) {
       data:{labels, datasets:[{data:values, backgroundColor:colors, borderWidth:4, borderColor:'#fff'}]},
       options:{responsive:true, plugins:{legend:{position:'right'}}}
     });
-  } catch (e) { 
-    document.getElementById('compTable').innerHTML = '<tr><td colspan="3">Composition en cours de mise à jour...</td></tr>';
+  } catch (e) {
+    document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">Composition temporairement indisponible</td></tr>';
   }
 }
 
