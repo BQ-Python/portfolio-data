@@ -4,57 +4,276 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nos Portefeuilles | AltInvest Capital</title>
-  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <meta name="description" content="Découvrez nos portefeuilles d'investissement performants : Croissance, Défensif, Europe. Performances, composition et analyses détaillées.">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Chart.js + Plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
   <style>
-    :root{--n:#0f172a;--g:#ca8a04;--sp:#64748b;--nas:#94a3b8;--l:#f8fafc;--gris:#94a3b8;}
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Satoshi',sans-serif;background:#fff;color:#1e293b;line-height:1.6;padding-top:90px;}
-    nav{position:fixed;top:0;width:100%;background:var(--n);padding:1.5rem 0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
-    .nav{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 5rem;}
-    .logo{font-size:2.4rem;font-weight:900;color:white;}.logo span{color:var(--g);}
-    .links a{color:white;text-decoration:none;margin:0 2.5rem;font-weight:500;transition:.3s;}
-    .links a:hover,.links a.active{color:var(--g);}
-    .container{max-width:1400px;margin:0 auto;padding:120px 2rem;}
-    h1{text-align:center;font-size:3.8rem;margin-bottom:5rem;color:var(--n);}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:4rem;}
-    .card{background:white;border-radius:20px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.08);transition:.4s;cursor:pointer;}
-    .card:hover{transform:translateY(-12px);box-shadow:0 35px 80px rgba(0,0,0,0.14);}
-    .header{background:linear-gradient(135deg,var(--n),#1e3a8a);padding:3.5rem 2rem;text-align:center;color:white;}
-    .header h3{font-size:2.4rem;font-weight:700;}
-    .metrics{padding:3rem;display:grid;grid-template-columns:1fr 1fr;gap:1.8rem;}
-    .kpi{background:var(--l);padding:1.8rem;border-radius:16px;text-align:center;}
-    .kpi strong{font-size:2.8rem;display:block;color:var(--g);font-weight:700;}
-    .kpi.red strong{color:#dc2626;}
-    .kpi small{font-size:0.95rem;color:var(--gris);}
+    :root {
+      --navy: #0f172a;
+      --gold: #ca8a04;
+      --slate: #64748b;
+      --light-slate: #94a3b8;
+      --light: #f8fafc;
+      --gray: #e2e8f0;
+      --red: #dc2626;
+      --green: #16a34a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #1e293b;
+      line-height: 1.6;
+      padding-top: 90px;
+      transition: background 0.4s;
+    }
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: var(--navy);
+      padding: 1.5rem 0;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .nav {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5rem;
+    }
+    .logo {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: white;
+    }
+    .logo span { color: var(--gold); }
+    .links a {
+      color: white;
+      text-decoration: none;
+      margin: 0 2rem;
+      font-weight: 500;
+      font-size: 1.05rem;
+      transition: color .3s;
+    }
+    .links a:hover, .links a.active { color: var(--gold); }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 120px 2rem 80px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 3.6rem;
+      font-weight: 800;
+      margin-bottom: 4rem;
+      background: linear-gradient(90deg, var(--navy), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Cards */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 2.5rem;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      transition: all 0.4s ease;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-16px);
+      box-shadow: 0 30px 70px rgba(0,0,0,0.15);
+    }
+    .card-header {
+      background: linear-gradient(135deg, var(--navy), #1e40af);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: white;
+    }
+    .card-header h3 {
+      font-size: 2.2rem;
+      font-weight: 700;
+    }
+    .metrics {
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .kpi {
+      text-align: center;
+      padding: 1.2rem;
+      background: var(--light);
+      border-radius: 16px;
+    }
+    .kpi strong {
+      display: block;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--gold);
+    }
+    .kpi.red strong { color: var(--red); }
+    .kpi.green strong { color: var(--green); }
+    .kpi small {
+      font-size: 0.9rem;
+      color: var(--slate);
+      margin-top: 0.3rem;
+      display: block;
+    }
 
     /* Modal */
-    #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;}
-    #modal.active{display:flex;}
-    .modal-content{background:white;border-radius:24px;max-width:1350px;width:95%;max-height:95vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,0.4);}
-    .modal-header{background:var(--n);color:white;padding:2.5rem 3rem;display:flex;justify-content:space-between;align-items:center;border-radius:24px 24px 0 0;}
-    .modal-header h2{font-size:2.6rem;font-weight:700;}
-    .close{font-size:3.5rem;cursor:pointer;opacity:0.8;transition:.3s;}
-    .close:hover{opacity:1;}
-    .modal-body{padding:3rem 4rem 4rem;}
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.97);
+      backdrop-filter: blur(16px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+    #modal.active { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 28px;
+      max-width: 1400px;
+      width: 95%;
+      max-height: 95vh;
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      background: var(--navy);
+      color: white;
+      padding: 2rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 {
+      font-size: 2.4rem;
+      font-weight: 800;
+    }
+    .close {
+      font-size: 3rem;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: 0.3s;
+    }
+    .close:hover { opacity: 1; transform: rotate(90deg); }
 
-    .kpi-bar{display:flex;flex-wrap:wrap;justify-content:space-around;gap:1.2rem;margin-bottom:3rem;}
-    .kpi-big{flex:1 1 150px;background:var(--l);padding:1.5rem;border-radius:14px;text-align:center;border-left:4px solid var(--g);transition:.3s;box-shadow:0 4px 15px rgba(0,0,0,0.04);}
-    .kpi-big:hover{box-shadow:0 8px 25px rgba(0,0,0,0.08);}
-    .kpi-big strong{font-size:2.4rem;color:var(--g);font-weight:700;display:block;}
-    .kpi-big.red{border-left-color:#dc2626;}
-    .kpi-big.red strong{color:#dc2626;}
-    .kpi-big div{font-size:0.9rem;color:var(--gris);margin-top:0.3rem;}
+    .modal-body { padding: 3rem 4rem 4rem; }
 
-    .chart-wrapper{position:relative;height:420px;max-height:60vh;margin:2.5rem 0;padding:1.5rem;background:white;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.06);}
-    .chart-wrapper canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
+    /* KPI Bar */
+    .kpi-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .kpi-big {
+      background: var(--light);
+      padding: 1.8rem;
+      border-radius: 18px;
+      text-align: center;
+      border-left: 6px solid var(--gold);
+      transition: all 0.3s;
+    }
+    .kpi-big:hover { transform: translateY(-6px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+    .kpi-big.red { border-left-color: var(--red); }
+    .kpi-big.red strong { color: var(--red); }
+    .kpi-big strong {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: var(--gold);
+      display: block;
+    }
+    .kpi-big div {
+      font-size: 1rem;
+      color: var(--slate);
+      margin-top: 0.5rem;
+    }
 
-    .metrics-tabs{text-align:center;margin:3rem 0 1rem;}
-    .metrics-tabs select{padding:1rem 2rem;font-size:1.2rem;border-radius:12px;border:2px solid var(--gris);background:white;}
+    /* Charts */
+    .chart-container:before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(202,138,4,0.03), transparent);
+      border-radius: 20px;
+      pointer-events: none;
+    }
+    .chart-container {
+      position: relative;
+      height: 480px;
+      margin: 3rem 0;
+      background: white;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.07);
+    }
 
-    table{width:100%;border-collapse:collapse;margin-top:3rem;}
-    th,td{padding:1.2rem 0.5rem;border-bottom:1px solid #e2e8f0;text-align:left;}
-    th{background:var(--l);font-weight:700;color:var(--n);}
-    tr:last-child td{border:none;}
+    /* Date Range */
+    .date-range {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+    .date-range input {
+      padding: 0.8rem 1.2rem;
+      border: 2px solid var(--gray);
+      border-radius: 12px;
+      font-size: 1rem;
+    }
+
+    /* Composition Donut */
+    .comp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      margin-top: 3rem;
+      align-items: center;
+    }
+    @media (max-width: 992px) {
+      .comp-grid { grid-template-columns: 1fr; }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+      font-size: 1rem;
+    }
+    th, td {
+      padding: 1rem 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid var(--gray);
+    }
+    th {
+      background: var(--light);
+      font-weight: 600;
+      color: var(--navy);
+    }
+    tr:hover td { background: #fafafa; }
   </style>
 </head>
 <body>
@@ -72,41 +291,63 @@
 </nav>
 
 <div class="container">
-  <h1>Nos Portefeuilles</h1>
+  <h1>Nos Portefeuilles d'Investissement</h1>
   <div class="grid" id="grid"></div>
 </div>
 
+<!-- Modal -->
 <div id="modal">
   <div class="modal-content">
     <div class="modal-header">
       <h2 id="modal-title"></h2>
-      <span class="close" onclick="closeModal()">&times;</span>
+      <span class="close" onclick="closeModal()">×</span>
     </div>
     <div class="modal-body">
+
       <div class="kpi-bar" id="kpi-bar"></div>
 
-      <div class="chart-wrapper">
+      <!-- Date Range Filter -->
+      <div class="date-range">
+        <input type="date" id="startDate">
+        <input type="date" id="endDate">
+        <button onclick="applyDateFilter()" style="padding:0.8rem 2rem;border:none;background:var(--gold);color:white;border-radius:12px;cursor:pointer;font-weight:600;">Appliquer</button>
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="chart-container">
         <canvas id="mainChart"></canvas>
       </div>
 
-      <div class="metrics-tabs">
-        <select id="metricSelect" onchange="updateDetailChart()">
+      <!-- Secondary Chart (Vol / DD) -->
+      <div style="text-align:center;margin:2rem 0;">
+        <select id="metricSelect" onchange="updateDetailChart()" style="padding:1rem 2rem;font-size:1.1rem;border-radius:12px;border:2px solid #cbd5e1;">
+          <option value="dd">Drawdown</option>
           <option value="vol">Volatilité annualisée</option>
-          <option value="dd" selected>Drawdown</option>
         </select>
       </div>
-
-      <div class="chart-wrapper">
+      <div class="chart-container">
         <canvas id="detailChart"></canvas>
       </div>
 
-      <h3 style="text-align:center;margin:4rem 0 1.5rem;font-size:2rem;">Composition actuelle</h3>
-      <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="comp"></tbody></table>
+      <!-- Composition -->
+      <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;font-weight:700;">Composition Actuelle du Portefeuille</h3>
+      <div class="comp-grid">
+        <div class="chart-container" style="height:400px;">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr>
+            </thead>
+            <tbody id="compTable"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const PORTFOLIOS = [
   { name: "Portefeuille Croissance", csv: "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portefeuille_portefeuille_croissance_v2.csv" },
@@ -115,171 +356,146 @@ const PORTFOLIOS = [
 ];
 const COMP_CSV = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles%20(3).csv";
 
-let currentData = [];
-let filteredData = [];
-let mainChart = null;
-let detailChart = null;
+let rawData = [], filteredData = [];
+let mainChart = null, detailChart = null, pieChart = null;
+let currentPortfolioName = "";
 
 function closeModal() {
   document.getElementById('modal').classList.remove('active');
   document.body.style.overflow = '';
-  if (mainChart) mainChart.destroy();
-  if (detailChart) detailChart.destroy();
+  [mainChart, detailChart, pieChart].forEach(c => c?.destroy());
 }
 
 async function loadCards() {
   const grid = document.getElementById('grid');
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
 
   for (const p of PORTFOLIOS) {
     try {
-      const txt = await fetch(p.csv).then(r => r.text());
-      const lines = txt.trim().split('\n').slice(1);
+      const text = await fetch(p.csv).then(r => r.text());
+      const lines = text.trim().split('\n').slice(1);
       if (lines.length < 10) continue;
 
       const data = lines.map(l => {
-        const v = l.split(',');
-        return { date: v[0], port: +v[1], sp: +v[2], nas: +v[3], volM: +v[6] };
+        const [date, port, sp, nas, , , volM, ddC, ddM] = l.split(',');
+        return { date, port: +port, sp: +sp, nas: +nas, volM: +volM, ddC: +ddC, ddM: +ddM };
       });
 
-      const perfCumul = data[data.length-1].port.toFixed(1);
+      const last = data[data.length - 1];
+      const firstThisYear = data.find(d => d.date.startsWith(year + '-01')) || data[0];
+      const ytd = ((last.port / firstThisYear.port) - 1) * 100;
 
-      // YTD
-      const ytdRow = data.find(d => d.date.startsWith(`${currentYear}-01-`)) || data[0];
-      const perfYTD = ((data[data.length-1].port / ytdRow.port) - 1) * 100;
-      const ytd = perfYTD.toFixed(1);
+      const years = (new Date(last.date) - new Date(data[0].date)) / (1000 * 3600 * 24 * 365.25);
+      const cagr = (Math.pow(last.port / 100, 1 / years) - 1) * 100;
 
-      // Perf annualisée (CAGR)
-      const startDate = new Date(data[0].date);
-      const endDate = new Date(data[data.length-1].date);
-      const years = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25);
-      const totalReturn = data[data.length-1].port / 100;
-      const perfAnn = (Math.pow(totalReturn + 1, 1/years) - 1) * 100;
-      const annualisee = perfAnn.toFixed(1);
-
-      // Volatilité annualisée
-      const vol = data[data.length-1].volM.toFixed(1);
-
-      // Drawdown max
-      const lastLine = txt.trim().split('\n').pop().split(',');
-      const dd = parseFloat(lastLine[8]).toFixed(1);
-
-      // Sharpe réel
-      const sharpe = vol > 0 ? (perfAnn / parseFloat(vol)).toFixed(2) : "N/A";
-
-      grid.innerHTML += `
-        <div class="card" onclick="openModal('${p.name}', '${p.csv}')">
-          <div class="header"><h3>${p.name}</h3></div>
-          <div class="metrics">
-            <div class="kpi"><strong>${perfCumul}%</strong><small>Perf. cumulée</small></div>
-            <div class="kpi"><strong>${ytd}%</strong><small>YTD ${currentYear}</small></div>
-            <div class="kpi"><strong>${annualisee}%</strong><small>Perf. annualisée</small></div>
-            <div class="kpi"><strong>${vol}%</strong><small>Vol. annualisée</small></div>
-            <div class="kpi red"><strong>${dd}%</strong><small>Drawdown max</small></div>
-            <div class="kpi"><strong>${sharpe}</strong><small>Ratio de Sharpe</small></div>
-          </div>
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.onclick = () => openModal(p.name, p.csv);
+      card.innerHTML = `
+        <div class="card-header"><h3>${p.name}</h3></div>
+        <div class="metrics">
+          <div class="kpi"><strong>${last.port.toFixed(1)}%</strong><small>Perf. cumulée</small></div>
+          <div class="kpi"><strong ${ytd >= 0 ? 'class="green"' : 'class="red'}>${ytd.toFixed(1)}%</strong><small>YTD ${year}</small></div>
+          <div class="kpi"><strong>${cagr.toFixed(1)}%</strong><small>Perf. annualisée</small></div>
+          <div class="kpi"><strong>${last.volM.toFixed(1)}%</strong><small>Volatilité</small></div>
+          <div class="kpi red"><strong>${last.ddM.toFixed(1)}%</strong><small>Drawdown max</small></div>
+          <div class="kpi"><strong>${(cagr / last.volM).toFixed(2)}</strong><small>Sharpe</small></div>
         </div>`;
-    } catch(e) { 
-      console.error("Erreur chargement", p.name, e);
-      grid.innerHTML += `<div class="error">Erreur ${p.name}</div>`;
+      grid.appendChild(card);
+    } catch (e) {
+      console.error(e);
     }
   }
 }
 
 async function openModal(name, url) {
   closeModal();
+  currentPortfolioName = name;
   document.getElementById('modal-title').textContent = name;
   document.getElementById('modal').classList.add('active');
   document.body.style.overflow = 'hidden';
 
-  const txt = await fetch(url).then(r => r.text());
-  const lines = txt.trim().split('\n').slice(1);
-  currentData = lines.map(l => {
-    const v = l.split(',');
-    return { 
-      date: v[0], 
-      port: +v[1], 
-      sp: +v[2], 
-      nas: +v[3], 
-      volM: +v[6], 
-      ddC: +v[7], 
-      ddM: +v[8] 
-    };
+  const text = await fetch(url).then(r => r.text());
+  const lines = text.trim().split('\n').slice(1);
+  rawData = lines.map(l => {
+    const [date, port, sp, nas, , , volM, ddC, ddM] = l.split(',');
+    return { date, port: +port, sp: +sp, nas: +nas, volM: +volM, ddC: +ddC, ddM: +ddM };
   });
 
-  // Filtre initial (tout)
-  filteredData = [...currentData];
+  filteredData = [...rawData];
+  updateAllCharts();
+  await loadComposition(name);
+  setupDateInputs();
+}
 
-  const last = filteredData[filteredData.length-1];
-  const currentYear = new Date().getFullYear();
+function setupDateInputs() {
+  const dates = rawData.map(d => d.date);
+  const min = dates[0];
+  const max = dates[dates,retain length - 1];
+  document.getElementById('startDate').value = min;
+  document.getElementById('endDate').value = max;
+}
 
-  // YTD
-  const ytdRow = filteredData.find(d => d.date.startsWith(`${currentYear}-01-`)) || filteredData[0];
-  const perfYTD = ((last.port / ytdRow.port) - 1) * 100;
+function applyDateFilter() {
+  const start = document.getElementById('startDate').value;
+  const end = document.getElementById('endDate').value;
+  filteredData = rawData.filter(d => d.date >= start && d.date <= end);
+  updateAllCharts();
+}
 
-  // Perf annualisée (CAGR)
-  const startDate = new Date(filteredData[0].date);
-  const endDate = new Date(last.date);
-  const years = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25);
-  const totalReturn = last.port / 100;
-  const perfAnn = (Math.pow(totalReturn + 1, 1/years) - 1) * 100;
-
-  // Sharpe réel
-  const sharpe = last.volM > 0 ? (perfAnn / last.volM).toFixed(2) : "N/A";
-
-  // KPI dans la modal – maintenant TOUT est dynamique
-  document.getElementById('kpi-bar').innerHTML = `
-    <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
-    <div class="kpi-big"><strong>${perfYTD.toFixed(1)}%</strong><div>YTD ${currentYear}</div></div>
-    <div class="kpi-big"><strong>${perfAnn.toFixed(1)}%</strong><div>Performance annualisée</div></div>
-    <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité annualisée</div></div>
-    <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-    <div class="kpi-big"><strong>${sharpe}</strong><div>Ratio de Sharpe</div></div>`;
-
-  // Composition – CORRIGÉE (split sur virgule, trim sur nom pour matcher exactement)
-  const comp = await fetch(COMP_CSV).then(r => r.text());
-  const rows = comp.trim().split('\n').slice(1).filter(r => {
-    const [portName] = r.split(',');
-    return portName.replace(/^\s+|\s+$/g, '') === name; // trim + match exact
-  });
-  document.getElementById('comp').innerHTML = rows.map(r => {
-    const [_,a,t,w] = r.split(',');
-    return `<tr><td><strong>${a}</strong></td><td>${t}</td><td style="text-align:right;font-weight:700;">${w}</td></tr>`;
-  }).join('');
-
+function updateAllCharts() {
+  updateKPIs();
   drawMainChart();
   updateDetailChart();
 }
 
-function filterData() {
-  const start = document.getElementById('startDate').value;
-  const end = document.getElementById('endDate').value;
-  filteredData = currentData.filter(d => d.date >= start && d.date <= end);
-  drawMainChart();
-  updateDetailChart();
+function updateKPIs() {
+  const last = filteredData[filteredData.length - 1];
+  const year = new Date().getFullYear();
+  const firstThisYear = filteredData.find(d => d.date.startsWith(year + '-01')) || filteredData[0];
+  const ytd = ((last.port / firstThisYear.port) - 1) * 100;
+
+  const years = (new Date(last.date) - new Date(filteredData[0].date)) / (1000 * 3600 * 24 * 365.25);
+  const cagr = years > 0 ? (Math.pow(last.port / 100, 1 / years) - 1) * 100 : 0;
+
+  const sharpe = last.volM > 0 ? (cagr / last.volM).toFixed(2) : 'N/A';
+
+  document.getElementById('kpi-bar').innerHTML = `
+    <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
+    <div class="kpi-big"><strong ${ytd >= 0 ? '' : 'class="red"'}>${ytd.toFixed(1)}%</strong><div>YTD ${year}</div></div>
+    <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Perf. annualisée</div></div>
+    <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité</div></div>
+    <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
+    <div class="kpi-big"><strong>${sharpe}</strong><div>Ratio de Sharpe</div></div>
+  `;
 }
 
 function drawMainChart() {
   if (mainChart) mainChart.destroy();
-  const labels = filteredData.map(d => d.date.slice(5));
-  mainChart = new Chart('mainChart', {
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  mainChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
+      labels: filteredData.map(d => d.date),
       datasets: [
-        { label: 'Portefeuille', data: filteredData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.05)', borderWidth: 3, tension: 0.3, fill: true },
-        { label: 'S&P 500', data: filteredData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2, tension: 0.3, borderDash: [6,6] },
-        { label: 'NASDAQ', data: filteredData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2, tension: 0.3, borderDash: [10,6] }
+        { label: currentPortfolioName, data: filteredData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.08)', fill: true, tension: 0.35, borderWidth: 3.5 },
+        { label: 'S&P 500', data: filteredData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2, borderDash: [8,6], tension: 0.35 },
+        { label: 'NASDAQ 100', data: filteredData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2, borderDash: [12,8], tension: 0.35 }
       ]
     },
-    options: { 
-      responsive: true, 
-      maintainAspectRatio: false, 
-      plugins: { legend: { position: 'top', labels: { font: { size: 15 } } } },
-      scales: { 
-        x: { ticks: { maxTicksLimit: 10 } },  // Moins de dates
-        y: { grid: { color: '#f1f5f9' } } 
-      } 
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 14, weight: '600' } } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` } },
+        zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' } }
+      },
+      scales: {
+        x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM YYYY' } }, grid: { display: false } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { callback: v => v + '%' } }
+      }
     }
   });
 }
@@ -287,34 +503,65 @@ function drawMainChart() {
 function updateDetailChart() {
   if (detailChart) detailChart.destroy();
   const metric = document.getElementById('metricSelect').value;
-  const labels = filteredData.map(d => d.date.slice(5));
+  const ctx = document.getElementById('detailChart').getContext('2d');
 
   if (metric === 'vol') {
-    detailChart = new Chart('detailChart', {
+    detailChart = new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ label: 'Volatilité annualisée', data: filteredData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.1)', fill: true, tension: 0.3 }] },
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { title: { display: true, text: 'Volatilité annualisée (%)', font: { size: 18 } } },
-        scales: { x: { ticks: { maxTicksLimit: 10 } }, y: { grid: { color: '#f1f5f9' } } } 
-      }
+      data: { labels: filteredData.map(d => d.date), datasets: [{ label: 'Volatilité annualisée (%)', data: filteredData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.12)', fill: true, tension: 0.3 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Volatilité annualisée', font: { size: 18 } } }, scales: { x: { type: 'time', time: { unit: 'month' } } } }
     });
   } else {
-    detailChart = new Chart('detailChart', {
+    detailChart = new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [
-        { label: 'Drawdown actuel', data: filteredData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true },
-        { label: 'Drawdown max', data: filteredData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
-      ]},
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { title: { display: true, text: 'Drawdown (%)', font: { size: 18 } } },
-        scales: { x: { ticks: { maxTicksLimit: 10 } }, y: { grid: { color: '#f1f5f9' } } } 
-      }
+      data: {
+        labels: filteredData.map(d => d.date),
+        datasets: [
+          { label: 'Drawdown actuel', data: filteredData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.2)', fill: true },
+          { label: 'Drawdown max historique', data: filteredData.map(d => d.ddM), borderColor: '#7f1d1d', borderDash: [6,6] }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Drawdown (%)', font: { size: 18 } } }, scales: { x: { type: 'time', time: { unit: 'month' } } } }
     });
   }
+}
+
+async function loadComposition(portfolioName) {
+  const text = await fetch(COMP_CSV).then(r => r.text());
+  const rows = text.trim().split('\n').slice(1);
+  const relevant = rows.filter(r => r.split(',')[0].trim() === portfolioName);
+
+  const tableBody = document.getElementById('compTable');
+  tableBody.innerHTML = '';
+  const pieData = [];
+  const pieLabels = [];
+  const colors = ['#ca8a04','#1e40af','#64748b','#94a3b8','#dc2626','#16a34a','#7c3aed','#ec4899','#f59e0b','#10b981'];
+
+  relevant.forEach(row => {
+    const [_, asset, ticker, weight] = row.split(',');
+    const w = parseFloat(weight.replace('%', ''));
+    tableBody.innerHTML += `<tr><td><strong>${asset.trim()}</strong></td><td>${ticker.trim()}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
+    pieLabels.push(asset.trim());
+    pieData.push(w);
+  });
+
+  if (pieChart) pieChart.destroy();
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  pieChart = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: pieLabels,
+      datasets: [{ data: pieData, backgroundColor: colors, borderWidth: 3, borderColor: '#fff' }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { padding: 20, font: { size: 13 } } },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed.toFixed(2)}%` } }
+      }
+    }
+  });
 }
 
 loadCards();
