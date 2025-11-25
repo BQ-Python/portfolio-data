@@ -133,7 +133,11 @@ for portefeuille_name in compo["Portefeuille"].unique():
 
     # Sauvegarder / mettre à jour le CSV de perf
     filename = f"perf_{portefeuille_name.lower().replace(' ', '_')}.csv"
-    filepath = DATA_DIR / filename
+        # À LA PLACE DE ÇA :
+    # filepath = DATA_DIR / filename
+
+    # Mets ÇA (2 lignes à changer) :
+    filepath = ROOT / "data_test" / f"TEST_{filename}"
     
     if filepath.exists():
         df = pd.read_csv(filepath)
