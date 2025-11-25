@@ -2,150 +2,115 @@
 import pandas as pd
 import yfinance as yf
 import numpy as np
-from datetime import datetime
 from pathlib import Path
 
-# Chemins
+# Tout est à la racine du repo (comme dans ton main)
 ROOT = Path(__file__).parent.parent
-COMPO_PATH = ROOT / "data" / "compositions_portefeuilles.csv"
-DATA_DIR = ROOT / "data"
+COMPO_FILE = ROOT / "composition_portefeuilles.csv"  # à la racine
+SP500 = "^GSPC"
+NASDAQ = "^IXIC"
+START_DATE = "2022-01-01"
 
-# Benchmarks
-BENCHMARKS = {"SP500": "^GSPC", "NASDAQ": "^IXIC"}
-
-# Mapper certains actifs non standards vers leur ticker yfinance
-TICKER_MAP = {
-    "Bitcoin": "BTC-USD",
-    "Ethereum": "ETH-USD",
-    "Or physique": "GC=F",      # Gold futures
-    "Cash & stablecoins": "BIL", # ETF ultra-court terme ≈ cash (ou tu peux mettre 0% vol)
-    "USDT": "BIL"
+# Tes vrais fichiers finaux (ne pas toucher leurs noms ni emplacement)
+OUTPUT_FILES = {
+    "Portefeuille Croissance": "portefeuille_portefeuille_croissance_v2.csv",
+    "Portefeuille Défensif": "portefeuille_portefeuille_defensif_v2.csv",
+    "Portefeuille Europe": "portefeuille_europe_v2.csv"
 }
 
-def load_current_weights():
-    df = pd.read_csv(COMPO_PATH)
-    # Nettoyer la pondération (enlever % et convertir en float)
-    df["Pondération"] = df["Pondération"].str.replace('%', '').astype(float) / 100
-    # Garder seulement la composition la plus récente par portefeuille
-    df["Date de mise à jour"] = pd.to_datetime(df["Date de mise à jour"], dayfirst=True)
-    latest = df.loc[df.groupby("Portefeuille")["Date de mise à jour"].idxmax()]
-    return latest
+print("Chargement de composition_portefeuilles.csv (racine)...")
+df = pd.read_csv(COMPO_FILE)
+df["Pondération"] = df["Pondération"].str.replace("%", "").astype(float) / 100
+df["Date de mise à jour"] = pd.to_datetime(df["Date de mise à jour"], dayfirst=True)
+compo = df.loc[df.groupby("Portefeuille")["Date de mise à jour"].idxmax()].copy()
 
-def get_yf_ticker(actif):
-    return TICKER_MAP.get(actif.strip(), actif.strip().upper().replace(" ", ""))
+# Tous les tickers
+tickers = compo["Ticker"].dropna().str.strip().unique().tolist() + [SP500, NASDAQ]
+tickers = sorted(set(tickers))
 
-def calculate_vol_and_returns(daily_ret):
-    if len(daily_ret) < 2:
-        return {k: 0.0 for k in ["daily", "weekly", "monthly", "vol_daily", "vol_weekly", "vol_monthly"]}
-    
-    vol_daily = daily_ret.std() * np.sqrt(252) * 100
-    vol_weekly = daily_ret.rolling(5).std().dropna().mean() * np.sqrt(52) * 100
-    vol_monthly = daily_ret.rolling(21).std().dropna().mean() * np.sqrt(12) * 100
+print(f"Téléchargement de {len(tickers)} tickers depuis {START_DATE}...")
+data = yf.download(tickers, start=START_DATE, progress=False, auto_adjust=True, threads=True)
+prices = data["Close"]
 
-    ret_daily = (1 + daily_ret.iloc[-1])
-    ret_weekly = (1 + daily_ret[-5:]).prod() if len(daily_ret) >= 5 else 1
-    ret_monthly = (1 + daily_ret[-21:]).prod() if len(daily_ret) >= 21 else 1
+# Forcer les benchmarks
+for b in [SP500, NASDAQ]:
+    if b not in prices.columns:
+        prices[b] = yf.download(b, start=START_DATE, progress=False, auto_adjust=True)["Close"]
 
-    return {
-        "vol_daily": round(vol_daily, 2),
-        "vol_weekly": round(vol_weekly, 2),
-        "vol_monthly": round(vol_monthly, 2),
-        "ret_daily": round((ret_daily - 1) * 100, 2),
-        "ret_weekly": round((ret_weekly - 1) * 100, 2),
-        "ret_monthly": round((ret_monthly - 1) * 100, 2),
-    }
+for pf_name in compo["Portefeuille"].unique():
+    sub = compo[compo["Portefeuille"] == pf_name]
+    weights = dict(zip(sub["Ticker"], sub["Pondération"]))
 
-def calculate_drawdown(nav_series):
-    peak = nav_series.cummax()
-    dd = (nav_series - peak) / peak
-    return round(dd.iloc[-1] * 100, 2), round(dd.min() * 100, 2)
+    available = [t for t in weights if t in prices.columns]
+    if not available:
+        print(f"{pf_name} → aucun ticker trouvé")
+        continue
 
-# ==================== DÉBUT DU SCRIPT ====================
-print("Chargement des compositions...")
-compo = load_current_weights()
+    returns = prices[available].pct_change()
+    pf_returns = (returns * pd.Series(weights)[available]).sum(axis=1).dropna()
 
-# Tous les tickers nécessaires
-tickers = [get_yf_ticker(t) for t in compo["Ticker"].unique()]
-tickers += list(BENCHMARKS.values())
-tickers = list(set(tickers))
+    if len(pf_returns) < 300:
+        print(f"{pf_name} → pas assez de données")
+        continue
 
-print(f"Téléchargement données yfinance pour {len(tickers)} actifs...")
-prices = yf.download(tickers, period="max", progress=False)["Adj Close"]
+    # NAVs bruts
+    nav_raw = (1 + pf_returns).cumprod()
+    sp_nav_raw = (1 + prices[SP500].pct_change().loc[pf_returns.index]).cumprod()
+    nas_nav_raw = (1 + prices[NASDAQ].pct_change().loc[pf_returns.index]).cumprod()
 
-# Pour chaque portefeuille
-for portefeuille_name in compo["Portefeuille"].unique():
-    print(f"\nTraitement → {portefeuille_name}")
-    sub = compo[compo["Portefeuille"] == portefeuille_name].copy()
-    
-    # Résoudre les tickers
-    sub["yf_ticker"] = sub["Actif"].apply(get_yf_ticker)
-    valid = sub[sub["yf_ticker"].isin(prices.columns)]
-    missing = sub[~sub["yf_ticker"].isin(prices.columns)]["Actif"].tolist()
-    if missing:
-        print(f"   Attention : actifs non trouvés → {missing}")
+    # On force tout à 100 au premier jour où Vol_Daily est calculable
+    first_valid = pf_returns.rolling(252).std().first_valid_index()
+    if first_valid is None:
+        first_valid = pf_returns.index[251]
 
-    # Période depuis la première date de mise à jour du portefeuille
-    start_date = sub["Date de mise à jour"].iloc[0]
+    base_nav = nav_raw.loc[first_valid]
+    base_sp = sp_nav_raw.loc[first_valid]
+    base_nas = nas_nav_raw.loc[first_valid]
 
-    # Retours journaliers du portefeuille
-    weights = valid.set_index("yf_ticker")["Pondération"]
-    returns = prices[weights.index].pct_change()
-    port_returns = (returns * weights).sum(axis=1)
-    port_returns = port_returns[port_returns.index >= start_date.strftime("%Y-%m-%d")]
+    nav = (nav_raw / base_nav) * 100
+    sp_nav = (sp_nav_raw / base_sp) * 100
+    nas_nav = (nas_nav_raw / base_nas) * 100
 
-    # NAV (départ à 100)
-    nav = (1 + port_returns).cumprod() * 100
+    dd_series = nav / nav.cummax() - 1
+    dd_max_series = dd_series.cummin()
 
-    # Benchmarks
-    sp_ret = prices[BENCHMARKS["SP500"]].pct_change()[port_returns.index]
-    nas_ret = prices[BENCHMARKS["NASDAQ"]].pct_change()[port_returns.index]
-    sp_nav = (1 + sp_ret).cumprod() * 100
-    nas_nav = (1 + nas_ret).cumprod() * 100
+    # Volatilités
+    vol_daily = pf_returns.rolling(252).std() * np.sqrt(252) * 100
+    vol_weekly = pf_returns.rolling(5).std() * np.sqrt(52) * 100
+    vol_monthly = pf_returns.rolling(21).std() * np.sqrt(12) * 100
 
-    # Métriques
-    port_met = calculate_vol_and_returns(port_returns)
-    sp_met = calculate_vol_and_returns(sp_ret)
-    nas_met = calculate_vol_and_returns(nas_ret)
-    dd_curr, dd_max = calculate_drawdown(nav)
+    # Returns
+    sp_ret = prices[SP500].pct_change().loc[pf_returns.index]
+    nas_ret = prices[NASDAQ].pct_change().loc[pf_returns.index]
 
-    # Ligne du jour
-    today = datetime.now().strftime("%Y-%m-%d")
-    row = {
-        "Date": today,
-        "Portfolio_CumReturn": round(nav.iloc[-1], 2),
-        "SP500_CumReturn": round(sp_nav.iloc[-1], 2),
-        "NASDAQ_CumReturn": round(nas_nav.iloc[-1], 2),
-        "Vol_Daily": port_met["vol_daily"],
-        "Vol_Weekly": port_met["vol_weekly"],
-        "Vol_Monthly": port_met["vol_monthly"],
-        "Drawdown_Current": dd_curr,
-        "Drawdown_Max": dd_max,
-        "Return_Port_Daily": port_met["ret_daily"],
-        "Return_Port_Weekly": port_met["ret_weekly"],
-        "Return_Port_Monthly": port_met["ret_monthly"],
-        "Return_SP_Daily": sp_met["ret_daily"],
-        "Return_SP_Weekly": sp_met["ret_weekly"],
-        "Return_SP_Monthly": sp_met["ret_monthly"],
-        "Return_NASDAQ_Daily": nas_met["ret_daily"],
-        "Return_NASDAQ_Weekly": nas_met["ret_weekly"],
-        "Return_NASDAQ_Monthly": nas_met["ret_monthly"],
-    }
+    result = pd.DataFrame({
+        "Date":                   pf_returns.index.strftime("%Y-%m-%d"),
+        "Portfolio_CumReturn":    nav.round(2),
+        "SP500_CumReturn":        sp_nav.round(2),
+        "NASDAQ_CumReturn":       nas_nav.round(2),
+        "Vol_Daily":              vol_daily.round(2),
+        "Vol_Weekly":             vol_weekly.round(2),
+        "Vol_Monthly":            vol_monthly.round(2),
+        "Drawdown_Current":       (dd_series * 100).round(2),
+        "Drawdown_Max":           (dd_max_series * 100).round(2),
+        "Return_Port_Daily":      (pf_returns * 100).round(2),
+        "Return_Port_Weekly":     pf_returns.rolling(5).apply(lambda x: (1+x).prod()-1).round(2) * 100,
+        "Return_Port_Monthly":    pf_returns.rolling(21).apply(lambda x: (1+x).prod()-1).round(2) * 100,
+        "Return_SP_Daily":        (sp_ret * 100).round(2),
+        "Return_SP_Weekly":       sp_ret.rolling(5).apply(lambda x: (1+x).prod()-1).round(2) * 100,
+        "Return_SP_Monthly":      sp_ret.rolling(21).apply(lambda x: (1+x).prod()-1).round(2) * 100,
+        "Return_NASDAQ_Daily":    (nas_ret * 100).round(2),
+        "Return_NASDAQ_Weekly":   nas_ret.rolling(5).apply(lambda x: (1+x).prod()-1).round(2) * 100,
+        "Return_NASDAQ_Monthly":  nas_ret.rolling(21).apply(lambda x: (1+x).prod()-1).round(2) * 100,
+    })
 
-    # Sauvegarder / mettre à jour le CSV de perf
-    filename = f"perf_{portefeuille_name.lower().replace(' ', '_')}.csv"
-    # MODE TEST → écrit dans data_test au lieu de data (aucun risque)
-    filepath = ROOT / "data_test" / f"TEST_{filename}"
-    
-    if filepath.exists():
-        df = pd.read_csv(filepath)
-        if len(df) and df.iloc[-1]["Date"] == today:
-            df.iloc[-1] = row
-        else:
-            df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
-    else:
-        df = pd.DataFrame([row])
+    result = result.dropna(subset=["Vol_Daily"]).reset_index(drop=True)
+    result.loc[0, ["Portfolio_CumReturn", "SP500_CumReturn", "NASDAQ_CumReturn"]] = 100.0
 
-    df.to_csv(filepath, index=False)
-    print(f"   Perf mise à jour → NAV = {row['Portfolio_CumReturn']}")
+    filename = OUTPUT_FILES[pf_name]
+    path = ROOT / filename
+    result.to_csv(path, index=False)
 
-print("\nToutes les performances sont à jour !")
+    print(f"{pf_name} → mis à jour : {filename} ({len(result)} jours, NAV final = {result['Portfolio_CumReturn'].iloc[-1]})")
+
+print("\nTOUS TES FICHIERS V2 SONT À JOUR À LA RACINE !")
