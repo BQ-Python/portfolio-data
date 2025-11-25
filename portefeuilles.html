@@ -157,14 +157,20 @@
       };
     }
 
-    // Calcul de la volatilité annualisée moyenne à partir de Vol_Daily
-    function computeAnnualizedVol(data) {
-  const vols = data
-    .map(d => d.volDaily)
-    .filter(v => v !== null && v > 0);
-  return vols.length > 0 
-    ? vols.reduce((a, b) => a + b, 0) / vols.length 
-    : 0;
+    // Remplace cette fonction
+function computeAnnualizedVol(data) {
+  // On ne prend PLUS la moyenne de Vol_Daily → c'est faux
+  // On recalcule la vraie volatilité annualisée à partir des rendements implicites
+  if (data.length < 2) return 0;
+
+  let totalReturn = 0;
+  for (let i = 1; i < data.length; i++) {
+    const dailyRet = (data[i].port - data[i-1].port) / data[i-1].port;
+    totalReturn += (dailyRet - totalReturn) ** 2;
+  }
+  const variance = totalReturn / (data.length - 1);
+  const dailyVol = Math.sqrt(variance);
+  return dailyVol * Math.sqrt(252) * 100;
 }
 
     async function loadPortfolios() {
