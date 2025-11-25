@@ -66,15 +66,15 @@ data = yf.download(tickers, period="max", progress=False, threads=True)
 
 # Correction : yfinance renvoie parfois une Series au lieu d’un DataFrame
 if len(tickers) == 1:
-    prices = pd.DataFrame(data["Adj Close"]).rename(columns={0: tickers[0]})
+    prices = pd.DataFrame(data["Close"]).rename(columns={0: tickers[0]})
 else:
-    prices = data["Adj Close"]
+    prices = data["Close"]
 
 # Forcer les benchmarks s’ils manquent
 for name, t in BENCHMARKS.items():
     if t not in prices.columns or prices[t].isna().all():
         print(f"   → Forçage {name} ({t})")
-        prices[t] = yf.download(t, period="max", progress=False)["Adj Close"]
+        prices[t] = yf.download(t, period="max", progress=False)["Close"]
 
 for pf_name in compo["Portefeuille"].unique():
     print(f"\nTraitement → {pf_name}")
