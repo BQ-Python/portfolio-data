@@ -7,7 +7,7 @@ from pathlib import Path
 
 # Chemins
 ROOT = Path(__file__).parent.parent
-COMPO_PATH = ROOT / "data" / "compositions_portefeuilles.csv"
+COMPO_PATH = ROOT / "data" / "composition_portefeuilles.csv"
 DATA_DIR = ROOT / "data"
 
 # Benchmarks
