@@ -159,11 +159,13 @@
 
     // Calcul de la volatilité annualisée moyenne à partir de Vol_Daily
     function computeAnnualizedVol(data) {
-      const validVols = data.map(d => d.volDaily).filter(v => v !== null && !isNaN(v) && v > 0);
-      if (validVols.length === 0) return 0;
-      const avgDailyVol = validVols.reduce((a, b) => a + b, 0) / validVols.length;
-      return Math.sqrt(252) * avgDailyVol; // Annualisation
-    }
+  const vols = data
+    .map(d => d.volDaily)
+    .filter(v => v !== null && v > 0);
+  return vols.length > 0 
+    ? vols.reduce((a, b) => a + b, 0) / vols.length 
+    : 0;
+}
 
     async function loadPortfolios() {
       try {
