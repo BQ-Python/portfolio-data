@@ -10,15 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <style>
     :root {
-      --navy: #0f172a;
-      --gold: #ca8a04;
-      --slate: #64748b;
-      --light: #f8fafc;
-      --gray: #e2e8f0;
-      --red: #dc2626;
-      --green: #16a34a;
-      --purple: #7c3aed;
-      --orange: #ea580c;
+      --navy: #0f172a; --gold: #ca8a04; --slate: #64748b; --light: #f8fafc; --gray: #e2e8f0;
+      --red: #dc2626; --green: #16a34a; --orange: #ea580c;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; padding-top: 90px; line-height: 1.6; }
@@ -106,6 +99,9 @@
         </div>
 
         <div class="chart-wrapper">
+          <div style="text-align:center; margin-bottom:12px;">
+            <h3 style="font-size:1.65rem; font-weight:700; color:#1e293b;">Value at Risk (VaR) Historique – 30 jours glissants</h3>
+          </div>
           <div class="chart-controls" id="varControls"></div>
           <canvas id="varChart"></canvas>
         </div>
@@ -143,7 +139,7 @@
       const port100 = parseFloat(cols[1]) || 100;
       const sp100 = parseFloat(cols[2]) || 100;
       const nas100 = parseFloat(cols[3]) || 100;
-      const dailyRet = parseFloat(cols[9]) / 100 || 0; // Return_Port_Daily
+      const dailyRet = parseFloat(cols[9]) / 100 || 0;
 
       return {
         date,
@@ -184,7 +180,9 @@
           const ytd = ((last.port100 / firstYTD.port100) - 1) * 100;
           const years = (last.date - first.date) / (1000 * 60 * 60 * 24 * 365.25);
           const cagr = years > 0 ? (Math.pow(last.port100 / 100, 1 / years) - 1) * 100 : 0;
-          const avgSharpe = data.reduce((s, d) => s + (d.sharpe || 0), 0) / data.filter(d => d.sharpe).length || 0;
+          const avgSharpe = data.filter(d => d.sharpe).length > 0 
+            ? data.reduce((s, d) => s + d.sharpe, 0) / data.filter(d => d.sharpe).length 
+            : 0;
 
           const card = document.createElement('div');
           card.className = 'card';
@@ -226,10 +224,15 @@
       const first = rawData[0];
       const currentYear = new Date().getFullYear();
       const firstYTD = rawData.find(d => d.date.getFullYear() === currentYear) || first;
+
       const ytd = ((last.port100 / firstYTD.port100) - 1) * 100;
       const years = (last.date - first.date) / (1000 * 60 * 60 * 24 * 365.25);
       const cagr = years > 0 ? (Math.pow(last.port100 / 100, 1 / years) - 1) * 100 : 0;
-      const avgSharpe = rawData.reduce((s, d) => s + (d.sharpe || 0), 0) / rawData.filter(d => d.sharpe).length || 0;
+
+      const validSharpe = rawData.filter(d => d.sharpe != null && !isNaN(d.sharpe));
+      const avgSharpe = validSharpe.length > 0 
+        ? validSharpe.reduce((s, d) => s + d.sharpe, 0) / validSharpe.length 
+        : 0;
 
       document.getElementById('kpi-bar').innerHTML = `
         <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
@@ -267,9 +270,9 @@
       const allValues = [...rawData.map(d => d.port), ...rawData.map(d => d.sp), ...rawData.map(d => d.nas)];
       const minVal = Math.min(...allValues);
       const maxVal = Math.max(...allValues);
-      const range = maxVal - minVal;
-      const yMin = Math.max(Math.floor(minVal - range * 0.12), -30);
-      const yMax = Math.ceil(maxVal + range * 0.08);
+      const range = Math.max(maxVal - minVal, 30);
+      const yMin = Math.floor(minVal - range * 0.15);
+      const yMax = Math.ceil(maxVal + range * 0.10);
 
       mainChart = new Chart(document.getElementById('mainChart'), {
         type: 'line',
@@ -319,19 +322,26 @@
       createButtons('detailControls', detailChart);
     }
 
+    // VaR 95% & 99% uniquement (sans CVaR)
     function drawVaRChart() {
       if (varChart) varChart.destroy();
 
       const returns = rawData.map(d => d.dailyRet);
-      const var95 = [];
-      const var99 = [];
+      const var95 = [], var99 = [];
 
       for (let i = 29; i < returns.length; i++) {
         const window = returns.slice(i - 29, i + 1);
-        window.sort((a, b) => a - b);
-        var95.push(window[Math.floor(0.05 * window.length)] * 100);
-        var99.push(window[Math.floor(0.01 * window.length)] * 100);
+        const sorted = window.slice().sort((a, b) => a - b);
+        var95.push(sorted[Math.floor(0.05 * sorted.length)] * 100);
+        var99.push(sorted[Math.floor(0.01 * sorted.length)] * 100);
       }
+
+      const allVaR = [...var95, ...var99];
+      const minV = Math.min(...allVaR);
+      const maxV = Math.max(...allVaR);
+      const rangeV = maxV - minV || 10;
+      const yMin = Math.floor(minV - rangeV * 0.2);
+      const yMax = Math.ceil(maxV + rangeV * 0.1);
 
       const labels = rawData.slice(29).map(d => d.date);
 
@@ -340,8 +350,8 @@
         data: {
           labels,
           datasets: [
-            { label: 'VaR 95% (30 jours)', data: var95, borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.1)', fill: true, tension: 0.4, borderWidth: 3 },
-            { label: 'VaR 99% (30 jours)', data: var99, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.1)', fill: true, tension: 0.4, borderWidth: 3 }
+            { label: 'VaR 95% (30 jours)', data: var95, borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 },
+            { label: 'VaR 99% (30 jours)', data: var99, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 }
           ]
         },
         options: {
@@ -349,12 +359,11 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { position: 'top' },
-            title: { display: true, text: 'Value at Risk Historique (30 jours glissants)', font: { size: 16 } },
             tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` } }
           },
           scales: {
             x: { type: 'time', time: { unit: 'month' } },
-            y: { ticks: { callback: v => v.toFixed(1) + '%' }, beginAtZero: false }
+            y: { min: yMin, max: yMax > 0 ? yMax : 0, ticks: { callback: v => v.toFixed(1) + '%', stepSize: 2 } }
           }
         }
       });
