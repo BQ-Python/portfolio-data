@@ -2,9 +2,16 @@ name: Mise à jour quotidienne à 19h00 (France)
 
 on:
   schedule:
-    - cron: '0 18 * * *'   # 19h00 France en hiver (UTC+1)
-    - cron: '0 17 * * *'   # 19h00 France en été   (UTC+2)
+    # 19h00 heure de Paris toute l'année (GitHub comprend automatiquement le passage heure d'été/hiver)
+    - cron: '0 19 * * *'
+      # ← cette ligne toute seule suffit grâce au tz ci-dessous
+      # (on garde les deux cron seulement si tu veux être ultra-prudent)
+    # - cron: '0 18 * * *'   # hiver
+    # - cron: '0 17 * * *'   # été
   workflow_dispatch:
+
+# Cette ligne magique affiche "19:00 Europe/Paris" dans l'interface GitHub
+timezone: Europe/Paris
 
 jobs:
   update-portfolios:
@@ -13,56 +20,50 @@ jobs:
       - name: Checkout du repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0     # obligatoire pour pouvoir push ensuite
+          fetch-depth: 0
 
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          # Pas de 'cache' → évite l'erreur "Caching for 'false' is not supported"
 
       - name: Installer les dépendances
         run: |
           python -m pip install --upgrade pip
-
-          # Si tu as un requirements.txt → on l'utilise
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           else
-            # Sinon on installe les libs classiques pour ce genre de job
             pip install pandas google-cloud-bigquery google-cloud-storage requests beautifulsoup4 lxml --quiet
           fi
 
-      - name: Écrire la clé GCP en fichier (si nécessaire)
-        run: |
-          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/gcp-key.json
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      - name: Créer la clé GCP (si le secret existe)
+        if: ${{ secrets.GCP_SA_KEY != '' }}
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/gcp-key.json
 
-      - name: Vérifier la présence du script
+      - name: Trouver et exécuter le script (fonctionne même si cloné dans un sous-dossier)
         run: |
-          echo "Répertoire courant : $(pwd)"
-          ls -la
-          echo "Contenu du dossier scripts/"
-          ls -la scripts/ || echo "Dossier scripts/ introuvable !"
-
-      - name: Exécuter le script de mise à jour
-        run: python -u scripts/update_portfolios.py
+          SCRIPT_PATH=$(find . -path "*/scripts/update_portfolios.py" -type f | head -1)
+          if [ -z "$SCRIPT_PATH" ]; then
+            echo "ERREUR : scripts/update_portfolios.py introuvable !"
+            ls -laR
+            exit 1
+          fi
+          echo "Script trouvé → $SCRIPT_PATH"
+          python -u "$SCRIPT_PATH"
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json   # si ton script attend un fichier JSON
-          # GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}   # ou juste la variable d'env si ton script la lit directement
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
 
       - name: Configurer Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Commit & push seulement s'il y a des changements
+      - name: Commit & push uniquement s'il y a des changements
         run: |
           git add .
           if git diff --staged --quiet; then
-            echo "Aucun changement, rien à pousser."
+            echo "Aucun changement détecté → rien à pousser"
           else
-            git commit -m "MAJ auto portefeuilles $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git commit -m "MAJ auto portefeuilles $(date '+%Y-%m-%d %H:%M') Paris"
             git push origin HEAD:${{ github.ref }}
           fi
