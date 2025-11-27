@@ -124,7 +124,7 @@
   <script>
     /* -------------------------
        KPI fetching (GitHub raw URLs)
-       ------------------------- */
+    ------------------------- */
     const el = {
       wallets: document.getElementById('walletsCount'),
       newsletters: document.getElementById('newslettersCount'),
@@ -200,7 +200,6 @@
           console.warn('Ticker column not found', parsed.headers);
           el.assetsTotal.textContent = '0';
           el.kpiAssetsCard.classList.add('kpi--error');
-          // fallback: set sparklines intensity moderate
           setSparkParams(18, 0.35);
         } else {
           const tickers = new Set();
@@ -212,7 +211,6 @@
           const total = tickers.size;
           el.assetsTotal.textContent = total.toLocaleString('fr-FR');
           el.kpiAssetsCard.classList.remove('kpi--error');
-          // adapt sparklines: more assets -> more lines and slightly higher amplitude
           const lines = Math.min(60, Math.max(8, Math.round(8 + total * 0.9)));
           const amp = Math.min(0.6, 0.18 + Math.log10(Math.max(1,total)) * 0.06);
           setSparkParams(lines, amp);
@@ -232,7 +230,7 @@
     setInterval(updateKPIs, 30000);
 
     /* -------------------------
-       Sparkline procedural background (darker lines)
+       Sparkline procedural background (even darker lines)
     ------------------------- */
 
     const canvas = document.getElementById('sparklines');
@@ -254,14 +252,14 @@
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // darker sparkline parameters
+    // darker sparkline parameters (further darkened)
     let sparkLines = [];
     let sparkLineCount = 18;
     let sparkAmplitude = 0.28;
     let sparkDensity = 64;
-    // darker base colors for better contrast
-    let sparkColor = 'rgba(80,110,170,0.22)'; // darker blue-gray, higher alpha
-    let sparkAccent = 'rgba(74,144,226,0.30)'; // slightly stronger accent
+    // much darker base color and stronger alpha for better contrast
+    let sparkBaseR = 60, sparkBaseG = 90, sparkBaseB = 140; // darker blue-gray
+    let sparkAccentR = 90, sparkAccentG = 150, sparkAccentB = 240; // brighter accent
 
     function setSparkParams(lines, amplitude){
       sparkLineCount = Math.max(6, Math.round(lines));
@@ -280,7 +278,7 @@
         const phase = Math.random() * Math.PI * 2;
         const speed = 0.0008 + Math.random() * 0.0016;
         const amplitude = sparkAmplitude * (0.6 + Math.random() * 0.9) * (usable * 0.12);
-        const thickness = 1.0 + Math.random() * 1.8; // slightly thicker for darker look
+        const thickness = 1.2 + Math.random() * 2.2; // thicker for darker presence
         sparkLines.push({
           yBase, phase, speed, amplitude, thickness,
           points: new Float32Array(sparkDensity)
@@ -314,13 +312,13 @@
           if(p === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
-        // darker stroke: use sparkColor with slightly higher alpha per line
-        const baseAlpha = 0.12 + (i / sparkLines.length) * 0.10; // increased baseline for darker look
+        // darker stroke: use RGB with higher alpha per line
+        const baseAlpha = 0.18 + (i / sparkLines.length) * 0.16; // increased baseline for much darker look
         ctx.lineWidth = s.thickness;
-        ctx.strokeStyle = `rgba(80,110,170,${baseAlpha})`;
+        ctx.strokeStyle = `rgba(${sparkBaseR},${sparkBaseG},${sparkBaseB},${baseAlpha})`;
         ctx.stroke();
 
-        // subtle brighter highlight
+        // stronger brighter highlight
         ctx.beginPath();
         for(let p=0;p<sparkDensity;p++){
           const noise = s.points[p] * (0.6 + 0.4 * Math.sin(t + p * 0.12 + s.phase));
@@ -329,8 +327,9 @@
           if(p === 0) ctx.moveTo(x, y - 0.6);
           else ctx.lineTo(x, y - 0.6);
         }
-        ctx.lineWidth = Math.max(0.6, s.thickness * 0.6);
-        ctx.strokeStyle = `rgba(180,210,255,${baseAlpha * 0.55})`;
+        ctx.lineWidth = Math.max(0.8, s.thickness * 0.6);
+        const highlightAlpha = Math.min(0.6, baseAlpha * 0.9);
+        ctx.strokeStyle = `rgba(${sparkAccentR},${sparkAccentG},${sparkAccentB},${highlightAlpha})`;
         ctx.stroke();
       }
 
