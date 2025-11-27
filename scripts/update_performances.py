@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # coding: utf-8
 """
-Script robuste pour générer les CSV de performances à partir de
-composition_portefeuilles.csv. Ajoute des logs détaillés et une
-sélection fiable de la ligne la plus récente par portefeuille.
+Génère les CSV de performances à partir de composition_portefeuilles.csv.
+- Prend en compte toutes les lignes d'un portefeuille à la date la plus récente.
+- Construit les poids à partir de toutes les lignes retenues.
+- Normalise les poids (somme = 1).
+- Nettoie les NaN et aligne correctement les séries avant calculs.
+- Logs détaillés pour debug.
 """
 
 import os
-import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -24,7 +26,7 @@ COMPO_FILE = ROOT / "composition_portefeuilles.csv"
 SP500 = "^GSPC"
 NASDAQ = "^IXIC"
 START_DATE = "2022-01-01"
-RISQUE_FREE_ANNUAL = 0  # en % (annualisé)
+RISQUE_FREE_ANNUAL = 0.0  # en % (annualisé)
 OUTPUT_FILES = {
     "Portefeuille Croissance": "portefeuille_portefeuille_croissance_v2.csv",
     "Portefeuille Défensif": "portefeuille_portefeuille_defensif_v2.csv",
@@ -36,9 +38,9 @@ if not COMPO_FILE.exists():
     raise SystemExit(f"Fichier introuvable: {COMPO_FILE}")
 
 print("Chargement composition depuis :", COMPO_FILE)
-df = pd.read_csv(COMPO_FILE, dtype=str)
+df = pd.read_csv(COMPO_FILE, dtype=str, sep=None, engine="python")  # tolérant au séparateur
 
-# Normalisations et nettoyage
+# Normalisations et nettoyage des colonnes attendues
 df["Portefeuille"] = df.get("Portefeuille", "").fillna("").astype(str).str.strip()
 df["Ticker"] = df.get("Ticker", "").fillna("").astype(str).str.strip()
 df["Pondération"] = df.get("Pondération", "").fillna("").astype(str).str.replace("%", "").str.replace(",", ".").str.strip()
@@ -49,13 +51,14 @@ df["Pondération"] = pd.to_numeric(df["Pondération"], errors="coerce").fillna(0
 
 print("Lignes totales composition:", len(df))
 print("Aperçu (colonnes importantes) :")
-print(df[["Portefeuille", "Ticker", "Pondération", "Date de mise à jour"]].head(30).to_string(index=False))
+print(df[["Portefeuille", "Ticker", "Pondération", "Date de mise à jour"]].head(50).to_string(index=False))
 
-# Sélection robuste : trier puis garder la dernière ligne par portefeuille
-df_sorted = df.sort_values(["Portefeuille", "Date de mise à jour"], ascending=[True, True])
-compo = df_sorted.drop_duplicates(subset=["Portefeuille"], keep="last").copy()
+# --- Sélection : garder toutes les lignes dont la date est la plus récente par portefeuille ---
+df["Date de mise à jour"] = pd.to_datetime(df["Date de mise à jour"], dayfirst=True, errors="coerce")
+max_dates = df.groupby("Portefeuille")["Date de mise à jour"].transform("max")
+compo = df[df["Date de mise à jour"] == max_dates].copy()
 
-print("\nLignes retenues par portefeuille (après tri/drop_duplicates) :")
+print("\nLignes retenues par portefeuille (toutes les lignes à la date la plus récente) :")
 print(compo[["Portefeuille", "Ticker", "Pondération", "Date de mise à jour"]].to_string(index=False))
 
 # Construire la liste de tickers à télécharger (inclure benchmarks)
@@ -74,55 +77,85 @@ for b in [SP500, NASDAQ]:
 # Taux sans risque journalier
 rf_daily = RISQUE_FREE_ANNUAL / 100.0 / 252.0
 
-# Boucle par portefeuille
+# --- Boucle par portefeuille ---
 for pf_name in compo["Portefeuille"].unique():
     print(f"\nTraitement : {pf_name}")
-    sub = compo[compo["Portefeuille"] == pf_name]
+    sub = compo[compo["Portefeuille"] == pf_name].copy()
     if sub.empty:
         print("Aucune ligne retenue pour ce portefeuille, skip.")
         continue
 
-    # Construire weights (assume un seul ticker par portefeuille dans la ligne retenue;
-    # si tu as plusieurs lignes par portefeuille, adapte la logique)
-    # Ici on supporte plusieurs tickers séparés par ; ou , dans la colonne Ticker si besoin.
-    # Si tes tickers sont déjà un seul par ligne, la logique ci‑dessous fonctionne.
-    tickers_list = sub["Ticker"].astype(str).str.split(r"[;,]").explode().str.strip().tolist()
-    pond_list = sub["Pondération"].astype(float).tolist()
-    # Si plusieurs tickers/pondérations sur une même ligne ne sont pas attendus,
-    # on utilise directement le mapping simple :
-    if len(tickers_list) == len(pond_list):
-        weights = dict(zip(tickers_list, pond_list))
-    else:
-        # fallback : utiliser la paire Ticker:Pondération telle quelle
-        weights = dict(zip(sub["Ticker"].tolist(), sub["Pondération"].tolist()))
+    # Construire weights à partir de toutes les lignes du portefeuille
+    # Supporte une ligne par actif (ton format actuel)
+    # Si une cellule Ticker contient plusieurs tickers séparés par ; ou , on les répartit uniformément
+    tickers_expanded = []
+    weights_expanded = []
+    for _, row in sub.iterrows():
+        raw_tickers = str(row["Ticker"]).strip()
+        raw_weight = float(row["Pondération"]) if pd.notna(row["Pondération"]) else 0.0
+        # split sur ; ou , et nettoyer
+        parts = [p.strip() for p in raw_tickers.replace(",", ";").split(";") if p.strip()]
+        if not parts:
+            continue
+        if len(parts) == 1:
+            tickers_expanded.append(parts[0])
+            weights_expanded.append(raw_weight)
+        else:
+            per = raw_weight / len(parts)
+            for p in parts:
+                tickers_expanded.append(p)
+                weights_expanded.append(per)
 
-    # Nettoyage des poids et tickers
-    weights = {t.strip(): float(w) for t, w in weights.items() if t and (w == w)}  # filtre NaN
-    print("Weights appliqués (bruts) :", weights)
+    # construire dict final et filtrer entrées vides
+    weights = {t: float(w) for t, w in zip(tickers_expanded, weights_expanded) if t}
+    print("Weights après expansion :", weights)
 
-    # Filtrer les tickers disponibles dans les données de marché
+    # filtrer les tickers réellement téléchargés
     available = [t for t in weights if t in data.columns]
+    missing = [t for t in weights if t not in data.columns]
     print("Tickers disponibles dans les données de marché :", available)
+    if missing:
+        print("Tickers manquants après download (vérifier orthographe / ticker):", missing)
 
     if not available:
         print("Aucun ticker disponible pour ce portefeuille, skip.")
         continue
 
+    # construire la série de poids alignée et normaliser (somme = 1)
+    weights_series = pd.Series({t: weights[t] for t in available}, dtype=float)
+    total_w = weights_series.sum()
+    if total_w <= 0:
+        print("Somme des poids <= 0, skip.")
+        continue
+    weights_series = weights_series / total_w
+    print("Somme des poids après normalisation :", weights_series.sum())
+    print("weights_series:")
+    print(weights_series.to_string())
+
     # Préparer les prix et retours
     prices = data[available].reindex(data.index).ffill()
-    daily_returns = prices.pct_change().dropna(how="all")
+    # pct_change sans dropna immédiat pour garder alignement
+    daily_returns = prices.pct_change()
+    # garder les lignes où au moins un ticker a un retour non-NaN
+    daily_returns = daily_returns.loc[daily_returns.notna().any(axis=1)]
+    # pf_returns
+    pf_returns = daily_returns.dot(weights_series)
+    pf_returns = pf_returns.dropna()
+    if pf_returns.empty:
+        print("pf_returns vide après nettoyage, skip.")
+        continue
 
-    # Série de poids alignée
-    weights_series = pd.Series({t: weights[t] for t in available})
-    # Retours pondérés du portefeuille
-    pf_returns = daily_returns @ weights_series
+    # Debug pf_returns
+    print("Premier jour pf_returns:", pf_returns.index[0])
+    print("Exemple pf_returns (5 premières):")
+    print(pf_returns.head(5).to_string())
 
-    # Indices de référence
+    # Indices de référence alignés sur les mêmes dates que pf_returns
     idx = pf_returns.index
     sp_ret = data[SP500].reindex(idx).pct_change()
     nas_ret = data[NASDAQ].reindex(idx).pct_change()
 
-    # NAV normalisée à 100 au premier jour valide
+    # NAV normalisée à 100 au PREMIER jour valide
     nav = (1 + pf_returns).cumprod() * 100
     sp_nav = (1 + sp_ret).cumprod() * 100
     nas_nav = (1 + nas_ret).cumprod() * 100
