@@ -218,23 +218,29 @@
     }
 
     function updateKPIs() {
-      const last = rawData[rawData.length - 1];
-      const first = rawData[0];
-      const currentYear = new Date().getFullYear();
-      const firstYTD = rawData.find(d => d.date.getFullYear() === currentYear) || first;
-      const ytd = ((last.port100 / firstYTD.port100) - 1) * 100;
-      const years = (last.date - first.date) / (1000 * 60 * 60 * 24 * 365.25);
-      const cagr = years > 0 ? (Math.pow(last.port100 / 100, 1 / years) - 1) * 100 : 0;
-      const avgSharpe = rawData.reduce((s, d) => s + (d.sharpe || 0), 0) / data.filter(d => d.sharpe).length || 0;
+  const last = rawData[rawData.length - 1];
+  const first = rawData[0];
+  const currentYear = new Date().getFullYear();
+  const firstYTD = rawData.find(d => d.date.getFullYear() === currentYear) || first;
 
-      document.getElementById('kpi-bar').innerHTML = `
-        <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
-        <div class="kpi-big ${ytd >= 0 ? '' : 'red'}"><strong>${ytd.toFixed(1)}%</strong><div>YTD ${currentYear}</div></div>
-        <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Performance annualisée</div></div>
-        <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité (21j)</div></div>
-        <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-        <div class="kpi-big"><strong>${avgSharpe.toFixed(2)}</strong><div>Sharpe moyen (21j)</div></div>`;
-    }
+  const ytd = ((last.port100 / firstYTD.port100) - 1) * 100;
+  const years = (last.date - first.date) / (1000 * 60 * 60 * 24 * 365.25);
+  const cagr = years > 0 ? (Math.pow(last.port100 / 100, 1 / years) - 1) * 100 : 0;
+
+  // ← CORRECTION ICI : on utilise rawData partout
+  const validSharpe = rawData.filter(d => d.sharpe != null && !isNaN(d.sharpe));
+  const avgSharpe = validSharpe.length > 0 
+    ? validSharpe.reduce((s, d) => s + d.sharpe, 0) / validSharpe.length 
+    : 0;
+
+  document.getElementById('kpi-bar').innerHTML = `
+    <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
+    <div class="kpi-big ${ytd >= 0 ? '' : 'red'}"><strong>${ytd.toFixed(1)}%</strong><div>YTD ${currentYear}</div></div>
+    <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Performance annualisée</div></div>
+    <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité (21j)</div></div>
+    <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
+    <div class="kpi-big"><strong>${avgSharpe.toFixed(2)}</strong><div>Sharpe moyen (21j)</div></div>`;
+}
 
     function createButtons(id, chart) {
       const div = document.getElementById(id);
