@@ -117,7 +117,7 @@
     </div>
   </section>
 
-  <!-- Dashboard KPIs (le 4e KPI a été supprimé) -->
+  <!-- Dashboard KPIs -->
   <section class="dashboard" aria-live="polite" aria-atomic="true">
     <div class="kpi" id="kpi-wallets">
       <h3>Portefeuilles recensés</h3>
@@ -148,13 +148,10 @@
 
     /* ---------------------------
        KPI data sources (front-end)
-       - portfolios.json        -> liste des portefeuilles (compte d'objets)
-       - newsletters.json       -> (optionnel) liste de newsletters (compte)
-       - composition_portefeuilles.csv -> CSV avec colonne "Ticker"
-         -> on compte les tickers uniques (déduplication)
-       Notes:
-       - chemins utilisés : /portfolios.json, /newsletters.json, /composition_portefeuilles.csv
-       - si un fichier est absent, on affiche un fallback et log en console
+       - /portfolios.json
+       - /newsletters.json (optionnel)
+       - /compositons_portefeuilles.csv  <-- nom fourni par l'utilisateur
+       Notes: place ces fichiers à la racine du serveur statique
     --------------------------- */
 
     const el = {
@@ -164,56 +161,55 @@
       assetsBreakdown: document.getElementById('assetsBreakdown')
     };
 
-    // Parse CSV simple (ne gère pas tous les cas CSV complexes, mais suffira pour un fichier standard)
+    // Parse CSV with auto-detect delimiter (tab or comma)
     function parseCSV(text) {
       const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
       if (!lines.length) return { headers: [], rows: [] };
-      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      // detect delimiter: tab if present in header, else comma
+      const headerLine = lines[0];
+      const delimiter = headerLine.includes('\t') ? '\t' : ',';
+      const headers = headerLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
       const rows = lines.slice(1).map(line => {
-        // split respecting simple quoted fields
         const values = [];
         let cur = '', inQuotes = false;
         for (let i = 0; i < line.length; i++) {
           const ch = line[i];
-          if (ch === '"' ) {
+          if (ch === '"') {
             if (inQuotes && line[i+1] === '"') { cur += '"'; i++; } else { inQuotes = !inQuotes; }
             continue;
           }
-          if (ch === ',' && !inQuotes) { values.push(cur); cur = ''; continue; }
+          if (ch === delimiter && !inQuotes) { values.push(cur); cur = ''; continue; }
           cur += ch;
         }
         values.push(cur);
-        // trim quotes/spaces
         return values.map(v => v.trim().replace(/^"|"$/g, ''));
       });
       return { headers, rows };
     }
 
-    // Récupère et met à jour les KPIs
+    // Update KPIs by reading files
     async function updateKPIs() {
-      // 1) portfolios.json -> compter les portefeuilles
+      // portfolios.json
       try {
         const res = await fetch('/portfolios.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error('portfolios.json non trouvé');
+        if (!res.ok) throw new Error(`portfolios.json ${res.status}`);
         const data = await res.json();
-        // On suppose que portfolios.json est soit un tableau, soit un objet avec une clé list
         let count = 0;
         if (Array.isArray(data)) count = data.length;
         else if (data && typeof data === 'object') {
-          // chercher la première propriété qui est un tableau
           const arr = Object.values(data).find(v => Array.isArray(v));
           count = Array.isArray(arr) ? arr.length : 0;
         }
         el.wallets.textContent = count.toLocaleString('fr-FR');
       } catch (err) {
-        console.warn('Impossible de lire /portfolios.json :', err);
+        console.warn('Erreur lecture /portfolios.json :', err);
         el.wallets.textContent = '0';
       }
 
-      // 2) newsletters.json -> si présent, compter, sinon 0 (utilisateur ajoutera plus tard)
+      // newsletters.json (optionnel)
       try {
         const res2 = await fetch('/newsletters.json', { cache: 'no-store' });
-        if (!res2.ok) throw new Error('newsletters.json non trouvé');
+        if (!res2.ok) throw new Error(`newsletters.json ${res2.status}`);
         const ndata = await res2.json();
         let ncount = 0;
         if (Array.isArray(ndata)) ncount = ndata.length;
@@ -223,72 +219,69 @@
         }
         el.newsletters.textContent = ncount.toLocaleString('fr-FR');
       } catch (err) {
-        // fichier absent -> afficher 0 et message console
-        console.info('newsletters.json absent, laisser 0 en attendant la création du fichier.');
+        console.info('newsletters.json absent ou inaccessible, affichage 0.');
         el.newsletters.textContent = '0';
       }
 
-      // 3) composition_portefeuilles.csv -> lire colonne "Ticker" et compter valeurs uniques
+      // composition CSV -> compter tickers uniques
       try {
-        const res3 = await fetch('/composition_portefeuilles.csv', { cache: 'no-store' });
-        if (!res3.ok) throw new Error('composition_portefeuilles.csv non trouvé');
+        const res3 = await fetch('/compositons_portefeuilles.csv', { cache: 'no-store' });
+        if (!res3.ok) throw new Error(`compositons_portefeuilles.csv ${res3.status}`);
         const csvText = await res3.text();
         const parsed = parseCSV(csvText);
-        const headers = parsed.headers.map(h => h.toLowerCase());
-        const tickerIdx = headers.findIndex(h => h === 'ticker' || h === '"ticker"' || h === 'symbole' || h === 'symbol');
+        const headersLower = parsed.headers.map(h => h.toLowerCase());
+        // chercher colonne ticker (ou symbole)
+        const tickerIdx = headersLower.findIndex(h => ['ticker','symbole','symbol'].includes(h));
         if (tickerIdx === -1) {
-          console.warn('Colonne "Ticker" introuvable dans composition_portefeuilles.csv. Entêtes:', parsed.headers);
+          console.warn('Colonne "Ticker" introuvable dans compositons_portefeuilles.csv. Entêtes:', parsed.headers);
           el.assetsTotal.textContent = '0';
           el.assetsBreakdown.textContent = 'Actions: — • ETF: — • Matières premières: —';
         } else {
           const tickers = new Set();
-          // On suppose que la colonne contient le ticker et éventuellement d'autres colonnes indiquant le type.
-          // Pour la répartition (actions/etf/commodities) on essaie de détecter une colonne "Type" ou "AssetType"
-          const typeIdx = headers.findIndex(h => ['type','assettype','asset_type','categorie','category'].includes(h));
+          // optional: detect type column for breakdown
+          const typeIdx = headersLower.findIndex(h => ['type','assettype','asset_type','categorie','category'].includes(h));
+          const seenType = new Map();
           parsed.rows.forEach(row => {
             const t = (row[tickerIdx] || '').trim();
-            if (t) tickers.add(t.toUpperCase());
+            if (!t) return;
+            const up = t.toUpperCase();
+            tickers.add(up);
+            if (typeIdx !== -1) {
+              const typ = (row[typeIdx] || '').trim().toLowerCase();
+              if (!seenType.has(up)) seenType.set(up, typ);
+            }
           });
           const total = tickers.size;
           el.assetsTotal.textContent = total.toLocaleString('fr-FR');
 
-          // breakdown simple si colonne type présente
           if (typeIdx !== -1) {
             const counts = { stock: 0, etf: 0, commodity: 0, other: 0 };
-            // map tickers -> first encountered type
-            const seen = new Map();
-            parsed.rows.forEach(row => {
-              const t = (row[tickerIdx] || '').trim().toUpperCase();
-              const typ = (row[typeIdx] || '').trim().toLowerCase();
-              if (!t) return;
-              if (!seen.has(t)) {
-                seen.set(t, typ);
-                if (typ.includes('etf')) counts.etf++;
-                else if (typ.includes('commodity') || typ.includes('mati') || typ.includes('matière')) counts.commodity++;
-                else if (typ.includes('stock') || typ.includes('action') || typ.includes('equity')) counts.stock++;
-                else counts.other++;
-              }
-            });
+            for (const [tk, typ] of seenType.entries()) {
+              if (!typ) { counts.other++; continue; }
+              if (typ.includes('etf')) counts.etf++;
+              else if (typ.includes('commodity') || typ.includes('mati') || typ.includes('matière')) counts.commodity++;
+              else if (typ.includes('stock') || typ.includes('action') || typ.includes('equity')) counts.stock++;
+              else counts.other++;
+            }
             el.assetsBreakdown.textContent = `Actions: ${counts.stock} • ETF: ${counts.etf} • Matières premières: ${counts.commodity}`;
           } else {
-            // pas de colonne type -> on affiche seulement le total
             el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
           }
         }
       } catch (err) {
-        console.warn('Impossible de lire /composition_portefeuilles.csv :', err);
+        console.warn('Erreur lecture /compositons_portefeuilles.csv :', err);
         el.assetsTotal.textContent = '0';
         el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
       }
     }
 
-    // Initial load + polling léger (toutes les 30s)
+    // initial load + polling léger
     updateKPIs();
     setInterval(updateKPIs, 30000);
 
     /* ---------------------------
-       Reste du script d'animation (barres, particules, svg coins)
-       inchangé par rapport à la version précédente
+       Animation background (barres, particules, coins)
+       - Déclarations placées avant l'utilisation pour éviter TDZ
     --------------------------- */
 
     // Canvases & SVG references
@@ -298,6 +291,10 @@
     const coinsLayer = document.getElementById('coinsLayer');
     const graphLine = document.getElementById('graphLine');
     const grid = document.getElementById('grid');
+
+    // Déclare bars et particles en haut pour éviter la TDZ
+    const bars = [];
+    const particles = [];
 
     let DPR = Math.max(1, devicePixelRatio || 1);
     function resize() {
@@ -329,7 +326,6 @@
     let accentColor = cssColor('--accent') || '#4a90e2';
 
     // Procedural bars
-    const bars = [];
     function initBars() {
       bars.length = 0;
       const cols = Math.max(8, Math.floor(innerWidth / 90));
@@ -365,8 +361,7 @@
     }
     buildGrid();
 
-    // Particles
-    const particles = [];
+    // Particles init
     function initParticles() {
       particles.length = 0;
       const count = Math.max(24, Math.floor(innerWidth / 60));
@@ -449,7 +444,7 @@
     }
     animateTicker();
 
-    // Draw rounded-top rectangle helper
+    // Drawing helpers
     function roundRect(ctx, x, y, w, h, r) {
       const radius = Math.min(r, w / 2, h / 2);
       ctx.beginPath();
@@ -462,7 +457,6 @@
       ctx.fill();
     }
 
-    // Draw bars and update graph line
     function drawBars(time) {
       barsCtx.clearRect(0, 0, innerWidth, innerHeight);
       const points = [];
@@ -503,7 +497,6 @@
       }
     }
 
-    // Particles draw
     function drawParticles(dt) {
       partCtx.clearRect(0, 0, innerWidth, innerHeight);
       for (let p of particles) {
@@ -526,7 +519,6 @@
       }
     }
 
-    // Utility: convert hex or rgb string to rgba with alpha fallback
     function hexToRgba(input, alpha = 1) {
       input = (input || '').trim();
       if (!input) return `rgba(255,255,255,${alpha})`;
@@ -556,12 +548,10 @@
     }
     requestAnimationFrame(loop);
 
-    // Re-init on orientation/size changes
     window.addEventListener('orientationchange', () => {
       setTimeout(() => { resize(); initParticles(); createCoins(); }, 300);
     });
 
-    // small accessibility: pause animations when page not visible
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         gsap.globalTimeline.pause();
