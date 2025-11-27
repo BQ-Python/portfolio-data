@@ -5,17 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Horizon Labs — Tableau de bord financier</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <style>
     :root{
       --bg:#050615;
-      --card-bg: rgba(255,255,255,0.03);
-      --card-strong: rgba(255,255,255,0.06);
-      --muted: rgba(255,255,255,0.72);
-      --accent: #4a90e2;
-      --gain: #4cd07d;
-      --loss: #e74c3c;
-      --border: rgba(255,255,255,0.08);
+      --accent:#4a90e2;
+      --muted:rgba(255,255,255,0.72);
+      --card-bg:rgba(255,255,255,0.03);
+      --card-strong:rgba(255,255,255,0.06);
+      --border:rgba(255,255,255,0.08);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
@@ -26,22 +23,22 @@
     .nav{width:1280px;max-width:96%;display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter:blur(12px);border-radius:8px;border:1px solid var(--border)}
     .brand{font-weight:800;font-size:1.3rem}
     .brand span{color:var(--accent)}
-    .links a{color:var(--muted);text-decoration:none;margin-left:20px;font-weight:500;transition:all .3s}
+    .links a{color:var(--muted);text-decoration:none;margin-left:20px;font-weight:500;transition:all .25s}
     .links a:hover{color:#fff}
-    .links a.disabled{opacity:.5;cursor:default;pointer-events:none}
+    .links a.disabled{opacity:.5;pointer-events:none}
 
     /* HERO */
     .hero{min-height:60vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:40;padding:0 20px;text-align:center}
     .hero-inner{max-width:900px;padding:28px;background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:8px;backdrop-filter:blur(8px);border:1px solid var(--border)}
     h1{font-size:clamp(2rem,4.5vw,3.2rem);line-height:1.1;font-weight:800;margin-bottom:8px}
     .lead{font-size:clamp(1rem,1.8vw,1.1rem);color:var(--muted);margin-bottom:14px}
-    .cta{display:inline-block;background:var(--accent);color:#fff;padding:10px 20px;border-radius:6px;font-weight:700;text-decoration:none;transition:all .3s}
-    .cta:hover{background:#357abd;box-shadow:0 4px 12px rgba(74,144,226,0.2)}
+    .cta{display:inline-block;background:var(--accent);color:#fff;padding:10px 20px;border-radius:6px;font-weight:700;text-decoration:none;transition:all .25s}
+    .cta:hover{background:#357abd;box-shadow:0 6px 18px rgba(74,144,226,0.14)}
 
     /* DASHBOARD */
     .dashboard{position:relative;z-index:50;max-width:1280px;margin:0 auto 80px;padding:40px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
-    .kpi{background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:8px;padding:20px;border:1px solid var(--border);transition:all .3s;pointer-events:auto}
-    .kpi:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.25)}
+    .kpi{background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:8px;padding:20px;border:1px solid var(--border);transition:all .25s}
+    .kpi:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,0.28)}
     .kpi h3{font-size:0.95rem;color:var(--muted);font-weight:500;margin-bottom:8px}
     .kpi .value{font-size:1.6rem;font-weight:800;color:#fff;display:block}
     .kpi.kpi--error{outline:1px solid rgba(231,76,60,0.18);box-shadow:0 6px 18px rgba(231,76,60,0.06) inset}
@@ -49,19 +46,19 @@
     /* SEO article */
     #seo-description{grid-column:1 / -1;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;padding:22px;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
 
-    /* BACKGROUND SCENE */
+    /* HEATMAP SCENE */
     .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#03040a 0%,#050615 70%)}
+    /* overlay sombre pour lisibilité */
     .scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.62);z-index:2;pointer-events:none}
-    canvas#network{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block}
-    /* remove previous elements */
-    .coin{display:none!important}
+    canvas#heatmap{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block}
+
     @media (max-width:900px){.dashboard{grid-template-columns:1fr;padding:30px 15px;gap:15px}}
   </style>
 </head>
 <body>
 
   <div class="scene" aria-hidden="true">
-    <canvas id="network"></canvas>
+    <canvas id="heatmap" aria-hidden="true"></canvas>
   </div>
 
   <nav>
@@ -120,13 +117,6 @@
         <li><strong>Suivi des newsletters et sources</strong> : centralisation des flux d’information pour la recherche et la veille.</li>
         <li><strong>KPIs en temps réel</strong> : indicateurs personnalisables pour piloter vos décisions d’investissement.</li>
       </ul>
-      <h3 style="color:#fff;margin-top:14px;margin-bottom:8px;">Pourquoi choisir Horizon Labs</h3>
-      <p style="color:var(--muted);line-height:1.6;">
-        Horizon Labs simplifie la gestion multi‑portefeuilles en offrant une interface claire et des métriques exploitables.
-        La plateforme est optimisée pour la performance et la sécurité des données, et permet d’importer facilement des fichiers
-        standards (CSV, JSON). Que vous soyez un investisseur particulier ou une petite équipe de gestion, Horizon Labs réduit
-        le temps consacré à la consolidation des données et augmente la qualité des décisions d’investissement.
-      </p>
     </article>
   </section>
 
@@ -134,7 +124,7 @@
 
   <script>
     // -------------------------
-    // KPI data (unchanged)
+    // Globals and KPI logic
     // -------------------------
     const el = {
       wallets: document.getElementById('walletsCount'),
@@ -145,6 +135,7 @@
       kpiAssetsCard: document.getElementById('kpi-assets')
     };
 
+    // Raw URLs (as provided)
     const portfoliosUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portfolios.json';
     const compositionCsvUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles.csv';
     const newslettersUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/newsletters.json';
@@ -170,6 +161,7 @@
     }
 
     async function updateKPIs(){
+      // portfolios
       try{
         const res = await fetch(portfoliosUrl, {cache:'no-store'});
         if(!res.ok) throw new Error(`portfolios.json ${res.status}`);
@@ -185,6 +177,7 @@
         el.kpiWalletsCard.classList.add('kpi--error');
       }
 
+      // newsletters
       try{
         const res2 = await fetch(newslettersUrl, {cache:'no-store'});
         if(!res2.ok) throw new Error(`newsletters.json ${res2.status}`);
@@ -197,6 +190,7 @@
         el.newsletters.textContent = '0';
       }
 
+      // composition CSV -> unique tickers
       try{
         const res3 = await fetch(compositionCsvUrl, {cache:'no-store'});
         if(!res3.ok) throw new Error(`composition_portefeuilles.csv ${res3.status}`);
@@ -208,6 +202,8 @@
           console.warn('Ticker column not found', parsed.headers);
           el.assetsTotal.textContent = '0';
           el.kpiAssetsCard.classList.add('kpi--error');
+          // set heatmap intensity fallback
+          heatmapSetIntensity(6, 0.6);
         } else {
           const tickers = new Set();
           parsed.rows.forEach(row=>{
@@ -215,194 +211,215 @@
             if(!t) return;
             tickers.add(t.toUpperCase());
           });
-          el.assetsTotal.textContent = tickers.size.toLocaleString('fr-FR');
+          const total = tickers.size;
+          el.assetsTotal.textContent = total.toLocaleString('fr-FR');
           el.kpiAssetsCard.classList.remove('kpi--error');
+          // adapt heatmap: more unique tickers -> more blobs / higher intensity
+          const blobBase = Math.min(80, Math.max(8, Math.round(8 + total * 0.9)));
+          const intensity = Math.min(1.0, 0.25 + Math.log10(Math.max(1,total)) * 0.18);
+          heatmapSetIntensity(blobBase, intensity);
         }
       }catch(err){
         console.warn('Erreur composition CSV', err);
         el.assetsTotal.textContent = '0';
         el.kpiAssetsCard.classList.add('kpi--error');
+        heatmapSetIntensity(8, 0.5);
       }
 
       // visits fictive
       if(el.visits) el.visits.textContent = '1 234';
     }
 
+    // initial KPIs
     updateKPIs();
     setInterval(updateKPIs, 30000);
 
     // -------------------------
-    // Network background animation
+    // Heatmap background (procedural blobs + color map)
     // -------------------------
-    const canvas = document.getElementById('network');
+    const canvas = document.getElementById('heatmap');
     const ctx = canvas.getContext('2d');
     let DPR = Math.max(1, devicePixelRatio || 1);
-    let width = innerWidth;
-    let height = innerHeight;
+    let W = innerWidth, H = innerHeight;
+
     function resizeCanvas(){
       DPR = Math.max(1, devicePixelRatio || 1);
-      width = innerWidth;
-      height = innerHeight;
-      canvas.width = width * DPR;
-      canvas.height = height * DPR;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
+      W = innerWidth; H = innerHeight;
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
       ctx.setTransform(DPR,0,0,DPR,0,0);
-      initNetwork();
+      // reinit grid if needed
+      initBlobs();
     }
     window.addEventListener('resize', resizeCanvas);
 
-    // network parameters
-    const NODE_COUNT_BASE = 40; // base number of nodes on desktop
-    const LINK_DISTANCE = 160;   // max distance to create a link
-    const NODE_RADIUS = 1.6;
-    const LINE_ALPHA = 0.12;
-    const NODE_ALPHA = 0.9;
-    const SLOW_SPEED = 0.12;
+    // Respect prefers-reduced-motion
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    let nodes = [];
-    let links = [];
-    let mouse = { x: width/2, y: height/2, vx:0, vy:0, active:false };
+    // Blobs state
+    let blobs = [];
+    let blobCount = 18;
+    let globalIntensity = 0.5; // 0..1
 
-    function rand(min, max){ return min + Math.random()*(max-min); }
+    function heatmapSetIntensity(count, intensity){
+      blobCount = Math.max(6, Math.round(count));
+      globalIntensity = Math.max(0, Math.min(1, intensity));
+      initBlobs();
+    }
 
-    function initNetwork(){
-      nodes.length = 0;
-      links.length = 0;
-      const count = Math.max(18, Math.floor((width/140) * (height/900) * NODE_COUNT_BASE));
-      for(let i=0;i<count;i++){
-        nodes.push({
-          x: Math.random()*width,
-          y: Math.random()*height,
-          vx: (Math.random()-0.5)*SLOW_SPEED,
-          vy: (Math.random()-0.5)*SLOW_SPEED,
-          r: NODE_RADIUS * (0.8 + Math.random()*0.8),
-          hue: Math.random()*360,
-          alpha: NODE_ALPHA * (0.6 + Math.random()*0.4)
+    function rand(min,max){ return min + Math.random()*(max-min); }
+
+    function initBlobs(){
+      blobs.length = 0;
+      for(let i=0;i<blobCount;i++){
+        const size = rand(Math.min(W,H)*0.06, Math.min(W,H)*0.22);
+        blobs.push({
+          x: Math.random()*W,
+          y: Math.random()*H,
+          vx: (Math.random()-0.5) * 0.08,
+          vy: (Math.random()-0.5) * 0.08,
+          r: size,
+          baseR: size,
+          hue: 200 + Math.random()*120, // blue->red range (200..320)
+          alpha: 0.06 + Math.random()*0.18
         });
       }
-      // build links by nearest neighbors (k nearest)
-      const k = 3;
-      for(let i=0;i<nodes.length;i++){
-        const distances = [];
-        for(let j=0;j<nodes.length;j++){
-          if(i===j) continue;
-          const dx = nodes[i].x - nodes[j].x;
-          const dy = nodes[i].y - nodes[j].y;
-          const d2 = dx*dx + dy*dy;
-          distances.push({ idx:j, d2 });
-        }
-        distances.sort((a,b)=>a.d2-b.d2);
-        for(let n=0;n<Math.min(k, distances.length); n++){
-          const j = distances[n].idx;
-          const dx = nodes[i].x - nodes[j].x;
-          const dy = nodes[i].y - nodes[j].y;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          if(dist <= LINK_DISTANCE) links.push({ a:i, b:j, dist });
-        }
-      }
     }
 
-    // subtle parallax: nodes are slightly attracted/repelled by mouse
-    canvas.addEventListener('mousemove', (e)=>{
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-      mouse.active = true;
-    });
-    canvas.addEventListener('mouseleave', ()=>{ mouse.active = false; });
-
-    function stepNetwork(dt){
-      // move nodes slowly and wrap edges
-      for(const n of nodes){
-        n.x += n.vx * dt * 0.06;
-        n.y += n.vy * dt * 0.06;
-        // gentle wandering
-        n.vx += (Math.random()-0.5)*0.002;
-        n.vy += (Math.random()-0.5)*0.002;
-        // clamp speed
-        n.vx = Math.max(-0.6, Math.min(0.6, n.vx));
-        n.vy = Math.max(-0.6, Math.min(0.6, n.vy));
-        // wrap
-        if(n.x < -20) n.x = width + 20;
-        if(n.x > width + 20) n.x = -20;
-        if(n.y < -20) n.y = height + 20;
-        if(n.y > height + 20) n.y = -20;
-      }
-
-      // mouse influence
-      if(mouse.active){
-        for(const n of nodes){
-          const dx = mouse.x - n.x;
-          const dy = mouse.y - n.y;
-          const d2 = dx*dx + dy*dy;
-          const influenceRadius = 220 * (width/1280);
-          if(d2 < influenceRadius*influenceRadius){
-            const d = Math.sqrt(d2) || 1;
-            const force = (1 - d / influenceRadius) * 0.06;
-            n.vx += (dx / d) * force;
-            n.vy += (dy / d) * force;
-          }
-        }
-      }
+    // color map: map intensity (0..1) to color gradient (cool -> warm)
+    function colorFor(t){
+      // t in [0,1]
+      // use HSL interpolation from blue (210) to red (10)
+      const h = 210 + (10 - 210) * t; // 210 -> 10
+      const s = 80;
+      const l = 55;
+      return `hsl(${h}, ${s}%, ${l}%)`;
     }
 
-    function drawNetwork(){
-      ctx.clearRect(0,0,width,height);
-      // draw links
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = `rgba(74,144,226,${LINE_ALPHA})`;
-      ctx.beginPath();
-      for(const l of links){
-        const a = nodes[l.a];
-        const b = nodes[l.b];
-        // fade by distance
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const d = Math.sqrt(dx*dx + dy*dy);
-        if(d > LINK_DISTANCE) continue;
-        const alpha = (1 - d / LINK_DISTANCE) * 0.9 * LINE_ALPHA;
-        ctx.strokeStyle = `rgba(120,170,255,${alpha})`;
+    // draw gaussian-like blurred blobs by drawing radial gradients additive
+    function drawHeatmap(){
+      // clear
+      ctx.clearRect(0,0,W,H);
+
+      // draw blobs onto an offscreen canvas for better blending if needed
+      // but here we draw directly with globalCompositeOperation 'lighter' to accumulate intensity
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgba(0,0,0,0)';
+      ctx.fillRect(0,0,W,H);
+
+      // accumulate intensity into an intermediate image (grayscale)
+      // We'll draw blurred circles with 'lighter' blend and then colorize
+      ctx.globalCompositeOperation = 'lighter';
+      for(const b of blobs){
+        const grd = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+        const a = Math.max(0.02, Math.min(0.35, b.alpha * globalIntensity));
+        grd.addColorStop(0, `rgba(255,255,255,${a})`);
+        grd.addColorStop(0.6, `rgba(255,255,255,${a*0.25})`);
+        grd.addColorStop(1, `rgba(255,255,255,0)`);
+        ctx.fillStyle = grd;
         ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
-      }
-      // draw nodes
-      for(const n of nodes){
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(180,210,255,${n.alpha * 0.9})`;
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
         ctx.fill();
       }
-      // optional subtle glow near center (very low opacity)
-      const grd = ctx.createRadialGradient(width/2, height/2, Math.min(width,height)*0.05, width/2, height/2, Math.max(width,height)*0.9);
-      grd.addColorStop(0, 'rgba(74,144,226,0.02)');
-      grd.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = grd;
-      ctx.fillRect(0,0,width,height);
+
+      // read pixels and colorize based on brightness
+      const img = ctx.getImageData(0,0,W,H);
+      const data = img.data;
+      for(let i=0;i<data.length;i+=4){
+        // brightness from white channel
+        const brightness = data[i]; // red channel (since we drew white)
+        if(brightness === 0) continue;
+        // normalize 0..255 -> 0..1
+        const t = Math.min(1, brightness / 255);
+        // map t through a non-linear curve to emphasize hotspots
+        const tt = Math.pow(t, 0.9);
+        // get color
+        const col = hslToRgb(210 + (10-210)*tt, 0.8, 0.55); // hue, s, l
+        // blend color with original alpha
+        data[i] = Math.min(255, col.r * 255);
+        data[i+1] = Math.min(255, col.g * 255);
+        data[i+2] = Math.min(255, col.b * 255);
+        // set alpha proportional to t and globalIntensity
+        data[i+3] = Math.min(220, Math.round(180 * tt * globalIntensity));
+      }
+      ctx.putImageData(img, 0, 0);
+
+      // subtle vignette to focus center
+      const vignette = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.2, W/2, H/2, Math.max(W,H)*0.9);
+      vignette.addColorStop(0, 'rgba(0,0,0,0)');
+      vignette.addColorStop(1, 'rgba(0,0,0,0.45)');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0,0,W,H);
+    }
+
+    // helper: convert HSL to normalized rgb object (r,g,b in 0..1)
+    function hslToRgb(h, s, l){
+      // h in degrees, s/l in 0..1
+      h = ((h % 360) + 360) % 360;
+      s = Math.max(0, Math.min(1, s));
+      l = Math.max(0, Math.min(1, l));
+      const c = (1 - Math.abs(2*l - 1)) * s;
+      const hp = h / 60;
+      const x = c * (1 - Math.abs((hp % 2) - 1));
+      let r1=0,g1=0,b1=0;
+      if(hp >= 0 && hp < 1){ r1=c; g1=x; b1=0; }
+      else if(hp < 2){ r1=x; g1=c; b1=0; }
+      else if(hp < 3){ r1=0; g1=c; b1=x; }
+      else if(hp < 4){ r1=0; g1=x; b1=c; }
+      else if(hp < 5){ r1=x; g1=0; b1=c; }
+      else { r1=c; g1=0; b1=x; }
+      const m = l - c/2;
+      return { r: r1 + m, g: g1 + m, b: b1 + m };
     }
 
     // animation loop
     let last = performance.now();
-    function loop(now){
+    function step(now){
       const dt = now - last;
       last = now;
-      stepNetwork(dt);
-      drawNetwork();
-      requestAnimationFrame(loop);
+      // if reduced motion, draw static frame and stop
+      if(reduceMotion){
+        drawHeatmap();
+        return;
+      }
+      // update blobs
+      for(const b of blobs){
+        b.x += b.vx * dt * 0.06;
+        b.y += b.vy * dt * 0.06;
+        // gentle size oscillation
+        b.r = b.baseR * (0.9 + 0.12 * Math.sin((now*0.001) + b.baseR));
+        // wrap
+        if(b.x < -b.r) b.x = W + b.r;
+        if(b.x > W + b.r) b.x = -b.r;
+        if(b.y < -b.r) b.y = H + b.r;
+        if(b.y > H + b.r) b.y = -b.r;
+      }
+      drawHeatmap();
+      requestAnimationFrame(step);
     }
 
-    // init
+    // initialize
     resizeCanvas();
-    initParticles = ()=>{}; // placeholder to avoid errors if referenced elsewhere
-    initNetwork();
-    requestAnimationFrame(loop);
+    initBlobs();
+    requestAnimationFrame(step);
 
-    // pause animations when not visible
+    // expose heatmapSetIntensity to KPI loader above
+    // (already defined earlier)
+
+    // pause animation when not visible (reduce CPU)
     document.addEventListener('visibilitychange', ()=>{
-      if(document.hidden) cancelAnimationFrame(loop);
+      if(document.hidden){
+        // do nothing; requestAnimationFrame will be throttled by browser
+      } else {
+        last = performance.now();
+        if(!reduceMotion) requestAnimationFrame(step);
+      }
     });
+
+    // Accessibility: allow toggling via JS console if needed
+    window.heatmapSetIntensity = heatmapSetIntensity;
   </script>
 </body>
 </html>
