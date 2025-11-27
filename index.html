@@ -9,7 +9,7 @@
     :root{
       --bg:#050615;
       --accent:#4a90e2;
-      --muted:rgba(255,255,255,0.72);
+      --muted:rgba(255,255,255,0.78);
       --card-bg:rgba(255,255,255,0.03);
       --card-strong:rgba(255,255,255,0.06);
       --border:rgba(255,255,255,0.08);
@@ -18,7 +18,12 @@
     html,body{height:100%}
     body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-    /* NAV */
+    /* Scene background */
+    .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#03040a 0%,#050615 70%)}
+    .scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.62);z-index:2;pointer-events:none}
+    canvas#sparklines{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block}
+
+    /* Navigation */
     nav{position:fixed;top:16px;left:0;right:0;z-index:1200;display:flex;justify-content:center;pointer-events:auto}
     .nav{width:1280px;max-width:96%;display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter:blur(12px);border-radius:8px;border:1px solid var(--border)}
     .brand{font-weight:800;font-size:1.3rem}
@@ -27,7 +32,7 @@
     .links a:hover{color:#fff}
     .links a.disabled{opacity:.5;pointer-events:none}
 
-    /* HERO */
+    /* Hero */
     .hero{min-height:60vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:40;padding:0 20px;text-align:center}
     .hero-inner{max-width:900px;padding:28px;background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:8px;backdrop-filter:blur(8px);border:1px solid var(--border)}
     h1{font-size:clamp(2rem,4.5vw,3.2rem);line-height:1.1;font-weight:800;margin-bottom:8px}
@@ -35,7 +40,7 @@
     .cta{display:inline-block;background:var(--accent);color:#fff;padding:10px 20px;border-radius:6px;font-weight:700;text-decoration:none;transition:all .25s}
     .cta:hover{background:#357abd;box-shadow:0 6px 18px rgba(74,144,226,0.14)}
 
-    /* DASHBOARD */
+    /* Dashboard */
     .dashboard{position:relative;z-index:50;max-width:1280px;margin:0 auto 80px;padding:40px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
     .kpi{background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:8px;padding:20px;border:1px solid var(--border);transition:all .25s}
     .kpi:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,0.28)}
@@ -46,19 +51,13 @@
     /* SEO article */
     #seo-description{grid-column:1 / -1;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;padding:22px;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
 
-    /* HEATMAP SCENE */
-    .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#03040a 0%,#050615 70%)}
-    /* overlay sombre pour lisibilité */
-    .scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.62);z-index:2;pointer-events:none}
-    canvas#heatmap{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block}
-
     @media (max-width:900px){.dashboard{grid-template-columns:1fr;padding:30px 15px;gap:15px}}
   </style>
 </head>
 <body>
 
   <div class="scene" aria-hidden="true">
-    <canvas id="heatmap" aria-hidden="true"></canvas>
+    <canvas id="sparklines" aria-hidden="true"></canvas>
   </div>
 
   <nav>
@@ -123,9 +122,9 @@
   <footer style="position:relative;z-index:10;padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;">© 2025 Horizon Labs — Gestion SaaS privée</footer>
 
   <script>
-    // -------------------------
-    // Globals and KPI logic
-    // -------------------------
+    /* -------------------------
+       KPI fetching (GitHub raw URLs)
+       ------------------------- */
     const el = {
       wallets: document.getElementById('walletsCount'),
       newsletters: document.getElementById('newslettersCount'),
@@ -135,7 +134,6 @@
       kpiAssetsCard: document.getElementById('kpi-assets')
     };
 
-    // Raw URLs (as provided)
     const portfoliosUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portfolios.json';
     const compositionCsvUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles.csv';
     const newslettersUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/newsletters.json';
@@ -202,8 +200,8 @@
           console.warn('Ticker column not found', parsed.headers);
           el.assetsTotal.textContent = '0';
           el.kpiAssetsCard.classList.add('kpi--error');
-          // set heatmap intensity fallback
-          heatmapSetIntensity(6, 0.6);
+          // fallback: set sparklines intensity moderate
+          setSparkParams(18, 0.35);
         } else {
           const tickers = new Set();
           parsed.rows.forEach(row=>{
@@ -214,30 +212,33 @@
           const total = tickers.size;
           el.assetsTotal.textContent = total.toLocaleString('fr-FR');
           el.kpiAssetsCard.classList.remove('kpi--error');
-          // adapt heatmap: more unique tickers -> more blobs / higher intensity
-          const blobBase = Math.min(80, Math.max(8, Math.round(8 + total * 0.9)));
-          const intensity = Math.min(1.0, 0.25 + Math.log10(Math.max(1,total)) * 0.18);
-          heatmapSetIntensity(blobBase, intensity);
+          // adapt sparklines: more assets -> more lines and slightly higher amplitude
+          const lines = Math.min(60, Math.max(8, Math.round(8 + total * 0.9)));
+          const amp = Math.min(0.6, 0.18 + Math.log10(Math.max(1,total)) * 0.06);
+          setSparkParams(lines, amp);
         }
       }catch(err){
         console.warn('Erreur composition CSV', err);
         el.assetsTotal.textContent = '0';
         el.kpiAssetsCard.classList.add('kpi--error');
-        heatmapSetIntensity(8, 0.5);
+        setSparkParams(18, 0.35);
       }
 
       // visits fictive
       if(el.visits) el.visits.textContent = '1 234';
     }
 
-    // initial KPIs
     updateKPIs();
     setInterval(updateKPIs, 30000);
 
-    // -------------------------
-    // Heatmap background (procedural blobs + color map)
-    // -------------------------
-    const canvas = document.getElementById('heatmap');
+    /* -------------------------
+       Sparkline procedural background
+       - multiple horizontal sparklines across the viewport
+       - each sparkline is a smooth polyline that oscillates over time
+       - parameters adjustable via setSparkParams(lines, amplitude)
+    ------------------------- */
+
+    const canvas = document.getElementById('sparklines');
     const ctx = canvas.getContext('2d');
     let DPR = Math.max(1, devicePixelRatio || 1);
     let W = innerWidth, H = innerHeight;
@@ -250,176 +251,139 @@
       canvas.style.width = W + 'px';
       canvas.style.height = H + 'px';
       ctx.setTransform(DPR,0,0,DPR,0,0);
-      // reinit grid if needed
-      initBlobs();
+      initSparklines();
     }
     window.addEventListener('resize', resizeCanvas);
 
-    // Respect prefers-reduced-motion
+    // respect prefers-reduced-motion
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Blobs state
-    let blobs = [];
-    let blobCount = 18;
-    let globalIntensity = 0.5; // 0..1
+    // sparkline state
+    let sparkLines = [];
+    let sparkLineCount = 18;
+    let sparkAmplitude = 0.28; // relative to available vertical spacing (0..1)
+    let sparkDensity = 64; // number of sample points per line
+    let sparkColor = 'rgba(120,170,255,0.12)'; // base color for lines
+    let sparkAccent = 'rgba(74,144,226,0.18)'; // slightly brighter for highlights
 
-    function heatmapSetIntensity(count, intensity){
-      blobCount = Math.max(6, Math.round(count));
-      globalIntensity = Math.max(0, Math.min(1, intensity));
-      initBlobs();
+    function setSparkParams(lines, amplitude){
+      sparkLineCount = Math.max(6, Math.round(lines));
+      sparkAmplitude = Math.max(0.02, Math.min(0.9, amplitude));
+      initSparklines();
     }
 
-    function rand(min,max){ return min + Math.random()*(max-min); }
-
-    function initBlobs(){
-      blobs.length = 0;
-      for(let i=0;i<blobCount;i++){
-        const size = rand(Math.min(W,H)*0.06, Math.min(W,H)*0.22);
-        blobs.push({
-          x: Math.random()*W,
-          y: Math.random()*H,
-          vx: (Math.random()-0.5) * 0.08,
-          vy: (Math.random()-0.5) * 0.08,
-          r: size,
-          baseR: size,
-          hue: 200 + Math.random()*120, // blue->red range (200..320)
-          alpha: 0.06 + Math.random()*0.18
+    function initSparklines(){
+      sparkLines.length = 0;
+      const marginTop = Math.max(80, H * 0.08);
+      const marginBottom = Math.max(80, H * 0.08);
+      const usable = Math.max(120, H - marginTop - marginBottom);
+      const spacing = usable / Math.max(1, sparkLineCount - 1);
+      for(let i=0;i<sparkLineCount;i++){
+        const yBase = marginTop + i * spacing;
+        const phase = Math.random() * Math.PI * 2;
+        const speed = 0.0008 + Math.random() * 0.0016; // slow
+        const amplitude = sparkAmplitude * (0.6 + Math.random() * 0.9) * (usable * 0.12);
+        const thickness = 0.9 + Math.random() * 1.6;
+        const colorShift = (Math.random() - 0.5) * 18;
+        sparkLines.push({
+          yBase, phase, speed, amplitude, thickness, colorShift,
+          points: new Float32Array(sparkDensity) // store normalized offsets
         });
       }
+      // precompute base noise for each line
+      for(const s of sparkLines){
+        for(let p=0;p<sparkDensity;p++){
+          s.points[p] = Math.sin((p / sparkDensity) * Math.PI * 2 + Math.random()*2) * (0.2 + Math.random()*0.8);
+        }
+      }
     }
 
-    // color map: map intensity (0..1) to color gradient (cool -> warm)
-    function colorFor(t){
-      // t in [0,1]
-      // use HSL interpolation from blue (210) to red (10)
-      const h = 210 + (10 - 210) * t; // 210 -> 10
-      const s = 80;
-      const l = 55;
-      return `hsl(${h}, ${s}%, ${l}%)`;
-    }
-
-    // draw gaussian-like blurred blobs by drawing radial gradients additive
-    function drawHeatmap(){
-      // clear
+    function drawSparklines(now){
       ctx.clearRect(0,0,W,H);
-
-      // draw blobs onto an offscreen canvas for better blending if needed
-      // but here we draw directly with globalCompositeOperation 'lighter' to accumulate intensity
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = 'rgba(0,0,0,0)';
+      // subtle backdrop gradient to add depth
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0.12)');
+      ctx.fillStyle = g;
       ctx.fillRect(0,0,W,H);
 
-      // accumulate intensity into an intermediate image (grayscale)
-      // We'll draw blurred circles with 'lighter' blend and then colorize
-      ctx.globalCompositeOperation = 'lighter';
-      for(const b of blobs){
-        const grd = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        const a = Math.max(0.02, Math.min(0.35, b.alpha * globalIntensity));
-        grd.addColorStop(0, `rgba(255,255,255,${a})`);
-        grd.addColorStop(0.6, `rgba(255,255,255,${a*0.25})`);
-        grd.addColorStop(1, `rgba(255,255,255,0)`);
-        ctx.fillStyle = grd;
+      // draw each sparkline
+      for(let i=0;i<sparkLines.length;i++){
+        const s = sparkLines[i];
+        // compute dynamic offsets
+        const t = now * s.speed;
+        // path
         ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-        ctx.fill();
+        const stepX = W / (sparkDensity - 1);
+        for(let p=0;p<sparkDensity;p++){
+          // base noise + slow phase
+          const noise = s.points[p] * (0.6 + 0.4 * Math.sin(t + p * 0.12 + s.phase));
+          const y = s.yBase + noise * s.amplitude;
+          const x = p * stepX;
+          if(p === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        // stroke style: thin, low-opacity line
+        ctx.lineWidth = s.thickness;
+        // color with slight hue shift per line
+        const baseAlpha = 0.08 + (i / sparkLines.length) * 0.06;
+        ctx.strokeStyle = `rgba(120,170,255,${baseAlpha})`;
+        ctx.stroke();
+
+        // subtle highlight: draw a faint brighter line offset by a tiny vertical blur
+        ctx.beginPath();
+        for(let p=0;p<sparkDensity;p++){
+          const noise = s.points[p] * (0.6 + 0.4 * Math.sin(t + p * 0.12 + s.phase));
+          const y = s.yBase + noise * s.amplitude;
+          const x = p * stepX;
+          if(p === 0) ctx.moveTo(x, y - 0.6);
+          else ctx.lineTo(x, y - 0.6);
+        }
+        ctx.lineWidth = Math.max(0.6, s.thickness * 0.6);
+        ctx.strokeStyle = `rgba(180,210,255,${baseAlpha * 0.55})`;
+        ctx.stroke();
       }
 
-      // read pixels and colorize based on brightness
-      const img = ctx.getImageData(0,0,W,H);
-      const data = img.data;
-      for(let i=0;i<data.length;i+=4){
-        // brightness from white channel
-        const brightness = data[i]; // red channel (since we drew white)
-        if(brightness === 0) continue;
-        // normalize 0..255 -> 0..1
-        const t = Math.min(1, brightness / 255);
-        // map t through a non-linear curve to emphasize hotspots
-        const tt = Math.pow(t, 0.9);
-        // get color
-        const col = hslToRgb(210 + (10-210)*tt, 0.8, 0.55); // hue, s, l
-        // blend color with original alpha
-        data[i] = Math.min(255, col.r * 255);
-        data[i+1] = Math.min(255, col.g * 255);
-        data[i+2] = Math.min(255, col.b * 255);
-        // set alpha proportional to t and globalIntensity
-        data[i+3] = Math.min(220, Math.round(180 * tt * globalIntensity));
-      }
-      ctx.putImageData(img, 0, 0);
-
-      // subtle vignette to focus center
-      const vignette = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.2, W/2, H/2, Math.max(W,H)*0.9);
-      vignette.addColorStop(0, 'rgba(0,0,0,0)');
-      vignette.addColorStop(1, 'rgba(0,0,0,0.45)');
-      ctx.fillStyle = vignette;
+      // vignette to keep center focus
+      const vign = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.15, W/2, H/2, Math.max(W,H)*0.9);
+      vign.addColorStop(0, 'rgba(0,0,0,0)');
+      vign.addColorStop(1, 'rgba(0,0,0,0.45)');
+      ctx.fillStyle = vign;
       ctx.fillRect(0,0,W,H);
-    }
-
-    // helper: convert HSL to normalized rgb object (r,g,b in 0..1)
-    function hslToRgb(h, s, l){
-      // h in degrees, s/l in 0..1
-      h = ((h % 360) + 360) % 360;
-      s = Math.max(0, Math.min(1, s));
-      l = Math.max(0, Math.min(1, l));
-      const c = (1 - Math.abs(2*l - 1)) * s;
-      const hp = h / 60;
-      const x = c * (1 - Math.abs((hp % 2) - 1));
-      let r1=0,g1=0,b1=0;
-      if(hp >= 0 && hp < 1){ r1=c; g1=x; b1=0; }
-      else if(hp < 2){ r1=x; g1=c; b1=0; }
-      else if(hp < 3){ r1=0; g1=c; b1=x; }
-      else if(hp < 4){ r1=0; g1=x; b1=c; }
-      else if(hp < 5){ r1=x; g1=0; b1=c; }
-      else { r1=c; g1=0; b1=x; }
-      const m = l - c/2;
-      return { r: r1 + m, g: g1 + m, b: b1 + m };
     }
 
     // animation loop
     let last = performance.now();
-    function step(now){
+    function loop(now){
       const dt = now - last;
       last = now;
-      // if reduced motion, draw static frame and stop
       if(reduceMotion){
-        drawHeatmap();
+        // draw a single static frame and stop animating
+        drawSparklines(now);
         return;
       }
-      // update blobs
-      for(const b of blobs){
-        b.x += b.vx * dt * 0.06;
-        b.y += b.vy * dt * 0.06;
-        // gentle size oscillation
-        b.r = b.baseR * (0.9 + 0.12 * Math.sin((now*0.001) + b.baseR));
-        // wrap
-        if(b.x < -b.r) b.x = W + b.r;
-        if(b.x > W + b.r) b.x = -b.r;
-        if(b.y < -b.r) b.y = H + b.r;
-        if(b.y > H + b.r) b.y = -b.r;
-      }
-      drawHeatmap();
-      requestAnimationFrame(step);
+      // update internal phases slightly (handled in draw via time)
+      drawSparklines(now);
+      requestAnimationFrame(loop);
     }
 
     // initialize
     resizeCanvas();
-    initBlobs();
-    requestAnimationFrame(step);
+    initSparklines();
+    requestAnimationFrame(loop);
 
-    // expose heatmapSetIntensity to KPI loader above
-    // (already defined earlier)
+    // expose setter for debugging
+    window.setSparkParams = setSparkParams;
 
-    // pause animation when not visible (reduce CPU)
+    // pause/resume on visibility change to reduce CPU
     document.addEventListener('visibilitychange', ()=>{
       if(document.hidden){
-        // do nothing; requestAnimationFrame will be throttled by browser
+        // browser throttles rAF automatically; nothing to do
       } else {
         last = performance.now();
-        if(!reduceMotion) requestAnimationFrame(step);
+        if(!reduceMotion) requestAnimationFrame(loop);
       }
     });
-
-    // Accessibility: allow toggling via JS console if needed
-    window.heatmapSetIntensity = heatmapSetIntensity;
   </script>
 </body>
 </html>
