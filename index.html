@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <style>
     :root {
-      --bg: #050615; /* plus sombre */
+      --bg: #050615;
       --accent: #4a90e2;
       --gain: #4cd07d;
       --loss: #e74c3c;
@@ -48,22 +48,17 @@
 
     /* SCENE (plus sombre et plus opaque) */
     .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, #03040a 0%, #050615 70%); }
-    /* overlay sombre pour faire ressortir le contenu */
     .scene::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.62); /* plus opaque pour assombrir */
+      background: rgba(0,0,0,0.62);
       z-index: 2;
       pointer-events: none;
     }
     svg#svgScene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; opacity: 0.85; }
     canvas#bars, canvas#particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; mix-blend-mode: screen; }
-    /* réduire visibilité des particules pour ne pas gêner la lecture */
     canvas#particles { opacity: 0.45; filter: blur(0.2px); }
-
-    .ticker { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 50; pointer-events: none; display: flex; justify-content: center; }
-    .ticker .line { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color: var(--muted); padding: 6px 12px; border-radius: 999px; font-weight: 500; font-size: 0.9rem; backdrop-filter: blur(8px); border: 1px solid var(--border); }
 
     /* remove coin visuals (no blue circles) */
     .coin { display: none !important; }
@@ -100,8 +95,6 @@
     <canvas id="particles"></canvas>
   </div>
 
-  <div class="ticker" aria-hidden="true"><div class="line" id="tickerText">S&P 500 ▲ 0.42% • BTC/USD ▲ 1.2% • EUR/USD ▼ 0.03% • NASDAQ ▲ 0.65%</div></div>
-
   <!-- Navigation -->
   <nav>
     <div class="nav">
@@ -124,7 +117,7 @@
     </div>
   </section>
 
-  <!-- Dashboard KPIs (sous-titres supprimés) -->
+  <!-- Dashboard KPIs (sous-titres supprimés, 4e KPI ajouté) -->
   <section class="dashboard" aria-live="polite" aria-atomic="true">
     <div class="kpi" id="kpi-wallets">
       <h3>Portefeuilles recensés</h3>
@@ -139,7 +132,11 @@
     <div class="kpi" id="kpi-assets">
       <h3>Actifs distincts disponibles</h3>
       <span class="value" id="assetsCount">—</span>
-      <div class="sub" id="assetsBreakdown" style="color:var(--muted); margin-top:8px; font-size:0.95rem;">Actions: — • ETF: — • Matières premières: —</div>
+    </div>
+
+    <div class="kpi" id="kpi-visits">
+      <h3>Visites ce mois-ci</h3>
+      <span class="value" id="visitsCount">1 234</span>
     </div>
 
     <article id="seo-description">
@@ -191,7 +188,6 @@
     const coinsLayer = document.getElementById('coinsLayer'); // not used for coins now
     const graphLine = document.getElementById('graphLine');
     const grid = document.getElementById('grid');
-    const tickerText = document.getElementById('tickerText');
 
     const css = getComputedStyle(document.documentElement);
     function cssColor(name) { return css.getPropertyValue(name).trim() || '#fff'; }
@@ -204,12 +200,12 @@
       wallets: document.getElementById('walletsCount'),
       newsletters: document.getElementById('newslettersCount'),
       assetsTotal: document.getElementById('assetsCount'),
-      assetsBreakdown: document.getElementById('assetsBreakdown'),
+      visits: document.getElementById('visitsCount'),
       kpiWalletsCard: document.getElementById('kpi-wallets'),
       kpiAssetsCard: document.getElementById('kpi-assets')
     };
 
-    // Remote raw URLs (as provided earlier)
+    // Remote raw URLs (GitHub raw)
     const portfoliosUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portfolios.json';
     const compositionCsvUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles.csv';
     const newslettersUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/newsletters.json';
@@ -287,44 +283,25 @@
         if (tickerIdx === -1) {
           console.warn('Colonne "Ticker" introuvable dans composition_portefeuilles.csv. Entêtes:', parsed.headers);
           el.assetsTotal.textContent = '0';
-          el.assetsBreakdown.textContent = 'Actions: — • ETF: — • Matières premières: —';
           el.kpiAssetsCard.classList.add('kpi--error');
         } else {
           const tickers = new Set();
-          const typeIdx = headersLower.findIndex(h => ['type','assettype','asset_type','categorie','category'].includes(h));
-          const seenType = new Map();
           parsed.rows.forEach(row => {
             const t = (row[tickerIdx] || '').trim();
             if (!t) return;
-            const up = t.toUpperCase();
-            tickers.add(up);
-            if (typeIdx !== -1) {
-              const typ = (row[typeIdx] || '').trim().toLowerCase();
-              if (!seenType.has(up)) seenType.set(up, typ);
-            }
+            tickers.add(t.toUpperCase());
           });
           el.assetsTotal.textContent = tickers.size.toLocaleString('fr-FR');
-          if (typeIdx !== -1) {
-            const counts = { stock: 0, etf: 0, commodity: 0, other: 0 };
-            for (const typ of seenType.values()) {
-              if (!typ) { counts.other++; continue; }
-              if (typ.includes('etf')) counts.etf++;
-              else if (typ.includes('commodity') || typ.includes('mati')) counts.commodity++;
-              else if (typ.includes('stock') || typ.includes('action') || typ.includes('equity')) counts.stock++;
-              else counts.other++;
-            }
-            el.assetsBreakdown.textContent = `Actions: ${counts.stock} • ETF: ${counts.etf} • Matières premières: ${counts.commodity}`;
-          } else {
-            el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
-          }
           el.kpiAssetsCard.classList.remove('kpi--error');
         }
       } catch (err) {
         console.warn('Erreur lecture composition_portefeuilles.csv :', err);
         el.assetsTotal.textContent = '0';
-        el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
         el.kpiAssetsCard.classList.add('kpi--error');
       }
+
+      // visits (fictive for now)
+      if (el.visits) el.visits.textContent = '1 234';
     }
 
     // initial load + polling
@@ -396,7 +373,6 @@
 
     function initParticles() {
       particles.length = 0;
-      // fewer particles and lower alpha to reduce distraction
       const count = Math.max(12, Math.floor(innerWidth / 140));
       for (let i = 0; i < count; i++) {
         particles.push({
@@ -433,7 +409,6 @@
         const h = b.height * (0.6 + oscill * 0.8);
         const top = b.base - h;
         const grad = barsCtx.createLinearGradient(b.x, top, b.x, b.base);
-        // slightly dim the bar colors so foreground text remains dominant
         grad.addColorStop(0, hexToRgba(b.color, 0.85));
         grad.addColorStop(1, hexToRgba(b.color, 0.12));
         barsCtx.fillStyle = grad;
@@ -506,19 +481,7 @@
     // initial inits and loop
     resize();
     initParticles();
-    // createCoins removed intentionally (no blue circles)
-    (function animateTicker() {
-      if (!tickerText) return;
-      const width = tickerText.offsetWidth;
-      gsap.fromTo(tickerText, { x: 0 }, {
-        x: -width - 60,
-        duration: 18,
-        ease: 'none',
-        repeat: -1,
-        modifiers: { x: gsap.utils.unitize(x => parseFloat(x) % (width + 60)) }
-      });
-    })();
-
+    // coins intentionally not created
     let last = performance.now();
     function loop(now) {
       const dt = now - last;
