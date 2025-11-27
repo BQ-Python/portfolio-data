@@ -28,7 +28,7 @@ jobs:
 
       - name: Exécuter le script de mise à jour
         run: |
-          update_performances.py    # ← METS ICI LE NOM EXACT DE TON SCRIPT
+          scripts/update_performances.py    # ← METS ICI LE NOM EXACT DE TON SCRIPT
 
       - name: Commit & Push uniquement s'il y a des changements
         run: |
