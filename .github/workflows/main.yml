@@ -47,7 +47,7 @@ jobs:
           ls -la scripts/ || echo "Dossier scripts/ introuvable !"
 
       - name: Exécuter le script de mise à jour
-        run: python -u scripts/update_portfolios.py
+        run: python -u scripts/update_performances.py
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json   # si ton script attend un fichier JSON
           # GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}   # ou juste la variable d'env si ton script la lit directement
