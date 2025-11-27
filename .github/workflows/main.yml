@@ -9,40 +9,42 @@ on:
 jobs:
   update-portfolios:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout du repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # indispensable pour git push ensuite
+          fetch-depth: 0
 
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
+          cache: false   # ← on désactive le cache → plus de message d’erreur rouge
 
       - name: Installer les dépendances
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          # Au cas où tu n’as pas de requirements.txt mais que tu utilises pandas/gcp
-          pip install pandas google-cloud-bigquery google-cloud-storage --quiet
 
-      - name: Vérifier que le script existe (debug)
+          # Si tu as un requirements.txt → on l’utilise
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            # Sinon on installe les libs classiques pour ce genre de job
+            pip install pandas google-cloud-bigquery google-cloud-storage requests beautifulsoup4 lxml --quiet
+          fi
+
+      - name: Vérifier la présence du script
         run: |
-          echo "Contenu du répertoire de travail :"
-          pwd
+          echo "Répertoire courant : $(pwd)"
           ls -la
-          echo "Contenu du dossier scripts/ :"
+          echo "Contenu du dossier scripts/"
           ls -la scripts/ || echo "Dossier scripts/ introuvable !"
 
       - name: Exécuter le script de mise à jour
         run: python -u scripts/update_portfolios.py
-        working-directory: ${{ github.workspace }}   # garantit qu’on est au bon endroit
         env:
-          # Ajoute ici tes secrets si ton script en a besoin
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          # GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json   # si tu préfères écrire le fichier
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}   # ou autre secret dont ton script a besoin
 
       - name: Configurer Git
         run: |
@@ -53,7 +55,7 @@ jobs:
         run: |
           git add .
           if git diff --staged --quiet; then
-            echo "Aucun changement détecté, rien à commiter."
+            echo "Aucun changement, rien à pousser."
           else
             git commit -m "MAJ auto portefeuilles $(date -u '+%Y-%m-%d %H:%M UTC')"
             git push origin HEAD:${{ github.ref }}
