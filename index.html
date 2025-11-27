@@ -17,31 +17,47 @@
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
     body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
     /* Scene */
     .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#02030a 0%,#040512 70%)}
     .scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.66);z-index:2;pointer-events:none}
     canvas#hero{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block}
-    /* Layout */
+
+    /* Layout / Nav */
     nav{position:fixed;top:16px;left:0;right:0;z-index:1200;display:flex;justify-content:center;pointer-events:auto}
     .nav{width:1280px;max-width:96%;display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter:blur(12px);border-radius:8px;border:1px solid var(--border)}
     .brand{font-weight:800;font-size:1.3rem}
     .brand span{color:var(--accent)}
     .links a{color:var(--muted);text-decoration:none;margin-left:20px;font-weight:500;transition:all .25s}
     .links a:hover{color:#fff}
+
+    /* Hero */
     .hero{min-height:56vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:40;padding:0 20px;text-align:center}
     .hero-inner{max-width:980px;padding:36px;background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:12px;backdrop-filter:blur(10px);border:1px solid var(--border)}
     h1{font-size:clamp(2rem,4.5vw,3.4rem);line-height:1.05;font-weight:800;margin-bottom:8px}
     .lead{font-size:clamp(1rem,1.6vw,1.05rem);color:var(--muted);margin-bottom:14px}
-    .dashboard{position:relative;z-index:50;max-width:1280px;margin:0 auto 80px;padding:28px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
-    .kpi{background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:10px;padding:18px;border:1px solid var(--border);transition:all .25s}
+
+    /* Dashboard KPIs centered */
+    .dashboard{position:relative;z-index:50;max-width:1280px;margin:0 auto 80px;padding:28px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:start}
+    .kpi{background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:10px;padding:18px;border:1px solid var(--border);transition:all .25s;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:84px}
     .kpi h3{font-size:0.95rem;color:var(--muted);font-weight:500;margin-bottom:8px}
     .kpi .value{font-size:1.6rem;font-weight:800;color:#fff;display:block}
-    #seo-description{grid-column:1 / -1;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;padding:20px;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .kpi.kpi--error{outline:1px solid rgba(231,76,60,0.18);box-shadow:0 6px 18px rgba(231,76,60,0.06) inset}
+
+    /* SEO article (restored presentation text) */
+    #seo-description{grid-column:1 / -1;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;padding:20px;border:1px solid rgba(255,255,255,0.04);color:var(--muted);line-height:1.5}
+
     footer{position:relative;z-index:60;padding:24px;text-align:center;color:var(--muted);font-size:0.85rem}
-    @media (max-width:900px){.hero-inner{padding:20px}.dashboard{padding:20px 12px}}
+
+    @media (max-width:900px){
+      .hero-inner{padding:20px}
+      .dashboard{padding:20px 12px}
+      .kpi{min-height:72px}
+    }
   </style>
 </head>
 <body>
+
   <div class="scene" aria-hidden="true">
     <canvas id="hero" aria-hidden="true"></canvas>
   </div>
@@ -61,7 +77,7 @@
   <section class="hero">
     <div class="hero-inner">
       <h1>Visuel Présentation — Sparklines & Barres</h1>
-      <p class="lead">Combinaison d’aires floues, sparklines marquantes et diagrammes en barre discrets pour un rendu magazine, professionnel et aéré.</p>
+      <p class="lead">Peu de lignes marquantes, aires floues et diagrammes en barre en bas : rendu magazine, professionnel et aéré. Les lignes sont distinctes (couleurs, épaisseurs, rythmes) et les barres plus visibles pour mieux représenter le volume.</p>
     </div>
   </section>
 
@@ -70,7 +86,11 @@
     <div class="kpi" id="kpi-newsletters"><h3>Newsletters référencées</h3><span class="value" id="newslettersCount">—</span></div>
     <div class="kpi" id="kpi-assets"><h3>Actifs distincts disponibles</h3><span class="value" id="assetsCount">—</span></div>
     <div class="kpi" id="kpi-visits"><h3>Visites ce mois-ci</h3><span class="value" id="visitsCount">1 234</span></div>
-    <article id="seo-description"><h2 style="color:#fff;margin-bottom:10px;font-size:1.15rem;">À propos — Présentation graphique</h2><p style="line-height:1.5;color:var(--muted);">Version mixée : barres en bas + sparklines marquantes par dessus, glow et ombres pour profondeur, densité réduite pour respirer.</p></article>
+
+    <article id="seo-description">
+      <h2 style="color:#fff;margin-bottom:10px;font-size:1.15rem;">À propos — Présentation graphique</h2>
+      <p>Version mixée : barres en bas + sparklines marquantes par dessus, glow et ombres pour profondeur, densité réduite pour respirer. Idéal pour une page de démonstration ou un hero visuel.</p>
+    </article>
   </section>
 
   <footer>© 2025 Horizon Labs — Gestion SaaS privée</footer>
@@ -136,18 +156,18 @@
         const parsed = parseCSV(csvText);
         const headersLower = parsed.headers.map(h=>h.toLowerCase());
         const tickerIdx = headersLower.findIndex(h=>['ticker','symbole','symbol'].includes(h));
-        if(tickerIdx===-1){ el.assetsTotal.textContent='0'; el.kpiAssetsCard.classList.add('kpi--error'); setVisual(4,0.18,0.18); }
+        if(tickerIdx===-1){ el.assetsTotal.textContent='0'; el.kpiAssetsCard.classList.add('kpi--error'); setVisual(3,0.14,0.18); }
         else {
           const tickers = new Set();
           parsed.rows.forEach(r=>{ const t=(r[tickerIdx]||'').trim(); if(t) tickers.add(t.toUpperCase()); });
           el.assetsTotal.textContent = tickers.size.toLocaleString('fr-FR');
           el.kpiAssetsCard.classList.remove('kpi--error');
-          const lines = Math.min(6, Math.max(3, Math.round(3 + tickers.size * 0.04)));
-          const amp = Math.min(0.5, 0.12 + Math.log10(Math.max(1,tickers.size)) * 0.04);
-          const blob = Math.min(0.9, 0.12 + Math.log10(Math.max(1,tickers.size)) * 0.06);
+          const lines = Math.min(5, Math.max(3, Math.round(3 + tickers.size * 0.03)));
+          const amp = Math.min(0.5, 0.10 + Math.log10(Math.max(1,tickers.size)) * 0.03);
+          const blob = Math.min(0.9, 0.12 + Math.log10(Math.max(1,tickers.size)) * 0.05);
           setVisual(lines, amp, blob);
         }
-      }catch(e){ el.assetsTotal.textContent='0'; el.kpiAssetsCard.classList.add('kpi--error'); setVisual(4,0.18,0.18); }
+      }catch(e){ el.assetsTotal.textContent='0'; el.kpiAssetsCard.classList.add('kpi--error'); setVisual(3,0.14,0.18); }
 
       if(el.visits) el.visits.textContent = '1 234';
     }
@@ -155,7 +175,7 @@
     setInterval(updateKPIs, 30000);
 
     /* -------------------------
-       Canvas hero: sparklines + bar chart bottom
+       Canvas hero: sparklines + bar chart bottom (improved)
     ------------------------- */
     const canvas = document.getElementById('hero');
     const ctx = canvas.getContext('2d', { alpha: true });
@@ -163,8 +183,8 @@
     let W = innerWidth, H = innerHeight;
     const POINTS = 160;
 
-    // visual params
-    let VIS = { lines: 4, amplitudeFactor: 0.18, blobIntensity: 0.18 };
+    // visual params (presentation preset)
+    let VIS = { lines: 3, amplitudeFactor: 0.12, blobIntensity: 0.18 };
 
     function setVisual(lines, amp, blobInt){
       VIS.lines = Math.max(3, Math.min(6, Math.round(lines)));
@@ -198,23 +218,23 @@
       }
     }
 
-    // bars (bottom chart)
+    // bars (bottom chart) — fewer, wider, more visible
     let bars = [];
     function initBars(){
       bars = [];
-      const count = Math.max(24, Math.round(W / 48)); // number of bars across width
+      const count = Math.max(12, Math.round(W / 120)); // fewer bars, wider
       for(let i=0;i<count;i++){
         bars.push({
           x: (i + 0.5) * (W / count),
-          w: Math.max(6, Math.floor(W / count * 0.6)),
-          h: (0.06 + Math.random()*0.34) * (H * 0.18),
+          w: Math.max(10, Math.floor(W / count * 0.7)),
+          h: (0.12 + Math.random()*0.6) * (H * 0.18),
           hue: 200 + Math.random()*80,
-          alpha: 0.06 + Math.random()*0.12
+          alpha: 0.18 + Math.random()*0.22 // stronger alpha for visibility
         });
       }
     }
 
-    // sparklines
+    // sparklines — fewer and more distinct
     let lines = [];
     function initLines(){
       lines = [];
@@ -224,14 +244,16 @@
       const spacing = usable / Math.max(1, VIS.lines - 1);
       for(let i=0;i<VIS.lines;i++){
         const yBase = marginTop + i * spacing;
-        const thickness = 2.6 + Math.random()*1.4; // 2.6..4.0
+        // make each line visually distinct: different thickness, hue and base frequency
+        const thickness = 2.8 + i * 0.6; // progressive thickness
         const phase = Math.random()*Math.PI*2;
-        const speed = 0.00035 + Math.random()*0.0009;
+        const speed = 0.00025 + Math.random()*0.0009;
         const amplitude = VIS.amplitudeFactor * (0.9 + Math.random()*0.6) * spacing;
-        const colorHue = 200 + i * 8;
+        const colorHue = 200 + i * 22; // larger hue shift for distinction
+        const freq = 1 + i * 0.6; // different frequency per line
         const base = new Float32Array(POINTS);
-        for(let p=0;p<POINTS;p++) base[p] = Math.sin((p/POINTS)*Math.PI*2*(1 + Math.random()*0.6)) * (0.4 + Math.random()*0.8);
-        lines.push({ yBase, thickness, phase, speed, amplitude, base, colorHue });
+        for(let p=0;p<POINTS;p++) base[p] = Math.sin((p/POINTS)*Math.PI*2*freq) * (0.4 + Math.random()*0.8);
+        lines.push({ yBase, thickness, phase, speed, amplitude, base, colorHue, freq });
       }
     }
 
@@ -240,10 +262,7 @@
     function initPoints(){
       animatedPoints = [];
       for(let i=0;i<lines.length;i++){
-        const count = 1;
-        for(let k=0;k<count;k++){
-          animatedPoints.push({ lineIdx:i, xIndex: Math.floor(Math.random()*POINTS), phase: Math.random()*Math.PI*2, speed: 0.0008 + Math.random()*0.002 });
-        }
+        animatedPoints.push({ lineIdx:i, xIndex: Math.floor(Math.random()*POINTS), phase: Math.random()*Math.PI*2, speed: 0.0008 + Math.random()*0.002 });
       }
     }
 
@@ -277,20 +296,26 @@
     }
 
     function drawBars(){
-      // bars sit near bottom; draw with low opacity and slight blur
       const baseY = H - 48;
       for(const bar of bars){
-        ctx.beginPath();
-        ctx.fillStyle = `hsla(${bar.hue},80%,60%,${bar.alpha})`;
-        // subtle shadow under bars
+        // subtle vertical gradient for bars
+        const g = ctx.createLinearGradient(bar.x - bar.w/2, baseY - bar.h, bar.x - bar.w/2, baseY);
+        g.addColorStop(0, `hsla(${bar.hue},85%,70%,${Math.min(0.28, bar.alpha)})`);
+        g.addColorStop(1, `hsla(${bar.hue},80%,45%,${Math.min(0.12, bar.alpha*0.6)})`);
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.28)';
-        ctx.shadowBlur = 8;
+        ctx.shadowColor = `rgba(0,0,0,0.32)`;
+        ctx.shadowBlur = 10;
         ctx.shadowOffsetY = 6;
+        ctx.fillStyle = g;
         ctx.fillRect(bar.x - bar.w/2, baseY - bar.h, bar.w, bar.h);
         ctx.restore();
-        // thin top highlight
-        ctx.fillStyle = `hsla(${bar.hue},95%,85%,${Math.min(0.12, bar.alpha*0.9)})`;
+        // thin stroke to make bars readable
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(255,255,255,0.06)`;
+        ctx.strokeRect(bar.x - bar.w/2 + 0.5, baseY - bar.h + 0.5, bar.w - 1, bar.h - 1);
+        // top highlight
+        ctx.fillStyle = `hsla(${bar.hue},95%,88%,${Math.min(0.14, bar.alpha*0.9)})`;
         ctx.fillRect(bar.x - bar.w/2, baseY - bar.h - 2, bar.w, 2);
       }
     }
@@ -303,7 +328,7 @@
         // compute points
         const pts = new Array(POINTS);
         for(let p=0;p<POINTS;p++){
-          const noise = s.base[p] * (0.5 + 0.5 * Math.sin(t + p * 0.14 + s.phase));
+          const noise = s.base[p] * (0.45 + 0.55 * Math.sin(t + p * 0.12 + s.phase));
           const x = p * stepX;
           const y = s.yBase + noise * s.amplitude;
           pts[p] = {x,y};
@@ -316,11 +341,11 @@
         ctx.lineTo(W, baseline); ctx.lineTo(0, baseline); ctx.closePath();
         // shadow under area
         ctx.save();
-        ctx.shadowColor = `rgba(6,18,40,0.22)`;
-        ctx.shadowBlur = 36;
-        ctx.shadowOffsetY = 12;
+        ctx.shadowColor = `rgba(6,18,40,0.20)`;
+        ctx.shadowBlur = 28;
+        ctx.shadowOffsetY = 10;
         const fillGrad = ctx.createLinearGradient(0, s.yBase - s.amplitude, 0, baseline);
-        fillGrad.addColorStop(0, `hsla(${s.colorHue},85%,65%,0.20)`);
+        fillGrad.addColorStop(0, `hsla(${s.colorHue},85%,65%,0.18)`);
         fillGrad.addColorStop(1, `hsla(${s.colorHue},80%,45%,0.02)`);
         ctx.fillStyle = fillGrad;
         ctx.fill();
@@ -328,25 +353,25 @@
         // glow stroke (outer)
         ctx.save();
         ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-        ctx.lineWidth = s.thickness + 2.0;
+        ctx.lineWidth = s.thickness + 2.4;
         ctx.shadowColor = `hsla(${s.colorHue},90%,70%,0.20)`;
-        ctx.shadowBlur = 28 + Math.random()*12;
+        ctx.shadowBlur = 30;
         ctx.strokeStyle = `hsla(${s.colorHue},90%,70%,0.16)`;
         ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
         for(let p=1;p<POINTS;p++) ctx.lineTo(pts[p].x, pts[p].y);
         ctx.stroke();
         ctx.restore();
-        // crisp inner stroke
+        // crisp inner stroke with distinct color per line
         ctx.beginPath();
-        ctx.lineWidth = Math.max(1.4, s.thickness * 0.9);
-        ctx.strokeStyle = `rgba(240,248,255,0.98)`;
+        ctx.lineWidth = Math.max(1.6, s.thickness * 0.95);
+        ctx.strokeStyle = `hsla(${s.colorHue},95%,92%,0.98)`;
         ctx.moveTo(pts[0].x, pts[0].y);
         for(let p=1;p<POINTS;p++) ctx.lineTo(pts[p].x, pts[p].y);
         ctx.stroke();
-        // thin highlight
+        // thin accent (slightly shifted) to add depth
         ctx.beginPath();
-        ctx.lineWidth = Math.max(0.8, s.thickness * 0.45);
-        ctx.strokeStyle = `hsla(${s.colorHue},95%,85%,0.12)`;
+        ctx.lineWidth = Math.max(0.9, s.thickness * 0.45);
+        ctx.strokeStyle = `hsla(${s.colorHue},95%,80%,0.14)`;
         ctx.moveTo(pts[0].x, pts[0].y - 0.8);
         for(let p=1;p<POINTS;p++) ctx.lineTo(pts[p].x, pts[p].y - 0.8);
         ctx.stroke();
@@ -359,26 +384,25 @@
         ap.phase += ap.speed * (now * 0.00002);
         const idx = (Math.floor((ap.xIndex + Math.sin(ap.phase) * 6 + now * 0.00002) + POINTS)) % POINTS;
         const stepX = W / (POINTS - 1);
-        const noise = s.base[idx] * (0.5 + 0.5 * Math.sin(now * s.speed + idx * 0.14 + s.phase));
+        const noise = s.base[idx] * (0.45 + 0.55 * Math.sin(now * s.speed + idx * 0.12 + s.phase));
         const x = idx * stepX;
         const y = s.yBase + noise * s.amplitude;
         // glow dot
         ctx.save();
         ctx.beginPath();
-        ctx.shadowColor = `hsla(${s.colorHue},95%,75%,0.30)`;
-        ctx.shadowBlur = 20;
+        ctx.shadowColor = `hsla(${s.colorHue},95%,75%,0.34)`;
+        ctx.shadowBlur = 22;
         ctx.fillStyle = `hsla(${s.colorHue},95%,75%,0.98)`;
-        ctx.arc(x,y,5.2,0,Math.PI*2); ctx.fill();
+        ctx.arc(x,y,6.0,0,Math.PI*2); ctx.fill();
         ctx.restore();
         // crisp center
-        ctx.beginPath(); ctx.fillStyle='rgba(255,255,255,0.98)'; ctx.arc(x,y,1.6,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.fillStyle='rgba(255,255,255,0.98)'; ctx.arc(x,y,1.8,0,Math.PI*2); ctx.fill();
       }
     }
 
     // render loop
     let last = performance.now();
     function render(now){
-      last = last || now;
       const dt = now - last;
       last = now;
       ctx.clearRect(0,0,W,H);
