@@ -3,13 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Horizon Labs | Survol animé sans images</title>
+<title>Horizon Labs — Survol financier</title>
 <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;600;800&display=swap" rel="stylesheet">
-<!-- GSAP CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <style>
 :root{
-  --bg:#071028; --accent:#00d1b2; --muted:rgba(255,255,255,0.85);
+  --bg:#071028; --accent:#00d1b2; --gain:#7ee787; --loss:#ff7b7b; --muted:rgba(255,255,255,0.85);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -32,57 +31,63 @@ h1{font-size:clamp(1.8rem,5vw,3.6rem);line-height:1.02;font-weight:800;margin-bo
 .cta{display:inline-block;background:var(--accent);color:#04202a;padding:12px 24px;border-radius:12px;font-weight:800;text-decoration:none;transition:transform .25s}
 .cta:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,209,178,0.12)}
 
-/* SCENE (no images) */
+/* SCENE (procedural finance) */
 .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#071028 0%, #041226 60%)}
-svg.sky{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
-canvas#city, canvas#particles{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+svg#svgScene{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+canvas#bars, canvas#particles{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.ticker{position:fixed;left:0;right:0;bottom:18px;z-index:30;pointer-events:none;display:flex;justify-content:center}
+.ticker .line{background:rgba(2,6,18,0.6);color:rgba(255,255,255,0.85);padding:8px 14px;border-radius:999px;font-weight:600;font-size:0.95rem;backdrop-filter:blur(6px);pointer-events:none}
 
-/* flare overlay */
-.flare{position:absolute;left:60%;top:12%;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(255,220,150,0.12), rgba(255,150,50,0.02) 30%, transparent 60%);mix-blend-mode:screen;filter:blur(10px);opacity:0.9;z-index:2;pointer-events:none}
+/* coin style (SVG) */
+.coin{filter:drop-shadow(0 8px 24px rgba(0,0,0,0.6));}
 
 /* responsive */
 @media(max-width:900px){
   .nav{padding:10px}
   .links a{margin-left:12px}
   .hero-inner{padding:22px}
+  .ticker .line{font-size:0.85rem;padding:6px 10px}
 }
 </style>
 </head>
 <body>
 
-<!-- Procedural scene -->
 <div class="scene" aria-hidden="true">
-  <!-- SVG sky for gradients and moving sun/moon -->
-  <svg class="sky" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" id="svgSky" aria-hidden="true">
+  <svg id="svgScene" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
-      <linearGradient id="gSky" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#0b2a4a" stop-opacity="1"/>
-        <stop offset="60%" stop-color="#071028" stop-opacity="1"/>
+      <linearGradient id="gradBG" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#071028"/>
+        <stop offset="100%" stop-color="#041226"/>
       </linearGradient>
-      <radialGradient id="sunGrad" cx="30%" cy="25%" r="40%">
-        <stop offset="0%" stop-color="#ffdca8" stop-opacity="0.95"/>
-        <stop offset="40%" stop-color="#ffb86b" stop-opacity="0.18"/>
-        <stop offset="100%" stop-color="#ffb86b" stop-opacity="0"/>
+      <radialGradient id="coinGrad" cx="30%" cy="30%" r="60%">
+        <stop offset="0%" stop-color="#fff7d6"/>
+        <stop offset="40%" stop-color="#ffd36b"/>
+        <stop offset="100%" stop-color="#ffb84a"/>
       </radialGradient>
+      <filter id="softBlur"><feGaussianBlur stdDeviation="8" result="b"/></filter>
     </defs>
-    <rect width="100%" height="100%" fill="url(#gSky)"></rect>
-    <circle id="sun" cx="1500" cy="160" r="120" fill="url(#sunGrad)" opacity="0.95"></circle>
-    <!-- subtle moving cloud groups will be injected by JS as <g> elements -->
+    <rect width="100%" height="100%" fill="url(#gradBG)"></rect>
+
+    <!-- procedural coins (will be cloned/animated by JS) -->
+    <g id="coinsLayer"></g>
+
+    <!-- animated graph line (SVG path updated by JS) -->
+    <path id="graphLine" d="" fill="none" stroke="#00d1b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"></path>
+
+    <!-- subtle grid -->
+    <g id="grid" opacity="0.06"></g>
   </svg>
 
-  <!-- canvas for city silhouette generated procedurally -->
-  <canvas id="city"></canvas>
-
-  <!-- particles for depth -->
+  <canvas id="bars"></canvas>
   <canvas id="particles"></canvas>
-
-  <div class="flare" id="flare"></div>
 </div>
+
+<div class="ticker" aria-hidden="true"><div class="line" id="tickerText">S&P 500 ▲ 0.42%  •  BTC/USD ▲ 1.2%  •  EUR/USD ▼ 0.03%</div></div>
 
 <!-- Navigation -->
 <nav>
   <div class="nav">
-    <div class="brand">Horizon<span>Labs</span></div>
+    <div class="brand">Horizon<span>Capital</span></div>
     <div class="links">
       <a class="disabled" aria-disabled="true">Accueil</a>
       <a href="portefeuilles.html">Portefeuilles</a>
@@ -95,32 +100,29 @@ canvas#city, canvas#particles{position:absolute;inset:0;width:100%;height:100%;z
 <!-- Hero -->
 <section class="hero">
   <div class="hero-inner">
-    <h1>Perspective claire. Exécution discrète.</h1>
-    <p class="lead">Solutions patrimoniales modernes, pilotées par données et conviction.</p>
-    <a class="cta" href="portefeuilles.html">Explorer les portefeuilles</a>
+    <h1>Capital en mouvement, stratégie en silence.</h1>
+    <p class="lead">Visualisation procédurale des tendances — survol ralenti pour une impression de maîtrise.</p>
+    <a class="cta" href="portefeuilles.html">Voir nos portefeuilles</a>
   </div>
 </section>
 
-<footer style="position:relative;z-index:10;padding:28px;text-align:center;color:rgba(255,255,255,0.6)">© 2025 Horizon Labs — Gestion privée</footer>
+<footer style="position:relative;z-index:10;padding:28px;text-align:center;color:rgba(255,255,255,0.6)">© 2025 Horizon Capital — Gestion privée</footer>
 
 <script>
-// Safety: only Portefeuilles clickable
+// ensure only Portefeuilles clickable
 document.querySelectorAll('.links a').forEach(a=>{
   if(a.classList.contains('disabled')){ a.removeAttribute('href'); a.addEventListener('click', e=>e.preventDefault()); }
 });
 
-// Responsive canvas sizing
-const cityCanvas = document.getElementById('city');
-const cityCtx = cityCanvas.getContext('2d');
-const partCanvas = document.getElementById('particles');
-const partCtx = partCanvas.getContext('2d');
-
-function resizeCanvases(){
-  cityCanvas.width = innerWidth * devicePixelRatio;
-  cityCanvas.height = innerHeight * devicePixelRatio;
-  cityCanvas.style.width = innerWidth + 'px';
-  cityCanvas.style.height = innerHeight + 'px';
-  cityCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+// canvases sizing
+const barsCanvas = document.getElementById('bars'), barsCtx = barsCanvas.getContext('2d');
+const partCanvas = document.getElementById('particles'), partCtx = partCanvas.getContext('2d');
+function resize(){
+  barsCanvas.width = innerWidth * devicePixelRatio;
+  barsCanvas.height = innerHeight * devicePixelRatio;
+  barsCanvas.style.width = innerWidth + 'px';
+  barsCanvas.style.height = innerHeight + 'px';
+  barsCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 
   partCanvas.width = innerWidth * devicePixelRatio;
   partCanvas.height = innerHeight * devicePixelRatio;
@@ -128,131 +130,58 @@ function resizeCanvases(){
   partCanvas.style.height = innerHeight + 'px';
   partCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 }
-window.addEventListener('resize', resizeCanvases);
-resizeCanvases();
+window.addEventListener('resize', resize);
+resize();
 
-// Procedural city silhouette generator
-function drawCity(offsetX = 0, scale = 1, color = '#071028', windowColor = '#ffd97a'){
-  const w = innerWidth;
-  const h = innerHeight;
-  cityCtx.clearRect(0,0,w,h);
+// procedural bars (financial skyline)
+const bars = [];
+function initBars(){
+  bars.length = 0;
+  const cols = Math.max(8, Math.floor(innerWidth / 80));
+  for(let i=0;i<cols;i++){
+    bars.push({
+      x: (i + 0.5) * (innerWidth / cols),
+      width: Math.min(64, innerWidth / cols * 0.6),
+      base: innerHeight * 0.75,
+      height: (0.08 + Math.random()*0.5) * innerHeight * 0.4,
+      color: Math.random() > 0.5 ? 'var(--gain)' : 'var(--loss)',
+      phase: Math.random()*Math.PI*2
+    });
+  }
+}
+initBars();
 
-  // background gradient for depth
-  const g = cityCtx.createLinearGradient(0, h*0.4, 0, h);
-  g.addColorStop(0, 'rgba(6,12,30,0.0)');
-  g.addColorStop(1, 'rgba(2,6,18,1)');
-  cityCtx.fillStyle = g;
-  cityCtx.fillRect(0, h*0.4, w, h*0.6);
-
-  // draw multiple layers of buildings for parallax
-  const layers = [
-    {rows: 18, heightFactor: 0.28, color: '#0b1b33', windows: 0.06, jitter: 0.6},
-    {rows: 12, heightFactor: 0.45, color: '#0e2238', windows: 0.12, jitter: 0.9},
-    {rows: 8,  heightFactor: 0.68, color: '#071028', windows: 0.18, jitter: 1.2}
-  ];
-
-  layers.forEach((layer, li) => {
-    const baseY = h * (0.6 + layer.heightFactor*0.2);
-    const cols = Math.floor(w / (40 + li*10));
-    const colW = w / cols;
-    for(let i= -2; i<cols+2; i++){
-      const x = i * colW + (offsetX * (0.2 + li*0.15)) + Math.sin((i*0.3 + offsetX*0.02))*10;
-      const bw = colW * (0.6 + Math.random()*0.8);
-      const bh = (h * (0.12 + Math.random()*layer.heightFactor)) * scale;
-      const y = baseY - bh + (Math.sin(i*0.5 + offsetX*0.01)* (layer.jitter*6));
-      cityCtx.fillStyle = layer.color;
-      cityCtx.fillRect(x, y, bw, bh);
-
-      // windows
-      const rows = Math.floor(bh / 18);
-      const colsW = Math.floor(bw / 12);
-      for(let r=0;r<rows;r++){
-        for(let c=0;c<colsW;c++){
-          if(Math.random() < layer.windows){
-            const wx = x + 6 + c*12 + (Math.random()*2-1);
-            const wy = y + 6 + r*18 + (Math.random()*2-1);
-            cityCtx.fillStyle = Math.random() < 0.08 ? windowColor : 'rgba(255,255,255,0.02)';
-            cityCtx.fillRect(wx, wy, 8, 12);
-          }
-        }
-      }
-    }
+// draw bars with slow breathing animation
+function drawBars(t){
+  barsCtx.clearRect(0,0,innerWidth,innerHeight);
+  bars.forEach((b, i)=>{
+    const slow = Math.sin((t*0.00006) + b.phase) * 0.08; // very slow
+    const h = b.height * (1 + slow);
+    const x = b.x - b.width/2;
+    const y = b.base - h;
+    // shadow
+    barsCtx.fillStyle = 'rgba(0,0,0,0.35)';
+    barsCtx.fillRect(x+6, y+8, b.width, h);
+    // bar
+    barsCtx.fillStyle = b.color;
+    barsCtx.fillRect(x, y, b.width, h);
+    // subtle top glow
+    barsCtx.fillStyle = 'rgba(255,255,255,0.04)';
+    barsCtx.fillRect(x, y, b.width, 4);
   });
 }
 
-// initial draw
-let cityOffset = 0;
-drawCity(cityOffset);
-
-// animate city pan to simulate drone movement using GSAP
-gsap.to({}, {
-  duration: 28,
-  repeat: -1,
-  ease: "none",
-  onUpdate: function() {
-    // cityOffset cycles slowly
-    cityOffset = (this.progress() * innerWidth * 0.6);
-    // draw with slight scale breathing
-    const scale = 1 + Math.sin(this.progress()*Math.PI*2)*0.003;
-    drawCity(cityOffset, scale);
-  }
-});
-
-// SVG clouds generator and animation
-const svgNS = "http://www.w3.org/2000/svg";
-const svg = document.getElementById('svgSky');
-
-function makeCloudGroup(count, y, speed, scale){
-  const g = document.createElementNS(svgNS, 'g');
-  g.setAttribute('class','cloud-group');
-  g.style.opacity = 0.12;
-  for(let i=0;i<count;i++){
-    const cx = Math.random()*1920;
-    const cy = y + (Math.random()*40-20);
-    const rx = 120 + Math.random()*220;
-    const ry = 30 + Math.random()*40;
-    const ellipse = document.createElementNS(svgNS,'ellipse');
-    ellipse.setAttribute('cx', cx);
-    ellipse.setAttribute('cy', cy);
-    ellipse.setAttribute('rx', rx);
-    ellipse.setAttribute('ry', ry);
-    ellipse.setAttribute('fill', 'white');
-    ellipse.setAttribute('opacity', 0.08 + Math.random()*0.06);
-    ellipse.setAttribute('filter', 'url(#blur)'); // optional if filter defined
-    g.appendChild(ellipse);
-  }
-  svg.appendChild(g);
-
-  // animate group with GSAP
-  gsap.to(g, {
-    x: -2200,
-    duration: speed,
-    repeat: -1,
-    ease: "linear",
-    modifiers: {
-      x: gsap.utils.unitize(x => (parseFloat(x) % 2200))
-    }
-  });
-  gsap.to(g, {y: `+=${(Math.random()*20-10)}`, duration: speed/6, repeat:-1, yoyo:true, ease:"sine.inOut"});
-  gsap.to(g, {opacity: 0.06 + Math.random()*0.12, duration: speed/4, repeat:-1, yoyo:true, ease:"sine.inOut"});
-}
-
-// create several cloud groups at different depths
-makeCloudGroup(5, 120, 80, 1.0);
-makeCloudGroup(6, 200, 120, 1.2);
-makeCloudGroup(4, 60, 60, 0.9);
-
-// particles for atmosphere
+// particles (dust / depth)
 let particles = [];
 function initParticles(){
   particles = [];
-  const count = Math.max(30, Math.floor((innerWidth*innerHeight)/140000));
+  const count = Math.max(20, Math.floor((innerWidth*innerHeight)/220000));
   for(let i=0;i<count;i++){
     particles.push({
       x: Math.random()*innerWidth,
       y: Math.random()*innerHeight,
       r: Math.random()*1.6+0.4,
-      v: Math.random()*0.25+0.02,
+      v: 0.02 + Math.random()*0.06,
       alpha: 0.02 + Math.random()*0.06
     });
   }
@@ -262,52 +191,150 @@ initParticles();
 function drawParticles(){
   partCtx.clearRect(0,0,innerWidth,innerHeight);
   particles.forEach(p=>{
-    p.x += Math.sin((p.y + performance.now()*0.00012) * 0.8) * 0.12;
+    p.x += Math.sin((p.y + performance.now()*0.00008) * 0.6) * 0.06;
     p.y -= p.v;
     if(p.y < -10){ p.y = innerHeight + 10; p.x = Math.random()*innerWidth; }
     partCtx.beginPath();
     partCtx.fillStyle = `rgba(255,255,255,${p.alpha})`;
-    partCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    partCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
     partCtx.fill();
   });
-  requestAnimationFrame(drawParticles);
 }
-drawParticles();
 
-// subtle flare breathing
-gsap.to('#flare', {duration: 8, scale: 1.08, opacity: 0.95, repeat: -1, yoyo: true, ease: "sine.inOut"});
+// SVG procedural coins and graph
+const svg = document.getElementById('svgScene');
+const coinsLayer = document.getElementById('coinsLayer');
+const graphLine = document.getElementById('graphLine');
+const grid = document.getElementById('grid');
 
-// mouse parallax for desktop
-let isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-if(!isTouch){
-  window.addEventListener('mousemove', e=>{
-    const cx = innerWidth/2, cy = innerHeight/2;
-    const dx = (e.clientX - cx)/cx;
-    const dy = (e.clientY - cy)/cy;
-    // move sun slightly
-    gsap.to('#sun', {duration: 1.2, attr: {cx: 1500 + dx*80, cy: 160 + dy*40}, ease: "power3.out"});
-    // parallax city layers by redrawing with offset
-    gsap.to({}, {duration: 0.8, onUpdate: ()=> {
-      // small reactive offset based on mouse
-      const reactiveOffset = dx * 120;
-      drawCity(cityOffset + reactiveOffset, 1 + dy*0.002);
-    }});
-  });
+// create grid lines
+function buildGrid(){
+  grid.innerHTML = '';
+  const stepX = 120, stepY = 80;
+  for(let x=0;x<1920;x+=stepX){
+    const line = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    line.setAttribute('x', x);
+    line.setAttribute('y', 0);
+    line.setAttribute('width', 1);
+    line.setAttribute('height', 1080);
+    line.setAttribute('fill', 'white');
+    line.setAttribute('opacity', 0.02);
+    grid.appendChild(line);
+  }
+  for(let y=0;y<1080;y+=stepY){
+    const line = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    line.setAttribute('x', 0);
+    line.setAttribute('y', y);
+    line.setAttribute('width', 1920);
+    line.setAttribute('height', 1);
+    line.setAttribute('fill', 'white');
+    line.setAttribute('opacity', 0.02);
+    grid.appendChild(line);
+  }
 }
+buildGrid();
+
+// create coins
+const coins = [];
+function createCoins(n=6){
+  coinsLayer.innerHTML = '';
+  for(let i=0;i<n;i++){
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','coin');
+    const cx = 200 + i*220 + (Math.random()*80-40);
+    const cy = 160 + (Math.random()*80-40);
+    const r = 36 + Math.random()*18;
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', cx);
+    circle.setAttribute('cy', cy);
+    circle.setAttribute('r', r);
+    circle.setAttribute('fill', 'url(#coinGrad)');
+    circle.setAttribute('opacity', 0.95);
+    // inner symbol (simple euro sign)
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', cx);
+    text.setAttribute('y', cy + r*0.12);
+    text.setAttribute('text-anchor','middle');
+    text.setAttribute('font-size', Math.max(18, r*0.6));
+    text.setAttribute('fill','#6b3f00');
+    text.setAttribute('font-weight','700');
+    text.textContent = '€';
+    g.appendChild(circle);
+    g.appendChild(text);
+    coinsLayer.appendChild(g);
+    coins.push({g, cx, cy, r, baseX:cx, baseY:cy});
+  }
+}
+createCoins(7);
+
+// generate a smooth graph path (procedural)
+function buildGraph(){
+  const points = [];
+  const cols = 14;
+  const w = 1600, left = 160, top = 220, bottom = 720;
+  for(let i=0;i<=cols;i++){
+    const x = left + (i/cols)*w;
+    const noise = Math.sin(i*0.6 + performance.now()*0.00002) * 0.06 + (Math.random()*0.02);
+    const y = top + (0.5 + noise) * (bottom - top) * (0.6 + Math.sin(i*0.4)*0.08);
+    points.push([x,y]);
+  }
+  // build smooth path
+  let d = `M ${points[0][0]} ${points[0][1]}`;
+  for(let i=1;i<points.length;i++){
+    const [x,y] = points[i];
+    const [px,py] = points[i-1];
+    const cx = (px + x)/2;
+    d += ` Q ${px} ${py} ${cx} ${(py + y)/2}`;
+    d += ` T ${x} ${y}`;
+  }
+  graphLine.setAttribute('d', d);
+}
+
+// GSAP timeline: very slow, long durations for a calm slow-motion effect
+const slowTL = gsap.timeline({repeat:-1, defaults:{ease:"sine.inOut"}});
+slowTL.to(coins, {
+  duration: 120, // very slow float across scene
+  onUpdate: function(){
+    // animate coins positions subtly
+    coins.forEach((c, idx)=>{
+      const t = slowTL.time() + idx*6;
+      const dx = Math.sin(t*0.02 + idx)*18;
+      const dy = Math.cos(t*0.015 + idx*0.6)*10;
+      c.g.setAttribute('transform', `translate(${dx},${dy})`);
+    });
+  }
+}, 0);
+
+slowTL.to({}, {duration: 140, onUpdate: ()=> {
+  // update graph slowly
+  buildGraph();
+}}, 0);
+
+// ticker slow scroll using GSAP
+const ticker = document.getElementById('tickerText');
+gsap.to(ticker, {x: '-=1200', duration: 80, ease: 'linear', repeat: -1});
+
+// animation loop for canvases
+function loop(ts){
+  drawBars(ts);
+  drawParticles();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
 
 // respect reduced motion
 const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
 if(mq.matches){
-  gsap.globalTimeline.timeScale(0.35);
-  // stop cloud movement if needed
-  document.querySelectorAll('.cloud-group').forEach(g => gsap.killTweensOf(g));
+  gsap.globalTimeline.timeScale(0.25);
+  gsap.killTweensOf(ticker);
 }
 
-// redraw on resize
+// handle resize
 window.addEventListener('resize', ()=>{
-  resizeCanvases();
+  resize();
+  initBars();
   initParticles();
-  drawCity(cityOffset);
+  buildGrid();
 });
 </script>
 </body>
