@@ -230,7 +230,7 @@
     setInterval(updateKPIs, 30000);
 
     /* -------------------------
-       Sparkline procedural background with glow and shadow
+       Sparkline procedural background (even darker lines)
     ------------------------- */
 
     const canvas = document.getElementById('sparklines');
@@ -252,15 +252,14 @@
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // parameters
+    // darker sparkline parameters (further darkened)
     let sparkLines = [];
     let sparkLineCount = 18;
     let sparkAmplitude = 0.28;
     let sparkDensity = 64;
-
-    // darker base colors
-    const baseRGB = { r: 48, g: 72, b: 120 }; // deep blue-gray
-    const accentRGB = { r: 90, g: 150, b: 240 }; // bright accent
+    // much darker base color and stronger alpha for better contrast
+    let sparkBaseR = 60, sparkBaseG = 90, sparkBaseB = 140; // darker blue-gray
+    let sparkAccentR = 90, sparkAccentG = 150, sparkAccentB = 240; // brighter accent
 
     function setSparkParams(lines, amplitude){
       sparkLineCount = Math.max(6, Math.round(lines));
@@ -277,9 +276,9 @@
       for(let i=0;i<sparkLineCount;i++){
         const yBase = marginTop + i * spacing;
         const phase = Math.random() * Math.PI * 2;
-        const speed = 0.0006 + Math.random() * 0.0012; // slightly slower
+        const speed = 0.0008 + Math.random() * 0.0016;
         const amplitude = sparkAmplitude * (0.6 + Math.random() * 0.9) * (usable * 0.12);
-        const thickness = 1.2 + Math.random() * 2.0;
+        const thickness = 1.2 + Math.random() * 2.2; // thicker for darker presence
         sparkLines.push({
           yBase, phase, speed, amplitude, thickness,
           points: new Float32Array(sparkDensity)
@@ -294,7 +293,6 @@
 
     function drawSparklines(now){
       ctx.clearRect(0,0,W,H);
-
       // subtle backdrop gradient
       const g = ctx.createLinearGradient(0,0,0,H);
       g.addColorStop(0, 'rgba(0,0,0,0)');
@@ -305,10 +303,8 @@
       for(let i=0;i<sparkLines.length;i++){
         const s = sparkLines[i];
         const t = now * s.speed;
+        ctx.beginPath();
         const stepX = W / (sparkDensity - 1);
-
-        // build path
-        ctx.beginPath();
         for(let p=0;p<sparkDensity;p++){
           const noise = s.points[p] * (0.6 + 0.4 * Math.sin(t + p * 0.12 + s.phase));
           const y = s.yBase + noise * s.amplitude;
@@ -316,61 +312,24 @@
           if(p === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
-
-        // create filled area path for shadow and gradient fill
-        ctx.lineTo(W, s.yBase + s.amplitude * 1.6);
-        ctx.lineTo(0, s.yBase + s.amplitude * 1.6);
-        ctx.closePath();
-
-        // shadow under filled area (soft, subtle)
-        ctx.save();
-        ctx.shadowColor = `rgba(${baseRGB.r},${baseRGB.g},${baseRGB.b},0.18)`;
-        ctx.shadowBlur = 28;
-        ctx.shadowOffsetY = 8;
-        // gradient fill under curve (very subtle)
-        const fillGrad = ctx.createLinearGradient(0, s.yBase - s.amplitude, 0, s.yBase + s.amplitude * 1.6);
-        fillGrad.addColorStop(0, `rgba(${accentRGB.r},${accentRGB.g},${accentRGB.b},0.06)`);
-        fillGrad.addColorStop(1, `rgba(${baseRGB.r},${baseRGB.g},${baseRGB.b},0.02)`);
-        ctx.fillStyle = fillGrad;
-        ctx.fill();
-        ctx.restore();
-
-        // draw main line with glow
-        ctx.save();
+        // darker stroke: use RGB with higher alpha per line
+        const baseAlpha = 0.18 + (i / sparkLines.length) * 0.16; // increased baseline for much darker look
         ctx.lineWidth = s.thickness;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        // glow: outer soft blur
-        ctx.shadowColor = `rgba(${accentRGB.r},${accentRGB.g},${accentRGB.b},0.14)`;
-        ctx.shadowBlur = 14;
-        ctx.strokeStyle = `rgba(${accentRGB.r},${accentRGB.g},${accentRGB.b},0.20)`;
+        ctx.strokeStyle = `rgba(${sparkBaseR},${sparkBaseG},${sparkBaseB},${baseAlpha})`;
         ctx.stroke();
-        ctx.restore();
 
-        // draw crisp inner stroke (no shadow) for readability
+        // stronger brighter highlight
         ctx.beginPath();
         for(let p=0;p<sparkDensity;p++){
           const noise = s.points[p] * (0.6 + 0.4 * Math.sin(t + p * 0.12 + s.phase));
           const y = s.yBase + noise * s.amplitude;
           const x = p * stepX;
-          if(p === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          if(p === 0) ctx.moveTo(x, y - 0.6);
+          else ctx.lineTo(x, y - 0.6);
         }
-        ctx.lineWidth = Math.max(0.6, s.thickness * 0.6);
-        ctx.strokeStyle = `rgba(200,220,255,0.18)`; // subtle crisp line
-        ctx.stroke();
-
-        // subtle highlight line above (thin, faint)
-        ctx.beginPath();
-        for(let p=0;p<sparkDensity;p++){
-          const noise = s.points[p] * (0.6 + 0.4 * Math.sin(t + p * 0.12 + s.phase));
-          const y = s.yBase + noise * s.amplitude - 0.6;
-          const x = p * stepX;
-          if(p === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.lineWidth = Math.max(0.5, s.thickness * 0.45);
-        ctx.strokeStyle = `rgba(${accentRGB.r},${accentRGB.g},${accentRGB.b},0.12)`;
+        ctx.lineWidth = Math.max(0.8, s.thickness * 0.6);
+        const highlightAlpha = Math.min(0.6, baseAlpha * 0.9);
+        ctx.strokeStyle = `rgba(${sparkAccentR},${sparkAccentG},${sparkAccentB},${highlightAlpha})`;
         ctx.stroke();
       }
 
