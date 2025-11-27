@@ -8,12 +8,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <style>
     :root {
-      --bg: #0a0f1f;
+      --bg: #050615; /* plus sombre */
       --accent: #4a90e2;
       --gain: #4cd07d;
       --loss: #e74c3c;
-      --muted: rgba(255,255,255,0.7);
+      --muted: rgba(255,255,255,0.72);
       --card-bg: rgba(255,255,255,0.03);
+      --card-strong: rgba(255,255,255,0.06);
       --border: rgba(255,255,255,0.08);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,7 +23,7 @@
 
     /* NAV */
     nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
-    .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
+    .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
     .brand { font-weight: 800; font-size: 1.3rem; }
     .brand span { color: var(--accent); }
     .links a { color: var(--muted); text-decoration: none; margin-left: 20px; font-weight: 500; transition: all .3s; }
@@ -30,35 +31,47 @@
     .links a.disabled { opacity: .5; cursor: default; pointer-events: none; }
 
     /* HERO */
-    .hero { min-height: 60vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; padding: 0 20px; text-align: center; }
-    .hero-inner { max-width: 900px; padding: 28px; background: var(--card-bg); border-radius: 8px; backdrop-filter: blur(8px); border: 1px solid var(--border); }
+    .hero { min-height: 60vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 30; padding: 0 20px; text-align: center; }
+    .hero-inner { max-width: 900px; padding: 28px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius: 8px; backdrop-filter: blur(8px); border: 1px solid var(--border); }
     h1 { font-size: clamp(2rem, 4.5vw, 3.2rem); line-height: 1.1; font-weight: 800; margin-bottom: 8px; }
     .lead { font-size: clamp(1rem, 1.8vw, 1.1rem); color: var(--muted); margin-bottom: 14px; }
     .cta { display: inline-block; background: var(--accent); color: #fff; padding: 10px 20px; border-radius: 6px; font-weight: 700; text-decoration: none; transition: all .3s; }
     .cta:hover { background: #357abd; box-shadow: 0 4px 12px rgba(74,144,226,0.2); }
 
     /* DASHBOARD */
-    .dashboard { position: relative; z-index: 20; max-width: 1280px; margin: 0 auto 80px; padding: 40px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-    .kpi { background: var(--card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--border); transition: all .3s; pointer-events: auto; }
-    .kpi:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .dashboard { position: relative; z-index: 40; max-width: 1280px; margin: 0 auto 80px; padding: 40px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .kpi { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 8px; padding: 20px; border: 1px solid var(--border); transition: all .3s; pointer-events: auto; }
+    .kpi:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
     .kpi h3 { font-size: 0.95rem; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
     .kpi .value { font-size: 1.6rem; font-weight: 800; color: #fff; display: block; }
-    .kpi .sub { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
     .kpi.kpi--error { outline: 1px solid rgba(231,76,60,0.18); box-shadow: 0 6px 18px rgba(231,76,60,0.06) inset; }
 
-    /* SCENE */
-    .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, var(--bg) 0%, #060b1a 60%); }
-    svg#svgScene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
-    canvas#bars, canvas#particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-    .ticker { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 30; pointer-events: none; display: flex; justify-content: center; }
-    .ticker .line { background: var(--card-bg); color: var(--muted); padding: 6px 12px; border-radius: 999px; font-weight: 500; font-size: 0.9rem; backdrop-filter: blur(8px); border: 1px solid var(--border); }
+    /* SCENE (plus sombre et plus opaque) */
+    .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, #03040a 0%, #050615 70%); }
+    /* overlay sombre pour faire ressortir le contenu */
+    .scene::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.62); /* plus opaque pour assombrir */
+      z-index: 2;
+      pointer-events: none;
+    }
+    svg#svgScene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; opacity: 0.85; }
+    canvas#bars, canvas#particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; mix-blend-mode: screen; }
+    /* réduire visibilité des particules pour ne pas gêner la lecture */
+    canvas#particles { opacity: 0.45; filter: blur(0.2px); }
 
-    /* RESPONSIVE */
+    .ticker { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 50; pointer-events: none; display: flex; justify-content: center; }
+    .ticker .line { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color: var(--muted); padding: 6px 12px; border-radius: 999px; font-weight: 500; font-size: 0.9rem; backdrop-filter: blur(8px); border: 1px solid var(--border); }
+
+    /* remove coin visuals (no blue circles) */
+    .coin { display: none !important; }
+
+    /* SEO article style */
+    #seo-description { grid-column: 1 / -1; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:8px; padding:22px; border:1px solid rgba(255,255,255,0.04); color:var(--muted); }
+
     @media (max-width: 900px) {
-      .nav { padding: 8px; }
-      .links a { margin-left: 12px; font-size: 0.95rem; }
-      .hero-inner { padding: 20px; }
-      .ticker .line { font-size: 0.85rem; padding: 5px 10px; }
       .dashboard { grid-template-columns: 1fr; padding: 30px 15px; gap: 15px; }
     }
   </style>
@@ -69,8 +82,8 @@
     <svg id="svgScene" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
         <linearGradient id="gradBG" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stop-color="var(--bg)"/>
-          <stop offset="100%" stop-color="#060b1a"/>
+          <stop offset="0%" stop-color="#03040a"/>
+          <stop offset="100%" stop-color="#050615"/>
         </linearGradient>
         <radialGradient id="coinGrad" cx="30%" cy="30%" r="60%">
           <stop offset="0%" stop-color="#e6f0ff"/>
@@ -111,27 +124,25 @@
     </div>
   </section>
 
-  <!-- Dashboard KPIs + SEO text -->
+  <!-- Dashboard KPIs (sous-titres supprimés) -->
   <section class="dashboard" aria-live="polite" aria-atomic="true">
     <div class="kpi" id="kpi-wallets">
       <h3>Portefeuilles recensés</h3>
       <span class="value" id="walletsCount">—</span>
-      <div class="sub">Comptage des portefeuilles dans <code>portfolios.json</code></div>
     </div>
 
     <div class="kpi" id="kpi-newsletters">
       <h3>Newsletters référencées</h3>
       <span class="value" id="newslettersCount">—</span>
-      <div class="sub">Fichier attendu : <code>newsletters.json</code> (sera ajouté plus tard)</div>
     </div>
 
     <div class="kpi" id="kpi-assets">
       <h3>Actifs distincts disponibles</h3>
       <span class="value" id="assetsCount">—</span>
-      <div class="sub" id="assetsBreakdown">Actions: — • ETF: — • Matières premières: —</div>
+      <div class="sub" id="assetsBreakdown" style="color:var(--muted); margin-top:8px; font-size:0.95rem;">Actions: — • ETF: — • Matières premières: —</div>
     </div>
 
-    <article id="seo-description" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); border-radius:8px; padding:22px; border:1px solid rgba(255,255,255,0.04); color:var(--muted);">
+    <article id="seo-description">
       <h2 style="color:#fff; margin-bottom:12px; font-size:1.25rem;">À propos de Horizon Labs — Plateforme de gestion de portefeuilles</h2>
 
       <p>
@@ -168,7 +179,7 @@
   <footer style="position:relative;z-index:10;padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;">© 2025 Horizon Labs — Gestion SaaS privée</footer>
 
   <script>
-    // --- Globals declared early to avoid TDZ ---
+    // Globals early to avoid TDZ
     const bars = [];
     const particles = [];
 
@@ -177,7 +188,7 @@
     const partCanvas = document.getElementById('particles');
     const partCtx = partCanvas ? partCanvas.getContext('2d') : null;
     const svg = document.getElementById('svgScene');
-    const coinsLayer = document.getElementById('coinsLayer');
+    const coinsLayer = document.getElementById('coinsLayer'); // not used for coins now
     const graphLine = document.getElementById('graphLine');
     const grid = document.getElementById('grid');
     const tickerText = document.getElementById('tickerText');
@@ -187,7 +198,6 @@
     let gainColor = cssColor('--gain') || '#4cd07d';
     let lossColor = cssColor('--loss') || '#e74c3c';
     let accentColor = cssColor('--accent') || '#4a90e2';
-    // --- End globals ---
 
     // KPI elements
     const el = {
@@ -199,14 +209,12 @@
       kpiAssetsCard: document.getElementById('kpi-assets')
     };
 
-    // Use the raw URLs provided (absolute raw GitHub URLs)
+    // Remote raw URLs (as provided earlier)
     const portfoliosUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portfolios.json';
-    // CSV assumed to be in same repo under this exact name
     const compositionCsvUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles.csv';
-    // newsletters optional (not provided)
     const newslettersUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/newsletters.json';
 
-    // CSV parser (detects tab or comma)
+    // CSV parser (tab or comma)
     function parseCSV(text) {
       const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
       if (!lines.length) return { headers: [], rows: [] };
@@ -231,7 +239,7 @@
       return { headers, rows };
     }
 
-    // Update KPIs using the provided raw URLs
+    // Update KPIs
     async function updateKPIs() {
       // portfolios.json
       try {
@@ -247,7 +255,7 @@
         el.wallets.textContent = count.toLocaleString('fr-FR');
         el.kpiWalletsCard.classList.remove('kpi--error');
       } catch (err) {
-        console.warn('Erreur lecture portfolios.json depuis GitHub raw URL :', err);
+        console.warn('Erreur lecture portfolios.json :', err);
         el.wallets.textContent = '0';
         el.kpiWalletsCard.classList.add('kpi--error');
       }
@@ -268,7 +276,7 @@
         el.newsletters.textContent = '0';
       }
 
-      // composition CSV -> count unique tickers
+      // composition CSV -> unique tickers
       try {
         const res3 = await fetch(compositionCsvUrl, { cache: 'no-store' });
         if (!res3.ok) throw new Error(`composition_portefeuilles.csv ${res3.status}`);
@@ -312,7 +320,7 @@
           el.kpiAssetsCard.classList.remove('kpi--error');
         }
       } catch (err) {
-        console.warn('Erreur lecture composition_portefeuilles.csv depuis GitHub raw URL :', err);
+        console.warn('Erreur lecture composition_portefeuilles.csv :', err);
         el.assetsTotal.textContent = '0';
         el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
         el.kpiAssetsCard.classList.add('kpi--error');
@@ -324,8 +332,9 @@
     setInterval(updateKPIs, 30000);
 
     /* ---------------------------
-       Background animation (bars, particles, coins)
-       All globals declared above to avoid TDZ
+       Background animation (bars + subtle particles)
+       - coins removed (no blue circles)
+       - particles reduced opacity to avoid visual noise
     --------------------------- */
 
     let DPR = Math.max(1, devicePixelRatio || 1);
@@ -379,7 +388,7 @@
         line.setAttribute('y1', y);
         line.setAttribute('x2', innerWidth);
         line.setAttribute('y2', y);
-        line.setAttribute('stroke', 'rgba(255,255,255,0.03)');
+        line.setAttribute('stroke', 'rgba(255,255,255,0.02)');
         line.setAttribute('stroke-width', '1');
         grid.appendChild(line);
       }
@@ -387,64 +396,17 @@
 
     function initParticles() {
       particles.length = 0;
-      const count = Math.max(24, Math.floor(innerWidth / 60));
+      // fewer particles and lower alpha to reduce distraction
+      const count = Math.max(12, Math.floor(innerWidth / 140));
       for (let i = 0; i < count; i++) {
         particles.push({
           x: Math.random() * innerWidth,
           y: Math.random() * innerHeight,
-          vx: (Math.random() - 0.5) * 0.2,
-          vy: -0.1 - Math.random() * 0.6,
-          size: 1 + Math.random() * 3,
-          alpha: 0.08 + Math.random() * 0.18,
-          color: Math.random() > 0.6 ? gainColor : 'rgba(255,255,255,0.06)'
-        });
-      }
-    }
-
-    function createCoins() {
-      if (!coinsLayer) return;
-      coinsLayer.innerHTML = '';
-      const count = Math.min(10, Math.floor(innerWidth / 220));
-      for (let i = 0; i < count; i++) {
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', 'coin');
-        const cx = Math.random() * innerWidth;
-        const cy = Math.random() * innerHeight * 0.6;
-        const r = 28 + Math.random() * 36;
-
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', cx);
-        circle.setAttribute('cy', cy);
-        circle.setAttribute('r', r);
-        circle.setAttribute('fill', 'url(#coinGrad)');
-        circle.setAttribute('opacity', 0.95);
-        circle.setAttribute('transform-origin', `${cx}px ${cy}px`);
-
-        const rim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        rim.setAttribute('cx', cx);
-        rim.setAttribute('cy', cy);
-        rim.setAttribute('r', r * 0.7);
-        rim.setAttribute('fill', 'rgba(255,255,255,0.06)');
-
-        g.appendChild(circle);
-        g.appendChild(rim);
-        coinsLayer.appendChild(g);
-
-        gsap.to(g, {
-          y: '+= ' + (10 + Math.random() * 30),
-          rotation: (Math.random() > 0.5 ? 1 : -1) * (6 + Math.random() * 12),
-          duration: 4 + Math.random() * 6,
-          yoyo: true,
-          repeat: -1,
-          ease: 'sine.inOut',
-          delay: Math.random() * 2
-        });
-        gsap.to(g, {
-          x: '+= ' + (Math.random() - 0.5) * 40,
-          duration: 6 + Math.random() * 6,
-          yoyo: true,
-          repeat: -1,
-          ease: 'sine.inOut'
+          vx: (Math.random() - 0.5) * 0.12,
+          vy: -0.05 - Math.random() * 0.3,
+          size: 0.8 + Math.random() * 2,
+          alpha: 0.04 + Math.random() * 0.08,
+          color: Math.random() > 0.6 ? gainColor : 'rgba(255,255,255,0.04)'
         });
       }
     }
@@ -471,8 +433,9 @@
         const h = b.height * (0.6 + oscill * 0.8);
         const top = b.base - h;
         const grad = barsCtx.createLinearGradient(b.x, top, b.x, b.base);
-        grad.addColorStop(0, hexToRgba(b.color, 0.95));
-        grad.addColorStop(1, hexToRgba(b.color, 0.18));
+        // slightly dim the bar colors so foreground text remains dominant
+        grad.addColorStop(0, hexToRgba(b.color, 0.85));
+        grad.addColorStop(1, hexToRgba(b.color, 0.12));
         barsCtx.fillStyle = grad;
         barsCtx.strokeStyle = hexToRgba('#000', 0.06);
         barsCtx.lineWidth = 1;
@@ -494,6 +457,7 @@
         d += ` T ${last.x} ${last.y}`;
         graphLine.setAttribute('d', d);
         graphLine.setAttribute('stroke', accentColor);
+        graphLine.setAttribute('opacity', '0.9');
       }
     }
 
@@ -503,15 +467,15 @@
       for (let p of particles) {
         p.x += p.vx * dt * 0.06;
         p.y += p.vy * dt * 0.06;
-        p.alpha -= 0.0006 * dt;
+        p.alpha -= 0.0004 * dt;
         if (p.y < -20 || p.alpha <= 0) {
           p.x = Math.random() * innerWidth;
           p.y = innerHeight + 10 + Math.random() * 80;
-          p.vx = (Math.random() - 0.5) * 0.2;
-          p.vy = -0.1 - Math.random() * 0.6;
-          p.size = 1 + Math.random() * 3;
-          p.alpha = 0.06 + Math.random() * 0.18;
-          p.color = Math.random() > 0.6 ? gainColor : 'rgba(255,255,255,0.06)';
+          p.vx = (Math.random() - 0.5) * 0.12;
+          p.vy = -0.05 - Math.random() * 0.3;
+          p.size = 0.8 + Math.random() * 2;
+          p.alpha = 0.04 + Math.random() * 0.08;
+          p.color = Math.random() > 0.6 ? gainColor : 'rgba(255,255,255,0.04)';
         }
         partCtx.beginPath();
         partCtx.fillStyle = hexToRgba(p.color, p.alpha);
@@ -542,7 +506,7 @@
     // initial inits and loop
     resize();
     initParticles();
-    createCoins();
+    // createCoins removed intentionally (no blue circles)
     (function animateTicker() {
       if (!tickerText) return;
       const width = tickerText.offsetWidth;
