@@ -3,23 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Skyline Capital | Gestion Privée</title>
-<link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+<title>Horizon Labs | Survol animé sans images</title>
+<link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;600;800&display=swap" rel="stylesheet">
+<!-- GSAP CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <style>
 :root{
-  --bg:#071028;
-  --accent:#00d1b2;
-  --muted:rgba(255,255,255,0.75);
-  --glass:rgba(255,255,255,0.06);
+  --bg:#071028; --accent:#00d1b2; --muted:rgba(255,255,255,0.85);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:'Satoshi',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:'Satoshi',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;background:var(--bg);-webkit-font-smoothing:antialiased;overflow:hidden}
 
 /* NAV */
 nav{position:fixed;top:18px;left:0;right:0;z-index:1200;display:flex;justify-content:center;pointer-events:auto}
 .nav{width:1200px;max-width:94%;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));backdrop-filter:blur(8px);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
-.brand{font-weight:900;font-size:1.5rem;letter-spacing:-0.02em}
+.brand{font-weight:800;font-size:1.4rem}
 .brand span{color:var(--accent)}
 .links a{color:var(--muted);text-decoration:none;margin-left:22px;font-weight:600;opacity:.95;transition:all .28s}
 .links a:hover{color:var(--accent);transform:translateY(-3px)}
@@ -27,61 +26,63 @@ nav{position:fixed;top:18px;left:0;right:0;z-index:1200;display:flex;justify-con
 
 /* HERO */
 .hero{height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:10;padding:0 20px;text-align:center}
-.hero-inner{max-width:1100px;padding:40px;background:linear-gradient(180deg, rgba(7,16,40,0.12), rgba(7,16,40,0.06));border-radius:16px;backdrop-filter:blur(6px)}
-h1{font-size:clamp(2rem,6vw,4.2rem);line-height:1.02;font-weight:900;margin-bottom:12px;letter-spacing:-0.02em}
-.lead{font-size:clamp(1rem,2.2vw,1.25rem);color:rgba(255,255,255,0.92);margin-bottom:18px}
-.cta{display:inline-block;background:var(--accent);color:#04202a;padding:12px 26px;border-radius:12px;font-weight:800;text-decoration:none;transition:transform .25s,box-shadow .25s}
-.cta:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,209,178,0.14)}
+.hero-inner{max-width:1100px;padding:36px;background:linear-gradient(180deg, rgba(7,16,40,0.12), rgba(7,16,40,0.06));border-radius:14px;backdrop-filter:blur(6px)}
+h1{font-size:clamp(1.8rem,5vw,3.6rem);line-height:1.02;font-weight:800;margin-bottom:10px}
+.lead{font-size:clamp(0.95rem,2vw,1.15rem);color:rgba(255,255,255,0.92);margin-bottom:16px}
+.cta{display:inline-block;background:var(--accent);color:#04202a;padding:12px 24px;border-radius:12px;font-weight:800;text-decoration:none;transition:transform .25s}
+.cta:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,209,178,0.12)}
 
-/* BACKGROUND VIDEO + OVERLAYS */
-.bg-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.bg-video{
-  position:absolute;inset:-10% -15% -10% -15%;
-  width:120%;height:120%;object-fit:cover;transform-origin:center;
-  filter:contrast(.95) saturate(.95) brightness(.95);
-  will-change:transform;
-  animation: slowPan 28s linear infinite;
-}
-@keyframes slowPan{
-  0%{transform:translate3d(-2%,0,0) scale(1.06)}
-  25%{transform:translate3d(2%,-1.2%,0) scale(1.07)}
-  50%{transform:translate3d(-1.5%,0.8%,0) scale(1.065)}
-  75%{transform:translate3d(1.8%,-0.6%,0) scale(1.07)}
-  100%{transform:translate3d(-2%,0,0) scale(1.06)}
-}
-.bg-gradient{position:absolute;inset:0;background:linear-gradient(180deg, rgba(2,8,20,0.18), rgba(2,8,20,0.6));mix-blend-mode:multiply}
+/* SCENE (no images) */
+.scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#071028 0%, #041226 60%)}
+svg.sky{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+canvas#city, canvas#particles{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 
-/* subtle particles layer (canvas) */
-canvas#particles{position:absolute;inset:0;z-index:2;pointer-events:none}
-
-/* footer */
-footer{position:relative;z-index:10;padding:28px;text-align:center;color:rgba(255,255,255,0.6)}
+/* flare overlay */
+.flare{position:absolute;left:60%;top:12%;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(255,220,150,0.12), rgba(255,150,50,0.02) 30%, transparent 60%);mix-blend-mode:screen;filter:blur(10px);opacity:0.9;z-index:2;pointer-events:none}
 
 /* responsive */
 @media(max-width:900px){
   .nav{padding:10px}
   .links a{margin-left:12px}
-  .hero-inner{padding:28px}
+  .hero-inner{padding:22px}
 }
 </style>
 </head>
 <body>
 
-<!-- Background video and overlays -->
-<div class="bg-wrap" aria-hidden="true">
-  <!-- Replace src with your own drone video file or hosted URL -->
-  <video id="bgVideo" class="bg-video" autoplay muted loop playsinline preload="auto" poster="">
-    <source src="https://cdn.coverr.co/videos/coverr-drone-city-1570?token=eyJhbGciOiJIUzI1NiJ9" type="video/mp4">
-    <!-- Fallback image if video not supported -->
-  </video>
-  <div class="bg-gradient"></div>
+<!-- Procedural scene -->
+<div class="scene" aria-hidden="true">
+  <!-- SVG sky for gradients and moving sun/moon -->
+  <svg class="sky" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" id="svgSky" aria-hidden="true">
+    <defs>
+      <linearGradient id="gSky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#0b2a4a" stop-opacity="1"/>
+        <stop offset="60%" stop-color="#071028" stop-opacity="1"/>
+      </linearGradient>
+      <radialGradient id="sunGrad" cx="30%" cy="25%" r="40%">
+        <stop offset="0%" stop-color="#ffdca8" stop-opacity="0.95"/>
+        <stop offset="40%" stop-color="#ffb86b" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#ffb86b" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#gSky)"></rect>
+    <circle id="sun" cx="1500" cy="160" r="120" fill="url(#sunGrad)" opacity="0.95"></circle>
+    <!-- subtle moving cloud groups will be injected by JS as <g> elements -->
+  </svg>
+
+  <!-- canvas for city silhouette generated procedurally -->
+  <canvas id="city"></canvas>
+
+  <!-- particles for depth -->
   <canvas id="particles"></canvas>
+
+  <div class="flare" id="flare"></div>
 </div>
 
 <!-- Navigation -->
 <nav>
   <div class="nav">
-    <div class="brand">Skyline<span>Capital</span></div>
+    <div class="brand">Horizon<span>Labs</span></div>
     <div class="links">
       <a class="disabled" aria-disabled="true">Accueil</a>
       <a href="portefeuilles.html">Portefeuilles</a>
@@ -91,60 +92,223 @@ footer{position:relative;z-index:10;padding:28px;text-align:center;color:rgba(25
   </div>
 </nav>
 
-<!-- Hero content -->
+<!-- Hero -->
 <section class="hero">
   <div class="hero-inner">
-    <h1>Gestion discrète. Vision globale.</h1>
-    <p class="lead">Solutions patrimoniales pour investisseurs exigeants — stratégie active, reporting transparent.</p>
-    <a class="cta" href="portefeuilles.html">Voir nos portefeuilles</a>
+    <h1>Perspective claire. Exécution discrète.</h1>
+    <p class="lead">Solutions patrimoniales modernes, pilotées par données et conviction.</p>
+    <a class="cta" href="portefeuilles.html">Explorer les portefeuilles</a>
   </div>
 </section>
 
-<footer>© 2025 Skyline Capital — Gestion privée et conseil</footer>
+<footer style="position:relative;z-index:10;padding:28px;text-align:center;color:rgba(255,255,255,0.6)">© 2025 Horizon Labs — Gestion privée</footer>
 
 <script>
-// Ensure only Portefeuilles link is clickable (extra safety)
+// Safety: only Portefeuilles clickable
 document.querySelectorAll('.links a').forEach(a=>{
   if(a.classList.contains('disabled')){ a.removeAttribute('href'); a.addEventListener('click', e=>e.preventDefault()); }
 });
 
-// Slow down playback for slow-motion effect on Chrome
-const video = document.getElementById('bgVideo');
-video.addEventListener('loadedmetadata', ()=> {
-  try {
-    // target slow motion; adjust factor between 0.25 and 0.6
-    video.playbackRate = 0.42;
-  } catch(e) {
-    // some browsers may restrict playbackRate on autoplaying muted video; ignore silently
+// Responsive canvas sizing
+const cityCanvas = document.getElementById('city');
+const cityCtx = cityCanvas.getContext('2d');
+const partCanvas = document.getElementById('particles');
+const partCtx = partCanvas.getContext('2d');
+
+function resizeCanvases(){
+  cityCanvas.width = innerWidth * devicePixelRatio;
+  cityCanvas.height = innerHeight * devicePixelRatio;
+  cityCanvas.style.width = innerWidth + 'px';
+  cityCanvas.style.height = innerHeight + 'px';
+  cityCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+
+  partCanvas.width = innerWidth * devicePixelRatio;
+  partCanvas.height = innerHeight * devicePixelRatio;
+  partCanvas.style.width = innerWidth + 'px';
+  partCanvas.style.height = innerHeight + 'px';
+  partCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
+
+// Procedural city silhouette generator
+function drawCity(offsetX = 0, scale = 1, color = '#071028', windowColor = '#ffd97a'){
+  const w = innerWidth;
+  const h = innerHeight;
+  cityCtx.clearRect(0,0,w,h);
+
+  // background gradient for depth
+  const g = cityCtx.createLinearGradient(0, h*0.4, 0, h);
+  g.addColorStop(0, 'rgba(6,12,30,0.0)');
+  g.addColorStop(1, 'rgba(2,6,18,1)');
+  cityCtx.fillStyle = g;
+  cityCtx.fillRect(0, h*0.4, w, h*0.6);
+
+  // draw multiple layers of buildings for parallax
+  const layers = [
+    {rows: 18, heightFactor: 0.28, color: '#0b1b33', windows: 0.06, jitter: 0.6},
+    {rows: 12, heightFactor: 0.45, color: '#0e2238', windows: 0.12, jitter: 0.9},
+    {rows: 8,  heightFactor: 0.68, color: '#071028', windows: 0.18, jitter: 1.2}
+  ];
+
+  layers.forEach((layer, li) => {
+    const baseY = h * (0.6 + layer.heightFactor*0.2);
+    const cols = Math.floor(w / (40 + li*10));
+    const colW = w / cols;
+    for(let i= -2; i<cols+2; i++){
+      const x = i * colW + (offsetX * (0.2 + li*0.15)) + Math.sin((i*0.3 + offsetX*0.02))*10;
+      const bw = colW * (0.6 + Math.random()*0.8);
+      const bh = (h * (0.12 + Math.random()*layer.heightFactor)) * scale;
+      const y = baseY - bh + (Math.sin(i*0.5 + offsetX*0.01)* (layer.jitter*6));
+      cityCtx.fillStyle = layer.color;
+      cityCtx.fillRect(x, y, bw, bh);
+
+      // windows
+      const rows = Math.floor(bh / 18);
+      const colsW = Math.floor(bw / 12);
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<colsW;c++){
+          if(Math.random() < layer.windows){
+            const wx = x + 6 + c*12 + (Math.random()*2-1);
+            const wy = y + 6 + r*18 + (Math.random()*2-1);
+            cityCtx.fillStyle = Math.random() < 0.08 ? windowColor : 'rgba(255,255,255,0.02)';
+            cityCtx.fillRect(wx, wy, 8, 12);
+          }
+        }
+      }
+    }
+  });
+}
+
+// initial draw
+let cityOffset = 0;
+drawCity(cityOffset);
+
+// animate city pan to simulate drone movement using GSAP
+gsap.to({}, {
+  duration: 28,
+  repeat: -1,
+  ease: "none",
+  onUpdate: function() {
+    // cityOffset cycles slowly
+    cityOffset = (this.progress() * innerWidth * 0.6);
+    // draw with slight scale breathing
+    const scale = 1 + Math.sin(this.progress()*Math.PI*2)*0.003;
+    drawCity(cityOffset, scale);
   }
 });
 
-// lightweight particles for depth
-const canvas = document.getElementById('particles');
-const ctx = canvas.getContext('2d');
-function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-resize(); window.addEventListener('resize', resize);
+// SVG clouds generator and animation
+const svgNS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById('svgSky');
 
-let parts = [];
-const count = Math.max(30, Math.floor((innerWidth*innerHeight)/120000));
-for(let i=0;i<count;i++){
-  parts.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*1.6+0.4, v:Math.random()*0.25+0.02});
-}
+function makeCloudGroup(count, y, speed, scale){
+  const g = document.createElementNS(svgNS, 'g');
+  g.setAttribute('class','cloud-group');
+  g.style.opacity = 0.12;
+  for(let i=0;i<count;i++){
+    const cx = Math.random()*1920;
+    const cy = y + (Math.random()*40-20);
+    const rx = 120 + Math.random()*220;
+    const ry = 30 + Math.random()*40;
+    const ellipse = document.createElementNS(svgNS,'ellipse');
+    ellipse.setAttribute('cx', cx);
+    ellipse.setAttribute('cy', cy);
+    ellipse.setAttribute('rx', rx);
+    ellipse.setAttribute('ry', ry);
+    ellipse.setAttribute('fill', 'white');
+    ellipse.setAttribute('opacity', 0.08 + Math.random()*0.06);
+    ellipse.setAttribute('filter', 'url(#blur)'); // optional if filter defined
+    g.appendChild(ellipse);
+  }
+  svg.appendChild(g);
 
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  parts.forEach(p=>{
-    p.x += Math.sin((p.y + performance.now()*0.00015))*0.15;
-    p.y -= p.v;
-    if(p.y < -10){ p.y = canvas.height + 10; p.x = Math.random()*canvas.width; }
-    ctx.beginPath();
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fill();
+  // animate group with GSAP
+  gsap.to(g, {
+    x: -2200,
+    duration: speed,
+    repeat: -1,
+    ease: "linear",
+    modifiers: {
+      x: gsap.utils.unitize(x => (parseFloat(x) % 2200))
+    }
   });
-  requestAnimationFrame(draw);
+  gsap.to(g, {y: `+=${(Math.random()*20-10)}`, duration: speed/6, repeat:-1, yoyo:true, ease:"sine.inOut"});
+  gsap.to(g, {opacity: 0.06 + Math.random()*0.12, duration: speed/4, repeat:-1, yoyo:true, ease:"sine.inOut"});
 }
-draw();
+
+// create several cloud groups at different depths
+makeCloudGroup(5, 120, 80, 1.0);
+makeCloudGroup(6, 200, 120, 1.2);
+makeCloudGroup(4, 60, 60, 0.9);
+
+// particles for atmosphere
+let particles = [];
+function initParticles(){
+  particles = [];
+  const count = Math.max(30, Math.floor((innerWidth*innerHeight)/140000));
+  for(let i=0;i<count;i++){
+    particles.push({
+      x: Math.random()*innerWidth,
+      y: Math.random()*innerHeight,
+      r: Math.random()*1.6+0.4,
+      v: Math.random()*0.25+0.02,
+      alpha: 0.02 + Math.random()*0.06
+    });
+  }
+}
+initParticles();
+
+function drawParticles(){
+  partCtx.clearRect(0,0,innerWidth,innerHeight);
+  particles.forEach(p=>{
+    p.x += Math.sin((p.y + performance.now()*0.00012) * 0.8) * 0.12;
+    p.y -= p.v;
+    if(p.y < -10){ p.y = innerHeight + 10; p.x = Math.random()*innerWidth; }
+    partCtx.beginPath();
+    partCtx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+    partCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    partCtx.fill();
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// subtle flare breathing
+gsap.to('#flare', {duration: 8, scale: 1.08, opacity: 0.95, repeat: -1, yoyo: true, ease: "sine.inOut"});
+
+// mouse parallax for desktop
+let isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+if(!isTouch){
+  window.addEventListener('mousemove', e=>{
+    const cx = innerWidth/2, cy = innerHeight/2;
+    const dx = (e.clientX - cx)/cx;
+    const dy = (e.clientY - cy)/cy;
+    // move sun slightly
+    gsap.to('#sun', {duration: 1.2, attr: {cx: 1500 + dx*80, cy: 160 + dy*40}, ease: "power3.out"});
+    // parallax city layers by redrawing with offset
+    gsap.to({}, {duration: 0.8, onUpdate: ()=> {
+      // small reactive offset based on mouse
+      const reactiveOffset = dx * 120;
+      drawCity(cityOffset + reactiveOffset, 1 + dy*0.002);
+    }});
+  });
+}
+
+// respect reduced motion
+const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+if(mq.matches){
+  gsap.globalTimeline.timeScale(0.35);
+  // stop cloud movement if needed
+  document.querySelectorAll('.cloud-group').forEach(g => gsap.killTweensOf(g));
+}
+
+// redraw on resize
+window.addEventListener('resize', ()=>{
+  resizeCanvases();
+  initParticles();
+  drawCity(cityOffset);
+});
 </script>
 </body>
 </html>
