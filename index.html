@@ -20,6 +20,7 @@
     html, body { height: 100%; }
     body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color: #fff; background: var(--bg); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 
+    /* NAV */
     nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
     .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
     .brand { font-weight: 800; font-size: 1.3rem; }
@@ -28,6 +29,7 @@
     .links a:hover { color: #fff; }
     .links a.disabled { opacity: .5; cursor: default; pointer-events: none; }
 
+    /* HERO */
     .hero { min-height: 60vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; padding: 0 20px; text-align: center; }
     .hero-inner { max-width: 900px; padding: 28px; background: var(--card-bg); border-radius: 8px; backdrop-filter: blur(8px); border: 1px solid var(--border); }
     h1 { font-size: clamp(2rem, 4.5vw, 3.2rem); line-height: 1.1; font-weight: 800; margin-bottom: 8px; }
@@ -35,6 +37,7 @@
     .cta { display: inline-block; background: var(--accent); color: #fff; padding: 10px 20px; border-radius: 6px; font-weight: 700; text-decoration: none; transition: all .3s; }
     .cta:hover { background: #357abd; box-shadow: 0 4px 12px rgba(74,144,226,0.2); }
 
+    /* DASHBOARD */
     .dashboard { position: relative; z-index: 20; max-width: 1280px; margin: 0 auto 80px; padding: 40px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
     .kpi { background: var(--card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--border); transition: all .3s; pointer-events: auto; }
     .kpi:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
@@ -43,13 +46,19 @@
     .kpi .sub { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
     .kpi.kpi--error { outline: 1px solid rgba(231,76,60,0.18); box-shadow: 0 6px 18px rgba(231,76,60,0.06) inset; }
 
+    /* SCENE */
     .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, var(--bg) 0%, #060b1a 60%); }
     svg#svgScene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
     canvas#bars, canvas#particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
     .ticker { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 30; pointer-events: none; display: flex; justify-content: center; }
     .ticker .line { background: var(--card-bg); color: var(--muted); padding: 6px 12px; border-radius: 999px; font-weight: 500; font-size: 0.9rem; backdrop-filter: blur(8px); border: 1px solid var(--border); }
 
+    /* RESPONSIVE */
     @media (max-width: 900px) {
+      .nav { padding: 8px; }
+      .links a { margin-left: 12px; font-size: 0.95rem; }
+      .hero-inner { padding: 20px; }
+      .ticker .line { font-size: 0.85rem; padding: 5px 10px; }
       .dashboard { grid-template-columns: 1fr; padding: 30px 15px; gap: 15px; }
     }
   </style>
@@ -80,6 +89,7 @@
 
   <div class="ticker" aria-hidden="true"><div class="line" id="tickerText">S&P 500 ▲ 0.42% • BTC/USD ▲ 1.2% • EUR/USD ▼ 0.03% • NASDAQ ▲ 0.65%</div></div>
 
+  <!-- Navigation -->
   <nav>
     <div class="nav">
       <div class="brand">Horizon<span>Labs</span></div>
@@ -92,6 +102,7 @@
     </div>
   </nav>
 
+  <!-- Hero -->
   <section class="hero">
     <div class="hero-inner">
       <h1>Maîtrise financière, en toute simplicité.</h1>
@@ -100,6 +111,7 @@
     </div>
   </section>
 
+  <!-- Dashboard KPIs + SEO text -->
   <section class="dashboard" aria-live="polite" aria-atomic="true">
     <div class="kpi" id="kpi-wallets">
       <h3>Portefeuilles recensés</h3>
@@ -118,12 +130,45 @@
       <span class="value" id="assetsCount">—</span>
       <div class="sub" id="assetsBreakdown">Actions: — • ETF: — • Matières premières: —</div>
     </div>
+
+    <article id="seo-description" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); border-radius:8px; padding:22px; border:1px solid rgba(255,255,255,0.04); color:var(--muted);">
+      <h2 style="color:#fff; margin-bottom:12px; font-size:1.25rem;">À propos de Horizon Labs — Plateforme de gestion de portefeuilles</h2>
+
+      <p>
+        Horizon Labs est une solution SaaS dédiée à la <strong>gestion de portefeuilles</strong> et à l’analyse d’actifs financiers.
+        Conçue pour les investisseurs individuels et les gestionnaires, la plateforme centralise les portefeuilles, suit les positions
+        et fournit des indicateurs clés (KPIs) pour faciliter la prise de décision. Horizon Labs agrège les compositions
+        de portefeuilles, identifie les tickers uniques et propose une vue consolidée des actifs (actions, ETF, matières premières).
+      </p>
+
+      <h3 style="color:#fff; margin-top:14px; margin-bottom:8px;">Fonctionnalités principales</h3>
+      <ul style="color:var(--muted); margin-left:18px; line-height:1.6;">
+        <li><strong>Inventaire des portefeuilles</strong> : import automatique depuis des fichiers CSV/JSON pour compter et comparer les portefeuilles.</li>
+        <li><strong>Comptage d’actifs uniques</strong> : déduplication des tickers pour connaître l’univers d’investissement réel.</li>
+        <li><strong>Suivi des newsletters et sources</strong> : centralisation des flux d’information pour la recherche et la veille.</li>
+        <li><strong>KPIs en temps réel</strong> : indicateurs personnalisables pour piloter vos décisions d’investissement.</li>
+      </ul>
+
+      <h3 style="color:#fff; margin-top:14px; margin-bottom:8px;">Pourquoi choisir Horizon Labs</h3>
+      <p style="color:var(--muted); line-height:1.6;">
+        Horizon Labs simplifie la gestion multi‑portefeuilles en offrant une interface claire et des métriques exploitables.
+        La plateforme est optimisée pour la performance et la sécurité des données, et permet d’importer facilement des fichiers
+        standards (CSV, JSON). Que vous soyez un investisseur particulier ou une petite équipe de gestion, Horizon Labs réduit
+        le temps consacré à la consolidation des données et augmente la qualité des décisions d’investissement.
+      </p>
+
+      <h3 style="color:#fff; margin-top:14px; margin-bottom:8px;">Mots‑clés SEO recommandés</h3>
+      <p style="color:var(--muted); line-height:1.6;">
+        gestion de portefeuille, suivi d'actifs, plateforme SaaS finance, comptage tickers, consolidation portefeuilles, KPIs financiers,
+        analyse d'actifs, import CSV portefeuille.
+      </p>
+    </article>
   </section>
 
   <footer style="position:relative;z-index:10;padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;">© 2025 Horizon Labs — Gestion SaaS privée</footer>
 
   <script>
-    // --- Déclarations globales placées avant toute utilisation (évite TDZ) ---
+    // --- Globals declared early to avoid TDZ ---
     const bars = [];
     const particles = [];
 
@@ -142,9 +187,9 @@
     let gainColor = cssColor('--gain') || '#4cd07d';
     let lossColor = cssColor('--loss') || '#e74c3c';
     let accentColor = cssColor('--accent') || '#4a90e2';
-    // ---------------------------------------------------------------------
+    // --- End globals ---
 
-    // éléments KPI
+    // KPI elements
     const el = {
       wallets: document.getElementById('walletsCount'),
       newsletters: document.getElementById('newslettersCount'),
@@ -154,7 +199,14 @@
       kpiAssetsCard: document.getElementById('kpi-assets')
     };
 
-    // parse CSV (détecte tab ou virgule)
+    // Use the raw URLs provided (absolute raw GitHub URLs)
+    const portfoliosUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portfolios.json';
+    // CSV assumed to be in same repo under this exact name
+    const compositionCsvUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles.csv';
+    // newsletters optional (not provided)
+    const newslettersUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/newsletters.json';
+
+    // CSV parser (detects tab or comma)
     function parseCSV(text) {
       const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
       if (!lines.length) return { headers: [], rows: [] };
@@ -179,11 +231,11 @@
       return { headers, rows };
     }
 
-    // update KPIs: utilise exactement ces chemins (fichiers à la racine)
+    // Update KPIs using the provided raw URLs
     async function updateKPIs() {
       // portfolios.json
       try {
-        const res = await fetch('/portfolios.json', { cache: 'no-store' });
+        const res = await fetch(portfoliosUrl, { cache: 'no-store' });
         if (!res.ok) throw new Error(`portfolios.json ${res.status}`);
         const data = await res.json();
         let count = 0;
@@ -195,14 +247,14 @@
         el.wallets.textContent = count.toLocaleString('fr-FR');
         el.kpiWalletsCard.classList.remove('kpi--error');
       } catch (err) {
-        console.warn('Erreur lecture /portfolios.json :', err);
+        console.warn('Erreur lecture portfolios.json depuis GitHub raw URL :', err);
         el.wallets.textContent = '0';
         el.kpiWalletsCard.classList.add('kpi--error');
       }
 
-      // newsletters.json (optionnel)
+      // newsletters.json (optional)
       try {
-        const res2 = await fetch('/newsletters.json', { cache: 'no-store' });
+        const res2 = await fetch(newslettersUrl, { cache: 'no-store' });
         if (!res2.ok) throw new Error(`newsletters.json ${res2.status}`);
         const ndata = await res2.json();
         let ncount = 0;
@@ -216,9 +268,9 @@
         el.newsletters.textContent = '0';
       }
 
-      // composition_portefeuilles.csv -> compter tickers uniques
+      // composition CSV -> count unique tickers
       try {
-        const res3 = await fetch('/composition_portefeuilles.csv', { cache: 'no-store' });
+        const res3 = await fetch(compositionCsvUrl, { cache: 'no-store' });
         if (!res3.ok) throw new Error(`composition_portefeuilles.csv ${res3.status}`);
         const csvText = await res3.text();
         const parsed = parseCSV(csvText);
@@ -260,21 +312,20 @@
           el.kpiAssetsCard.classList.remove('kpi--error');
         }
       } catch (err) {
-        console.warn('Erreur lecture /composition_portefeuilles.csv :', err);
+        console.warn('Erreur lecture composition_portefeuilles.csv depuis GitHub raw URL :', err);
         el.assetsTotal.textContent = '0';
         el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
         el.kpiAssetsCard.classList.add('kpi--error');
       }
     }
 
-    // initial load + polling léger
+    // initial load + polling
     updateKPIs();
     setInterval(updateKPIs, 30000);
 
     /* ---------------------------
-       Animation background (barres, particules, coins)
-       - fonctions d'animation (initBars, drawBars, etc.)
-       - déclarations et initialisations déjà placées plus haut
+       Background animation (bars, particles, coins)
+       All globals declared above to avoid TDZ
     --------------------------- */
 
     let DPR = Math.max(1, devicePixelRatio || 1);
@@ -346,6 +397,54 @@
           size: 1 + Math.random() * 3,
           alpha: 0.08 + Math.random() * 0.18,
           color: Math.random() > 0.6 ? gainColor : 'rgba(255,255,255,0.06)'
+        });
+      }
+    }
+
+    function createCoins() {
+      if (!coinsLayer) return;
+      coinsLayer.innerHTML = '';
+      const count = Math.min(10, Math.floor(innerWidth / 220));
+      for (let i = 0; i < count; i++) {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'coin');
+        const cx = Math.random() * innerWidth;
+        const cy = Math.random() * innerHeight * 0.6;
+        const r = 28 + Math.random() * 36;
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        circle.setAttribute('r', r);
+        circle.setAttribute('fill', 'url(#coinGrad)');
+        circle.setAttribute('opacity', 0.95);
+        circle.setAttribute('transform-origin', `${cx}px ${cy}px`);
+
+        const rim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        rim.setAttribute('cx', cx);
+        rim.setAttribute('cy', cy);
+        rim.setAttribute('r', r * 0.7);
+        rim.setAttribute('fill', 'rgba(255,255,255,0.06)');
+
+        g.appendChild(circle);
+        g.appendChild(rim);
+        coinsLayer.appendChild(g);
+
+        gsap.to(g, {
+          y: '+= ' + (10 + Math.random() * 30),
+          rotation: (Math.random() > 0.5 ? 1 : -1) * (6 + Math.random() * 12),
+          duration: 4 + Math.random() * 6,
+          yoyo: true,
+          repeat: -1,
+          ease: 'sine.inOut',
+          delay: Math.random() * 2
+        });
+        gsap.to(g, {
+          x: '+= ' + (Math.random() - 0.5) * 40,
+          duration: 6 + Math.random() * 6,
+          yoyo: true,
+          repeat: -1,
+          ease: 'sine.inOut'
         });
       }
     }
@@ -443,6 +542,7 @@
     // initial inits and loop
     resize();
     initParticles();
+    createCoins();
     (function animateTicker() {
       if (!tickerText) return;
       const width = tickerText.offsetWidth;
