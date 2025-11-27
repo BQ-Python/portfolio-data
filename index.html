@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Horizon Labs — Survol financier</title>
+<title>Horizon Capital — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <style>
 :root{
   --bg:#071028; --accent:#00d1b2; --gain:#7ee787; --loss:#ff7b7b; --muted:rgba(255,255,255,0.85);
+  --card-bg: rgba(255,255,255,0.03);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -24,12 +25,20 @@ nav{position:fixed;top:18px;left:0;right:0;z-index:1200;display:flex;justify-con
 .links a.disabled{opacity:.45;cursor:default;transform:none;pointer-events:none}
 
 /* HERO */
-.hero{height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:10;padding:0 20px;text-align:center}
-.hero-inner{max-width:1100px;padding:36px;background:linear-gradient(180deg, rgba(7,16,40,0.12), rgba(7,16,40,0.06));border-radius:14px;backdrop-filter:blur(6px)}
-h1{font-size:clamp(1.8rem,5vw,3.6rem);line-height:1.02;font-weight:800;margin-bottom:10px}
-.lead{font-size:clamp(0.95rem,2vw,1.15rem);color:rgba(255,255,255,0.92);margin-bottom:16px}
-.cta{display:inline-block;background:var(--accent);color:#04202a;padding:12px 24px;border-radius:12px;font-weight:800;text-decoration:none;transition:transform .25s}
+.hero{height:60vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:10;padding:0 20px;text-align:center}
+.hero-inner{max-width:1100px;padding:28px;background:linear-gradient(180deg, rgba(7,16,40,0.12), rgba(7,16,40,0.06));border-radius:14px;backdrop-filter:blur(6px)}
+h1{font-size:clamp(1.8rem,4.2vw,2.8rem);line-height:1.02;font-weight:800;margin-bottom:8px}
+.lead{font-size:clamp(0.95rem,1.8vw,1.05rem);color:rgba(255,255,255,0.92);margin-bottom:12px}
+.cta{display:inline-block;background:var(--accent);color:#04202a;padding:10px 20px;border-radius:12px;font-weight:800;text-decoration:none;transition:transform .25s}
 .cta:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,209,178,0.12)}
+
+/* KPI Panel */
+.kpi-panel{position:relative;z-index:15;margin:18px auto 0;max-width:1200px;padding:12px 16px;pointer-events:auto}
+.kpi-inner{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.kpi-card{min-width:160px;background:var(--card-bg);border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(6px);border-radius:12px;padding:14px 18px;text-align:center;box-shadow:0 8px 24px rgba(2,6,23,0.35)}
+.kpi-value{font-weight:800;font-size:1.6rem;color:var(--accent);margin-bottom:6px}
+.kpi-label{font-size:0.92rem;color:rgba(255,255,255,0.78)}
+.kpi-sub{font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:6px}
 
 /* SCENE (procedural finance) */
 .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#071028 0%, #041226 60%)}
@@ -38,20 +47,22 @@ canvas#bars, canvas#particles{position:absolute;inset:0;width:100%;height:100%;z
 .ticker{position:fixed;left:0;right:0;bottom:18px;z-index:30;pointer-events:none;display:flex;justify-content:center}
 .ticker .line{background:rgba(2,6,18,0.6);color:rgba(255,255,255,0.85);padding:8px 14px;border-radius:999px;font-weight:600;font-size:0.95rem;backdrop-filter:blur(6px);pointer-events:none}
 
-/* coin style (SVG) */
-.coin{filter:drop-shadow(0 8px 24px rgba(0,0,0,0.6));}
+/* footer */
+footer{position:relative;z-index:10;padding:28px;text-align:center;color:rgba(255,255,255,0.6)}
 
 /* responsive */
 @media(max-width:900px){
   .nav{padding:10px}
   .links a{margin-left:12px}
-  .hero-inner{padding:22px}
+  .hero-inner{padding:18px}
+  .kpi-card{min-width:140px;padding:12px}
   .ticker .line{font-size:0.85rem;padding:6px 10px}
 }
 </style>
 </head>
 <body>
 
+<!-- Procedural scene -->
 <div class="scene" aria-hidden="true">
   <svg id="svgScene" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
@@ -64,17 +75,10 @@ canvas#bars, canvas#particles{position:absolute;inset:0;width:100%;height:100%;z
         <stop offset="40%" stop-color="#ffd36b"/>
         <stop offset="100%" stop-color="#ffb84a"/>
       </radialGradient>
-      <filter id="softBlur"><feGaussianBlur stdDeviation="8" result="b"/></filter>
     </defs>
     <rect width="100%" height="100%" fill="url(#gradBG)"></rect>
-
-    <!-- procedural coins (will be cloned/animated by JS) -->
     <g id="coinsLayer"></g>
-
-    <!-- animated graph line (SVG path updated by JS) -->
     <path id="graphLine" d="" fill="none" stroke="#00d1b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"></path>
-
-    <!-- subtle grid -->
     <g id="grid" opacity="0.06"></g>
   </svg>
 
@@ -103,10 +107,42 @@ canvas#bars, canvas#particles{position:absolute;inset:0;width:100%;height:100%;z
     <h1>Capital en mouvement, stratégie en silence.</h1>
     <p class="lead">Visualisation procédurale des tendances — survol ralenti pour une impression de maîtrise.</p>
     <a class="cta" href="portefeuilles.html">Voir nos portefeuilles</a>
+
+    <!-- KPI Panel -->
+    <section class="kpi-panel" aria-label="Indicateurs clés">
+      <div class="kpi-inner">
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpi-portfolios">0</div>
+          <div class="kpi-label">Portefeuilles disponibles</div>
+          <div class="kpi-sub">Stratégies actives</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpi-newsletters">0</div>
+          <div class="kpi-label">Abonnés newsletter</div>
+          <div class="kpi-sub">Inscription ouverte</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpi-aum">€0</div>
+          <div class="kpi-label">Actifs sous gestion</div>
+          <div class="kpi-sub">Échelle indicative</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpi-clients">0</div>
+          <div class="kpi-label">Clients actifs</div>
+          <div class="kpi-sub">Relations suivies</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpi-ytd">0%</div>
+          <div class="kpi-label">Performance YTD</div>
+          <div class="kpi-sub">Rendement annuel</div>
+        </div>
+      </div>
+    </section>
+    <!-- end KPI -->
   </div>
 </section>
 
-<footer style="position:relative;z-index:10;padding:28px;text-align:center;color:rgba(255,255,255,0.6)">© 2025 Horizon Capital — Gestion privée</footer>
+<footer>© 2025 Horizon Capital — Gestion privée</footer>
 
 <script>
 // ensure only Portefeuilles clickable
@@ -114,36 +150,38 @@ document.querySelectorAll('.links a').forEach(a=>{
   if(a.classList.contains('disabled')){ a.removeAttribute('href'); a.addEventListener('click', e=>e.preventDefault()); }
 });
 
-// canvases sizing
+// ---------- Canvas & SVG setup ----------
 const barsCanvas = document.getElementById('bars'), barsCtx = barsCanvas.getContext('2d');
 const partCanvas = document.getElementById('particles'), partCtx = partCanvas.getContext('2d');
+const svg = document.getElementById('svgScene');
+const coinsLayer = document.getElementById('coinsLayer');
+const graphLine = document.getElementById('graphLine');
+const grid = document.getElementById('grid');
+
 function resize(){
-  barsCanvas.width = innerWidth * devicePixelRatio;
-  barsCanvas.height = innerHeight * devicePixelRatio;
-  barsCanvas.style.width = innerWidth + 'px';
-  barsCanvas.style.height = innerHeight + 'px';
+  const w = innerWidth, h = innerHeight;
+  barsCanvas.width = w * devicePixelRatio; barsCanvas.height = h * devicePixelRatio;
+  barsCanvas.style.width = w + 'px'; barsCanvas.style.height = h + 'px';
   barsCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 
-  partCanvas.width = innerWidth * devicePixelRatio;
-  partCanvas.height = innerHeight * devicePixelRatio;
-  partCanvas.style.width = innerWidth + 'px';
-  partCanvas.style.height = innerHeight + 'px';
+  partCanvas.width = w * devicePixelRatio; partCanvas.height = h * devicePixelRatio;
+  partCanvas.style.width = w + 'px'; partCanvas.style.height = h + 'px';
   partCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 }
 window.addEventListener('resize', resize);
 resize();
 
-// procedural bars (financial skyline)
-const bars = [];
+// ---------- Procedural bars ----------
+let bars = [];
 function initBars(){
-  bars.length = 0;
-  const cols = Math.max(8, Math.floor(innerWidth / 80));
+  bars = [];
+  const cols = Math.max(6, Math.floor(innerWidth / 120));
   for(let i=0;i<cols;i++){
     bars.push({
       x: (i + 0.5) * (innerWidth / cols),
-      width: Math.min(64, innerWidth / cols * 0.6),
-      base: innerHeight * 0.75,
-      height: (0.08 + Math.random()*0.5) * innerHeight * 0.4,
+      width: Math.min(80, innerWidth / cols * 0.6),
+      base: innerHeight * 0.78,
+      height: (0.08 + Math.random()*0.5) * innerHeight * 0.42,
       color: Math.random() > 0.5 ? 'var(--gain)' : 'var(--loss)',
       phase: Math.random()*Math.PI*2
     });
@@ -151,38 +189,38 @@ function initBars(){
 }
 initBars();
 
-// draw bars with slow breathing animation
 function drawBars(t){
   barsCtx.clearRect(0,0,innerWidth,innerHeight);
-  bars.forEach((b, i)=>{
-    const slow = Math.sin((t*0.00006) + b.phase) * 0.08; // very slow
+  bars.forEach((b,i)=>{
+    // extremely slow breathing
+    const slow = Math.sin((t*0.00001) + b.phase) * 0.03;
     const h = b.height * (1 + slow);
     const x = b.x - b.width/2;
     const y = b.base - h;
     // shadow
-    barsCtx.fillStyle = 'rgba(0,0,0,0.35)';
+    barsCtx.fillStyle = 'rgba(0,0,0,0.28)';
     barsCtx.fillRect(x+6, y+8, b.width, h);
     // bar
     barsCtx.fillStyle = b.color;
     barsCtx.fillRect(x, y, b.width, h);
-    // subtle top glow
-    barsCtx.fillStyle = 'rgba(255,255,255,0.04)';
+    // top glow
+    barsCtx.fillStyle = 'rgba(255,255,255,0.03)';
     barsCtx.fillRect(x, y, b.width, 4);
   });
 }
 
-// particles (dust / depth)
+// ---------- Particles ----------
 let particles = [];
 function initParticles(){
   particles = [];
-  const count = Math.max(20, Math.floor((innerWidth*innerHeight)/220000));
+  const count = Math.max(12, Math.floor((innerWidth*innerHeight)/300000));
   for(let i=0;i<count;i++){
     particles.push({
       x: Math.random()*innerWidth,
       y: Math.random()*innerHeight,
       r: Math.random()*1.6+0.4,
-      v: 0.02 + Math.random()*0.06,
-      alpha: 0.02 + Math.random()*0.06
+      v: 0.01 + Math.random()*0.03,
+      alpha: 0.02 + Math.random()*0.05
     });
   }
 }
@@ -191,7 +229,7 @@ initParticles();
 function drawParticles(){
   partCtx.clearRect(0,0,innerWidth,innerHeight);
   particles.forEach(p=>{
-    p.x += Math.sin((p.y + performance.now()*0.00008) * 0.6) * 0.06;
+    p.x += Math.sin((p.y + performance.now()*0.00004) * 0.6) * 0.04;
     p.y -= p.v;
     if(p.y < -10){ p.y = innerHeight + 10; p.x = Math.random()*innerWidth; }
     partCtx.beginPath();
@@ -201,16 +239,10 @@ function drawParticles(){
   });
 }
 
-// SVG procedural coins and graph
-const svg = document.getElementById('svgScene');
-const coinsLayer = document.getElementById('coinsLayer');
-const graphLine = document.getElementById('graphLine');
-const grid = document.getElementById('grid');
-
-// create grid lines
+// ---------- SVG grid ----------
 function buildGrid(){
   grid.innerHTML = '';
-  const stepX = 120, stepY = 80;
+  const stepX = 160, stepY = 120;
   for(let x=0;x<1920;x+=stepX){
     const line = document.createElementNS('http://www.w3.org/2000/svg','rect');
     line.setAttribute('x', x);
@@ -234,23 +266,23 @@ function buildGrid(){
 }
 buildGrid();
 
-// create coins
+// ---------- Coins ----------
 const coins = [];
 function createCoins(n=6){
   coinsLayer.innerHTML = '';
+  coins.length = 0;
   for(let i=0;i<n;i++){
     const g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.setAttribute('class','coin');
-    const cx = 200 + i*220 + (Math.random()*80-40);
-    const cy = 160 + (Math.random()*80-40);
-    const r = 36 + Math.random()*18;
+    const cx = 220 + i*220 + (Math.random()*80-40);
+    const cy = 140 + (Math.random()*80-40);
+    const r = 30 + Math.random()*18;
     const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
     circle.setAttribute('cx', cx);
     circle.setAttribute('cy', cy);
     circle.setAttribute('r', r);
     circle.setAttribute('fill', 'url(#coinGrad)');
     circle.setAttribute('opacity', 0.95);
-    // inner symbol (simple euro sign)
     const text = document.createElementNS('http://www.w3.org/2000/svg','text');
     text.setAttribute('x', cx);
     text.setAttribute('y', cy + r*0.12);
@@ -262,23 +294,22 @@ function createCoins(n=6){
     g.appendChild(circle);
     g.appendChild(text);
     coinsLayer.appendChild(g);
-    coins.push({g, cx, cy, r, baseX:cx, baseY:cy});
+    coins.push({g, cx, cy, r});
   }
 }
-createCoins(7);
+createCoins(6);
 
-// generate a smooth graph path (procedural)
+// ---------- Graph ----------
 function buildGraph(){
   const points = [];
-  const cols = 14;
-  const w = 1600, left = 160, top = 220, bottom = 720;
+  const cols = 12;
+  const w = Math.max(900, innerWidth - 320), left = 160, top = 220, bottom = 720;
   for(let i=0;i<=cols;i++){
     const x = left + (i/cols)*w;
-    const noise = Math.sin(i*0.6 + performance.now()*0.00002) * 0.06 + (Math.random()*0.02);
-    const y = top + (0.5 + noise) * (bottom - top) * (0.6 + Math.sin(i*0.4)*0.08);
+    const noise = Math.sin(i*0.6 + performance.now()*0.00001) * 0.03 + (Math.random()*0.01);
+    const y = top + (0.5 + noise) * (bottom - top) * (0.6 + Math.sin(i*0.4)*0.03);
     points.push([x,y]);
   }
-  // build smooth path
   let d = `M ${points[0][0]} ${points[0][1]}`;
   for(let i=1;i<points.length;i++){
     const [x,y] = points[i];
@@ -290,31 +321,32 @@ function buildGraph(){
   graphLine.setAttribute('d', d);
 }
 
-// GSAP timeline: very slow, long durations for a calm slow-motion effect
+// ---------- GSAP timeline (très ralenti) ----------
 const slowTL = gsap.timeline({repeat:-1, defaults:{ease:"sine.inOut"}});
-slowTL.to(coins, {
-  duration: 120, // very slow float across scene
-  onUpdate: function(){
-    // animate coins positions subtly
-    coins.forEach((c, idx)=>{
-      const t = slowTL.time() + idx*6;
-      const dx = Math.sin(t*0.02 + idx)*18;
-      const dy = Math.cos(t*0.015 + idx*0.6)*10;
-      c.g.setAttribute('transform', `translate(${dx},${dy})`);
-    });
-  }
-}, 0);
+// extremely long durations to create imperceptible slow motion
+slowTL.to({}, {duration: 600, onUpdate: function(){
+  // animate coins very slowly
+  coins.forEach((c, idx)=>{
+    const t = slowTL.time() + idx*12;
+    const dx = Math.sin(t*0.002 + idx)*8; // tiny amplitude
+    const dy = Math.cos(t*0.0015 + idx*0.6)*4;
+    c.g.setAttribute('transform', `translate(${dx},${dy})`);
+  });
+}}, 0);
 
-slowTL.to({}, {duration: 140, onUpdate: ()=> {
-  // update graph slowly
+slowTL.to({}, {duration: 720, onUpdate: ()=> {
+  // update graph extremely slowly
   buildGraph();
 }}, 0);
 
-// ticker slow scroll using GSAP
-const ticker = document.getElementById('tickerText');
-gsap.to(ticker, {x: '-=1200', duration: 80, ease: 'linear', repeat: -1});
+// global timeScale reduction for extra slowness (very small)
+gsap.globalTimeline.timeScale(0.06);
 
-// animation loop for canvases
+// ticker slow scroll
+const ticker = document.getElementById('tickerText');
+gsap.to(ticker, {x: '-=1600', duration: 240, ease: 'linear', repeat: -1});
+
+// ---------- Animation loop ----------
 function loop(ts){
   drawBars(ts);
   drawParticles();
@@ -322,19 +354,55 @@ function loop(ts){
 }
 requestAnimationFrame(loop);
 
-// respect reduced motion
+// ---------- KPI integration & animation ----------
+const KPI_DEFAULTS = {
+  portfolios: 12,
+  newsletters: 0,
+  aum: 1250000000,
+  clients: 842,
+  ytd: 8.4
+};
+const fmtCurrency = n => {
+  if (n >= 1e9) return '€' + (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return '€' + (n/1e6).toFixed(2) + 'M';
+  return '€' + (n/1000 >= 1 ? (n/1000).toFixed(0)+'k' : Math.round(n).toString());
+};
+const fmtPercent = p => (Math.abs(p) >= 100 ? p.toFixed(0)+'%' : p.toFixed(2)+'%');
+
+function animateCounter(el, start, end, formatFn, duration = 2.2){
+  const obj = {v: start};
+  gsap.to(obj, {
+    v: end,
+    duration,
+    ease: "power2.out",
+    onUpdate: () => { el.textContent = formatFn(obj.v); }
+  });
+}
+
+function updateKPIs(data){
+  animateCounter(document.getElementById('kpi-portfolios'), 0, data.portfolios, v => Math.round(v).toString(), 1.6);
+  animateCounter(document.getElementById('kpi-newsletters'), 0, data.newsletters, v => Math.round(v).toString(), 1.6);
+  animateCounter(document.getElementById('kpi-aum'), 0, data.aum, v => fmtCurrency(Math.round(v)), 2.4);
+  animateCounter(document.getElementById('kpi-clients'), 0, data.clients, v => Math.round(v).toString(), 1.8);
+  animateCounter(document.getElementById('kpi-ytd'), 0, data.ytd, v => fmtPercent(v), 2.0);
+}
+updateKPIs(KPI_DEFAULTS);
+
+// ---------- reduced motion handling ----------
 const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
 if(mq.matches){
-  gsap.globalTimeline.timeScale(0.25);
+  gsap.globalTimeline.timeScale(0.02);
   gsap.killTweensOf(ticker);
 }
 
-// handle resize
+// ---------- responsive / rebuild on resize ----------
 window.addEventListener('resize', ()=>{
   resize();
   initBars();
   initParticles();
   buildGrid();
+  createCoins(6);
+  buildGraph();
 });
 </script>
 </body>
