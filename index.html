@@ -117,30 +117,24 @@
     </div>
   </section>
 
-  <!-- Dashboard KPIs -->
+  <!-- Dashboard KPIs (le 4e KPI a été supprimé) -->
   <section class="dashboard" aria-live="polite" aria-atomic="true">
     <div class="kpi" id="kpi-wallets">
-      <h3>Portefeuilles enregistrés</h3>
+      <h3>Portefeuilles recensés</h3>
       <span class="value" id="walletsCount">—</span>
-      <div class="sub">Nombre total de portefeuilles créés par les utilisateurs</div>
+      <div class="sub">Comptage des portefeuilles dans <code>portfolios.json</code></div>
     </div>
 
     <div class="kpi" id="kpi-newsletters">
       <h3>Newsletters référencées</h3>
       <span class="value" id="newslettersCount">—</span>
-      <div class="sub">Flux et bulletins suivis dans la plateforme</div>
+      <div class="sub">Fichier attendu : <code>newsletters.json</code> (sera ajouté plus tard)</div>
     </div>
 
     <div class="kpi" id="kpi-assets">
       <h3>Actifs distincts disponibles</h3>
       <span class="value" id="assetsCount">—</span>
       <div class="sub" id="assetsBreakdown">Actions: — • ETF: — • Matières premières: —</div>
-    </div>
-
-    <div class="kpi" id="kpi-other">
-      <h3>Utilisateurs actifs (30j)</h3>
-      <span class="value" id="activeUsers">—</span>
-      <div class="sub">Sessions uniques au cours des 30 derniers jours</div>
     </div>
   </section>
 
@@ -153,85 +147,148 @@
     });
 
     /* ---------------------------
-       KPI: liaison front-end
-       - Attends un endpoint JSON à /api/stats
-       - Format attendu (exemple):
-         {
-           "wallets": 1245,
-           "newsletters": 87,
-           "assets": {
-             "total": 3421,
-             "stocks": 2100,
-             "etf": 900,
-             "commodities": 421
-           },
-           "activeUsers30d": 532
-         }
-       - Si l'API échoue, on utilise un fallback mock local.
+       KPI data sources (front-end)
+       - portfolios.json        -> liste des portefeuilles (compte d'objets)
+       - newsletters.json       -> (optionnel) liste de newsletters (compte)
+       - composition_portefeuilles.csv -> CSV avec colonne "Ticker"
+         -> on compte les tickers uniques (déduplication)
+       Notes:
+       - chemins utilisés : /portfolios.json, /newsletters.json, /composition_portefeuilles.csv
+       - si un fichier est absent, on affiche un fallback et log en console
     --------------------------- */
 
-    const selectors = {
+    const el = {
       wallets: document.getElementById('walletsCount'),
       newsletters: document.getElementById('newslettersCount'),
       assetsTotal: document.getElementById('assetsCount'),
-      assetsBreakdown: document.getElementById('assetsBreakdown'),
-      activeUsers: document.getElementById('activeUsers')
+      assetsBreakdown: document.getElementById('assetsBreakdown')
     };
 
-    // Met à jour l'UI avec les données
-    function renderStats(data) {
-      if (!data) return;
-      selectors.wallets.textContent = (typeof data.wallets === 'number') ? data.wallets.toLocaleString('fr-FR') : '—';
-      selectors.newsletters.textContent = (typeof data.newsletters === 'number') ? data.newsletters.toLocaleString('fr-FR') : '—';
-
-      const assets = data.assets || {};
-      const total = (typeof assets.total === 'number') ? assets.total : (typeof data.assetsTotal === 'number' ? data.assetsTotal : null);
-      selectors.assetsTotal.textContent = total !== null ? total.toLocaleString('fr-FR') : '—';
-
-      const stocks = (typeof assets.stocks === 'number') ? assets.stocks : '—';
-      const etf = (typeof assets.etf === 'number') ? assets.etf : '—';
-      const commodities = (typeof assets.commodities === 'number') ? assets.commodities : '—';
-      selectors.assetsBreakdown.textContent = `Actions: ${stocks} • ETF: ${etf} • Matières premières: ${commodities}`;
-
-      selectors.activeUsers.textContent = (typeof data.activeUsers30d === 'number') ? data.activeUsers30d.toLocaleString('fr-FR') : '—';
+    // Parse CSV simple (ne gère pas tous les cas CSV complexes, mais suffira pour un fichier standard)
+    function parseCSV(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+      if (!lines.length) return { headers: [], rows: [] };
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const rows = lines.slice(1).map(line => {
+        // split respecting simple quoted fields
+        const values = [];
+        let cur = '', inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"' ) {
+            if (inQuotes && line[i+1] === '"') { cur += '"'; i++; } else { inQuotes = !inQuotes; }
+            continue;
+          }
+          if (ch === ',' && !inQuotes) { values.push(cur); cur = ''; continue; }
+          cur += ch;
+        }
+        values.push(cur);
+        // trim quotes/spaces
+        return values.map(v => v.trim().replace(/^"|"$/g, ''));
+      });
+      return { headers, rows };
     }
 
-    // Fallback mock si l'API n'est pas disponible (utile en dev)
-    function mockStats() {
-      return {
-        wallets: 1245,
-        newsletters: 87,
-        assets: {
-          total: 3421,
-          stocks: 2100,
-          etf: 900,
-          commodities: 421
-        },
-        activeUsers30d: 532
-      };
-    }
-
-    // Récupère les stats depuis le backend
-    async function fetchStats() {
+    // Récupère et met à jour les KPIs
+    async function updateKPIs() {
+      // 1) portfolios.json -> compter les portefeuilles
       try {
-        const res = await fetch('/api/stats', { cache: 'no-store' });
-        if (!res.ok) throw new Error('API non disponible');
-        const json = await res.json();
-        renderStats(json);
+        const res = await fetch('/portfolios.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('portfolios.json non trouvé');
+        const data = await res.json();
+        // On suppose que portfolios.json est soit un tableau, soit un objet avec une clé list
+        let count = 0;
+        if (Array.isArray(data)) count = data.length;
+        else if (data && typeof data === 'object') {
+          // chercher la première propriété qui est un tableau
+          const arr = Object.values(data).find(v => Array.isArray(v));
+          count = Array.isArray(arr) ? arr.length : 0;
+        }
+        el.wallets.textContent = count.toLocaleString('fr-FR');
       } catch (err) {
-        // En cas d'erreur, on utilise le mock et on log l'erreur en console
-        console.warn('Impossible de récupérer /api/stats, utilisation du fallback mock.', err);
-        renderStats(mockStats());
+        console.warn('Impossible de lire /portfolios.json :', err);
+        el.wallets.textContent = '0';
+      }
+
+      // 2) newsletters.json -> si présent, compter, sinon 0 (utilisateur ajoutera plus tard)
+      try {
+        const res2 = await fetch('/newsletters.json', { cache: 'no-store' });
+        if (!res2.ok) throw new Error('newsletters.json non trouvé');
+        const ndata = await res2.json();
+        let ncount = 0;
+        if (Array.isArray(ndata)) ncount = ndata.length;
+        else if (ndata && typeof ndata === 'object') {
+          const arr = Object.values(ndata).find(v => Array.isArray(v));
+          ncount = Array.isArray(arr) ? arr.length : 0;
+        }
+        el.newsletters.textContent = ncount.toLocaleString('fr-FR');
+      } catch (err) {
+        // fichier absent -> afficher 0 et message console
+        console.info('newsletters.json absent, laisser 0 en attendant la création du fichier.');
+        el.newsletters.textContent = '0';
+      }
+
+      // 3) composition_portefeuilles.csv -> lire colonne "Ticker" et compter valeurs uniques
+      try {
+        const res3 = await fetch('/composition_portefeuilles.csv', { cache: 'no-store' });
+        if (!res3.ok) throw new Error('composition_portefeuilles.csv non trouvé');
+        const csvText = await res3.text();
+        const parsed = parseCSV(csvText);
+        const headers = parsed.headers.map(h => h.toLowerCase());
+        const tickerIdx = headers.findIndex(h => h === 'ticker' || h === '"ticker"' || h === 'symbole' || h === 'symbol');
+        if (tickerIdx === -1) {
+          console.warn('Colonne "Ticker" introuvable dans composition_portefeuilles.csv. Entêtes:', parsed.headers);
+          el.assetsTotal.textContent = '0';
+          el.assetsBreakdown.textContent = 'Actions: — • ETF: — • Matières premières: —';
+        } else {
+          const tickers = new Set();
+          // On suppose que la colonne contient le ticker et éventuellement d'autres colonnes indiquant le type.
+          // Pour la répartition (actions/etf/commodities) on essaie de détecter une colonne "Type" ou "AssetType"
+          const typeIdx = headers.findIndex(h => ['type','assettype','asset_type','categorie','category'].includes(h));
+          parsed.rows.forEach(row => {
+            const t = (row[tickerIdx] || '').trim();
+            if (t) tickers.add(t.toUpperCase());
+          });
+          const total = tickers.size;
+          el.assetsTotal.textContent = total.toLocaleString('fr-FR');
+
+          // breakdown simple si colonne type présente
+          if (typeIdx !== -1) {
+            const counts = { stock: 0, etf: 0, commodity: 0, other: 0 };
+            // map tickers -> first encountered type
+            const seen = new Map();
+            parsed.rows.forEach(row => {
+              const t = (row[tickerIdx] || '').trim().toUpperCase();
+              const typ = (row[typeIdx] || '').trim().toLowerCase();
+              if (!t) return;
+              if (!seen.has(t)) {
+                seen.set(t, typ);
+                if (typ.includes('etf')) counts.etf++;
+                else if (typ.includes('commodity') || typ.includes('mati') || typ.includes('matière')) counts.commodity++;
+                else if (typ.includes('stock') || typ.includes('action') || typ.includes('equity')) counts.stock++;
+                else counts.other++;
+              }
+            });
+            el.assetsBreakdown.textContent = `Actions: ${counts.stock} • ETF: ${counts.etf} • Matières premières: ${counts.commodity}`;
+          } else {
+            // pas de colonne type -> on affiche seulement le total
+            el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
+          }
+        }
+      } catch (err) {
+        console.warn('Impossible de lire /composition_portefeuilles.csv :', err);
+        el.assetsTotal.textContent = '0';
+        el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
       }
     }
 
-    // Initialisation et polling léger (toutes les 30s)
-    fetchStats();
-    setInterval(fetchStats, 30000);
+    // Initial load + polling léger (toutes les 30s)
+    updateKPIs();
+    setInterval(updateKPIs, 30000);
 
     /* ---------------------------
        Reste du script d'animation (barres, particules, svg coins)
-       (identique à l'exemple précédent, réduit ici pour la lisibilité)
+       inchangé par rapport à la version précédente
     --------------------------- */
 
     // Canvases & SVG references
@@ -264,14 +321,14 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Colors
+    // Resolve CSS variables for canvas usage
     const css = getComputedStyle(document.documentElement);
     function cssColor(name) { return css.getPropertyValue(name).trim() || '#fff'; }
     let gainColor = cssColor('--gain') || '#4cd07d';
     let lossColor = cssColor('--loss') || '#e74c3c';
     let accentColor = cssColor('--accent') || '#4a90e2';
 
-    // Bars, particles, coins (same logic as précédemment)
+    // Procedural bars
     const bars = [];
     function initBars() {
       bars.length = 0;
@@ -290,6 +347,7 @@
     }
     initBars();
 
+    // Build subtle SVG grid
     function buildGrid() {
       grid.innerHTML = '';
       const rows = 6;
@@ -307,6 +365,7 @@
     }
     buildGrid();
 
+    // Particles
     const particles = [];
     function initParticles() {
       particles.length = 0;
@@ -325,6 +384,7 @@
     }
     initParticles();
 
+    // SVG coins
     function createCoins() {
       coinsLayer.innerHTML = '';
       const count = Math.min(10, Math.floor(innerWidth / 220));
@@ -373,7 +433,7 @@
     }
     createCoins();
 
-    // Ticker
+    // Ticker subtle horizontal scroll
     const tickerText = document.getElementById('tickerText');
     function animateTicker() {
       const width = tickerText.offsetWidth;
@@ -389,7 +449,7 @@
     }
     animateTicker();
 
-    // Drawing helpers
+    // Draw rounded-top rectangle helper
     function roundRect(ctx, x, y, w, h, r) {
       const radius = Math.min(r, w / 2, h / 2);
       ctx.beginPath();
@@ -402,6 +462,7 @@
       ctx.fill();
     }
 
+    // Draw bars and update graph line
     function drawBars(time) {
       barsCtx.clearRect(0, 0, innerWidth, innerHeight);
       const points = [];
@@ -442,6 +503,7 @@
       }
     }
 
+    // Particles draw
     function drawParticles(dt) {
       partCtx.clearRect(0, 0, innerWidth, innerHeight);
       for (let p of particles) {
@@ -464,6 +526,7 @@
       }
     }
 
+    // Utility: convert hex or rgb string to rgba with alpha fallback
     function hexToRgba(input, alpha = 1) {
       input = (input || '').trim();
       if (!input) return `rgba(255,255,255,${alpha})`;
@@ -493,10 +556,12 @@
     }
     requestAnimationFrame(loop);
 
+    // Re-init on orientation/size changes
     window.addEventListener('orientationchange', () => {
       setTimeout(() => { resize(); initParticles(); createCoins(); }, 300);
     });
 
+    // small accessibility: pause animations when page not visible
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         gsap.globalTimeline.pause();
