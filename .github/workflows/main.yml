@@ -25,7 +25,7 @@ jobs:
 
       - name: Exécuter le script de mise à jour
         run: |
-          python -u update_portfolios.py   # ← METS ICI LE NOM EXACT DE TON FICHIER
+          python -u scripts/update_portfolios.py   # ← METS ICI LE NOM EXACT DE TON FICHIER
 
       - name: Commit & push seulement s'il y a des changements
         run: |
