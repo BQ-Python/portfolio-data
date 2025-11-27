@@ -1,5 +1,5 @@
 Portefeuille,Actif,Ticker,Pondération,Date de mise à jour
-Portefeuille Croissance,Bitcoin,BTC-USD,25%,17/11/2025
+Portefeuille Croissance,Bitcoin,BTC-USD,5%,17/11/2025
 Portefeuille Croissance,Ethereum,ETH-USD,15%,17/11/2025
 Portefeuille Croissance,NVIDIA,NVDA,12%,17/11/2025
 Portefeuille Croissance,Tesla,TSLA,10%,17/11/2025
@@ -8,7 +8,7 @@ Portefeuille Croissance,Google,GOOGL,8%,17/11/2025
 Portefeuille Croissance,Amazon,AMZN,7%,17/11/2025
 Portefeuille Croissance,Meta,META,6%,17/11/2025
 Portefeuille Croissance,Apple,AAPL,5%,17/11/2025
-Portefeuille Croissance,Palantir,PLTR,4%,17/11/2025
+Portefeuille Croissance,Palantir,PLTR,24%,17/11/2025
 Portefeuille Défensif,Or physique,GC=F,30%,17/11/2025
 Portefeuille Défensif,Obligations US 10Y,TLT,25%,17/11/2025
 Portefeuille Défensif,Cash & stablecoins,USDT,20%,17/11/2025
@@ -30,4 +30,5 @@ Portefeuille Europe,Hermès,RMS.PA,4%,17/11/2025
 Portefeuille Europe,Deutsche Telekom,DTE.DE,4%,17/11/2025
 Portefeuille Europe,Adidas,ADS.DE,3%,17/11/2025
 Portefeuille Europe,Infineon,IFX.DE,3%,17/11/2025
+
 
