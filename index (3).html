@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Horizon Labs — Tableau de bord financier</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    :root{
+      --bg:#050615;
+      --card-bg: rgba(255,255,255,0.03);
+      --card-strong: rgba(255,255,255,0.06);
+      --muted: rgba(255,255,255,0.72);
+      --accent: #4a90e2;
+      --gain: #4cd07d;
+      --loss: #e74c3c;
+      --border: rgba(255,255,255,0.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+    /* NAV */
+    nav{position:fixed;top:16px;left:0;right:0;z-index:1200;display:flex;justify-content:center;pointer-events:auto}
+    .nav{width:1280px;max-width:96%;display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter:blur(12px);border-radius:8px;border:1px solid var(--border)}
+    .brand{font-weight:800;font-size:1.3rem}
+    .brand span{color:var(--accent)}
+    .links a{color:var(--muted);text-decoration:none;margin-left:20px;font-weight:500;transition:all .3s}
+    .links a:hover{color:#fff}
+    .links a.disabled{opacity:.5;cursor:default;pointer-events:none}
+
+    /* HERO */
+    .hero{min-height:60vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:40;padding:0 20px;text-align:center}
+    .hero-inner{max-width:900px;padding:28px;background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:8px;backdrop-filter:blur(8px);border:1px solid var(--border)}
+    h1{font-size:clamp(2rem,4.5vw,3.2rem);line-height:1.1;font-weight:800;margin-bottom:8px}
+    .lead{font-size:clamp(1rem,1.8vw,1.1rem);color:var(--muted);margin-bottom:14px}
+    .cta{display:inline-block;background:var(--accent);color:#fff;padding:10px 20px;border-radius:6px;font-weight:700;text-decoration:none;transition:all .3s}
+    .cta:hover{background:#357abd;box-shadow:0 4px 12px rgba(74,144,226,0.2)}
+
+    /* DASHBOARD */
+    .dashboard{position:relative;z-index:50;max-width:1280px;margin:0 auto 80px;padding:40px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+    .kpi{background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:8px;padding:20px;border:1px solid var(--border);transition:all .3s;pointer-events:auto}
+    .kpi:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.25)}
+    .kpi h3{font-size:0.95rem;color:var(--muted);font-weight:500;margin-bottom:8px}
+    .kpi .value{font-size:1.6rem;font-weight:800;color:#fff;display:block}
+    .kpi.kpi--error{outline:1px solid rgba(231,76,60,0.18);box-shadow:0 6px 18px rgba(231,76,60,0.06) inset}
+
+    /* SEO article */
+    #seo-description{grid-column:1 / -1;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;padding:22px;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+    /* BACKGROUND SCENE */
+    .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#03040a 0%,#050615 70%)}
+    .scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.62);z-index:2;pointer-events:none}
+    canvas#network{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block}
+    /* remove previous elements */
+    .coin{display:none!important}
+    @media (max-width:900px){.dashboard{grid-template-columns:1fr;padding:30px 15px;gap:15px}}
+  </style>
+</head>
+<body>
+
+  <div class="scene" aria-hidden="true">
+    <canvas id="network"></canvas>
+  </div>
+
+  <nav>
+    <div class="nav">
+      <div class="brand">Horizon<span>Labs</span></div>
+      <div class="links">
+        <a class="disabled" aria-disabled="true">Accueil</a>
+        <a href="portefeuilles.html">Portefeuilles</a>
+        <a class="disabled" aria-disabled="true">Analyse</a>
+        <a class="disabled" aria-disabled="true">Paramètres</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>Maîtrise financière, en toute simplicité.</h1>
+      <p class="lead">Tableau de bord SaaS pour un survol en temps réel — KPIs essentiels et tendances procédurales.</p>
+      <a class="cta" href="portefeuilles.html">Accéder au dashboard</a>
+    </div>
+  </section>
+
+  <section class="dashboard" aria-live="polite" aria-atomic="true">
+    <div class="kpi" id="kpi-wallets">
+      <h3>Portefeuilles recensés</h3>
+      <span class="value" id="walletsCount">—</span>
+    </div>
+
+    <div class="kpi" id="kpi-newsletters">
+      <h3>Newsletters référencées</h3>
+      <span class="value" id="newslettersCount">—</span>
+    </div>
+
+    <div class="kpi" id="kpi-assets">
+      <h3>Actifs distincts disponibles</h3>
+      <span class="value" id="assetsCount">—</span>
+    </div>
+
+    <div class="kpi" id="kpi-visits">
+      <h3>Visites ce mois-ci</h3>
+      <span class="value" id="visitsCount">1 234</span>
+    </div>
+
+    <article id="seo-description">
+      <h2 style="color:#fff;margin-bottom:12px;font-size:1.25rem;">À propos de Horizon Labs — Plateforme de gestion de portefeuilles</h2>
+      <p>
+        Horizon Labs est une solution SaaS dédiée à la <strong>gestion de portefeuilles</strong> et à l’analyse d’actifs financiers.
+        Conçue pour les investisseurs individuels et les gestionnaires, la plateforme centralise les portefeuilles, suit les positions
+        et fournit des indicateurs clés (KPIs) pour faciliter la prise de décision. Horizon Labs agrège les compositions
+        de portefeuilles, identifie les tickers uniques et propose une vue consolidée des actifs (actions, ETF, matières premières).
+      </p>
+      <h3 style="color:#fff;margin-top:14px;margin-bottom:8px;">Fonctionnalités principales</h3>
+      <ul style="color:var(--muted);margin-left:18px;line-height:1.6;">
+        <li><strong>Inventaire des portefeuilles</strong> : import automatique depuis des fichiers CSV/JSON pour compter et comparer les portefeuilles.</li>
+        <li><strong>Comptage d’actifs uniques</strong> : déduplication des tickers pour connaître l’univers d’investissement réel.</li>
+        <li><strong>Suivi des newsletters et sources</strong> : centralisation des flux d’information pour la recherche et la veille.</li>
+        <li><strong>KPIs en temps réel</strong> : indicateurs personnalisables pour piloter vos décisions d’investissement.</li>
+      </ul>
+      <h3 style="color:#fff;margin-top:14px;margin-bottom:8px;">Pourquoi choisir Horizon Labs</h3>
+      <p style="color:var(--muted);line-height:1.6;">
+        Horizon Labs simplifie la gestion multi‑portefeuilles en offrant une interface claire et des métriques exploitables.
+        La plateforme est optimisée pour la performance et la sécurité des données, et permet d’importer facilement des fichiers
+        standards (CSV, JSON). Que vous soyez un investisseur particulier ou une petite équipe de gestion, Horizon Labs réduit
+        le temps consacré à la consolidation des données et augmente la qualité des décisions d’investissement.
+      </p>
+    </article>
+  </section>
+
+  <footer style="position:relative;z-index:10;padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;">© 2025 Horizon Labs — Gestion SaaS privée</footer>
+
+  <script>
+    // -------------------------
+    // KPI data (unchanged)
+    // -------------------------
+    const el = {
+      wallets: document.getElementById('walletsCount'),
+      newsletters: document.getElementById('newslettersCount'),
+      assetsTotal: document.getElementById('assetsCount'),
+      visits: document.getElementById('visitsCount'),
+      kpiWalletsCard: document.getElementById('kpi-wallets'),
+      kpiAssetsCard: document.getElementById('kpi-assets')
+    };
+
+    const portfoliosUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portfolios.json';
+    const compositionCsvUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles.csv';
+    const newslettersUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/newsletters.json';
+
+    function parseCSV(text){
+      const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+      if(!lines.length) return {headers:[], rows:[]};
+      const headerLine = lines[0];
+      const delimiter = headerLine.includes('\t') ? '\t' : ',';
+      const headers = headerLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g,''));
+      const rows = lines.slice(1).map(line=>{
+        const values=[]; let cur='', inQuotes=false;
+        for(let i=0;i<line.length;i++){
+          const ch=line[i];
+          if(ch==='"'){ if(inQuotes && line[i+1]==='"'){ cur+='"'; i++; } else { inQuotes=!inQuotes; } continue; }
+          if(ch===delimiter && !inQuotes){ values.push(cur); cur=''; continue; }
+          cur+=ch;
+        }
+        values.push(cur);
+        return values.map(v=>v.trim().replace(/^"|"$/g,''));
+      });
+      return {headers, rows};
+    }
+
+    async function updateKPIs(){
+      try{
+        const res = await fetch(portfoliosUrl, {cache:'no-store'});
+        if(!res.ok) throw new Error(`portfolios.json ${res.status}`);
+        const data = await res.json();
+        let count = 0;
+        if(Array.isArray(data)) count = data.length;
+        else if(data && typeof data === 'object'){ const arr = Object.values(data).find(v=>Array.isArray(v)); count = Array.isArray(arr)?arr.length:0; }
+        el.wallets.textContent = count.toLocaleString('fr-FR');
+        el.kpiWalletsCard.classList.remove('kpi--error');
+      }catch(err){
+        console.warn('Erreur portfolios.json', err);
+        el.wallets.textContent = '0';
+        el.kpiWalletsCard.classList.add('kpi--error');
+      }
+
+      try{
+        const res2 = await fetch(newslettersUrl, {cache:'no-store'});
+        if(!res2.ok) throw new Error(`newsletters.json ${res2.status}`);
+        const ndata = await res2.json();
+        let ncount = 0;
+        if(Array.isArray(ndata)) ncount = ndata.length;
+        else if(ndata && typeof ndata === 'object'){ const arr = Object.values(ndata).find(v=>Array.isArray(v)); ncount = Array.isArray(arr)?arr.length:0; }
+        el.newsletters.textContent = ncount.toLocaleString('fr-FR');
+      }catch(err){
+        el.newsletters.textContent = '0';
+      }
+
+      try{
+        const res3 = await fetch(compositionCsvUrl, {cache:'no-store'});
+        if(!res3.ok) throw new Error(`composition_portefeuilles.csv ${res3.status}`);
+        const csvText = await res3.text();
+        const parsed = parseCSV(csvText);
+        const headersLower = parsed.headers.map(h=>h.toLowerCase());
+        const tickerIdx = headersLower.findIndex(h=>['ticker','symbole','symbol'].includes(h));
+        if(tickerIdx === -1){
+          console.warn('Ticker column not found', parsed.headers);
+          el.assetsTotal.textContent = '0';
+          el.kpiAssetsCard.classList.add('kpi--error');
+        } else {
+          const tickers = new Set();
+          parsed.rows.forEach(row=>{
+            const t = (row[tickerIdx]||'').trim();
+            if(!t) return;
+            tickers.add(t.toUpperCase());
+          });
+          el.assetsTotal.textContent = tickers.size.toLocaleString('fr-FR');
+          el.kpiAssetsCard.classList.remove('kpi--error');
+        }
+      }catch(err){
+        console.warn('Erreur composition CSV', err);
+        el.assetsTotal.textContent = '0';
+        el.kpiAssetsCard.classList.add('kpi--error');
+      }
+
+      // visits fictive
+      if(el.visits) el.visits.textContent = '1 234';
+    }
+
+    updateKPIs();
+    setInterval(updateKPIs, 30000);
+
+    // -------------------------
+    // Network background animation
+    // -------------------------
+    const canvas = document.getElementById('network');
+    const ctx = canvas.getContext('2d');
+    let DPR = Math.max(1, devicePixelRatio || 1);
+    let width = innerWidth;
+    let height = innerHeight;
+    function resizeCanvas(){
+      DPR = Math.max(1, devicePixelRatio || 1);
+      width = innerWidth;
+      height = innerHeight;
+      canvas.width = width * DPR;
+      canvas.height = height * DPR;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      initNetwork();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // network parameters
+    const NODE_COUNT_BASE = 40; // base number of nodes on desktop
+    const LINK_DISTANCE = 160;   // max distance to create a link
+    const NODE_RADIUS = 1.6;
+    const LINE_ALPHA = 0.12;
+    const NODE_ALPHA = 0.9;
+    const SLOW_SPEED = 0.12;
+
+    let nodes = [];
+    let links = [];
+    let mouse = { x: width/2, y: height/2, vx:0, vy:0, active:false };
+
+    function rand(min, max){ return min + Math.random()*(max-min); }
+
+    function initNetwork(){
+      nodes.length = 0;
+      links.length = 0;
+      const count = Math.max(18, Math.floor((width/140) * (height/900) * NODE_COUNT_BASE));
+      for(let i=0;i<count;i++){
+        nodes.push({
+          x: Math.random()*width,
+          y: Math.random()*height,
+          vx: (Math.random()-0.5)*SLOW_SPEED,
+          vy: (Math.random()-0.5)*SLOW_SPEED,
+          r: NODE_RADIUS * (0.8 + Math.random()*0.8),
+          hue: Math.random()*360,
+          alpha: NODE_ALPHA * (0.6 + Math.random()*0.4)
+        });
+      }
+      // build links by nearest neighbors (k nearest)
+      const k = 3;
+      for(let i=0;i<nodes.length;i++){
+        const distances = [];
+        for(let j=0;j<nodes.length;j++){
+          if(i===j) continue;
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const d2 = dx*dx + dy*dy;
+          distances.push({ idx:j, d2 });
+        }
+        distances.sort((a,b)=>a.d2-b.d2);
+        for(let n=0;n<Math.min(k, distances.length); n++){
+          const j = distances[n].idx;
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist <= LINK_DISTANCE) links.push({ a:i, b:j, dist });
+        }
+      }
+    }
+
+    // subtle parallax: nodes are slightly attracted/repelled by mouse
+    canvas.addEventListener('mousemove', (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+      mouse.active = true;
+    });
+    canvas.addEventListener('mouseleave', ()=>{ mouse.active = false; });
+
+    function stepNetwork(dt){
+      // move nodes slowly and wrap edges
+      for(const n of nodes){
+        n.x += n.vx * dt * 0.06;
+        n.y += n.vy * dt * 0.06;
+        // gentle wandering
+        n.vx += (Math.random()-0.5)*0.002;
+        n.vy += (Math.random()-0.5)*0.002;
+        // clamp speed
+        n.vx = Math.max(-0.6, Math.min(0.6, n.vx));
+        n.vy = Math.max(-0.6, Math.min(0.6, n.vy));
+        // wrap
+        if(n.x < -20) n.x = width + 20;
+        if(n.x > width + 20) n.x = -20;
+        if(n.y < -20) n.y = height + 20;
+        if(n.y > height + 20) n.y = -20;
+      }
+
+      // mouse influence
+      if(mouse.active){
+        for(const n of nodes){
+          const dx = mouse.x - n.x;
+          const dy = mouse.y - n.y;
+          const d2 = dx*dx + dy*dy;
+          const influenceRadius = 220 * (width/1280);
+          if(d2 < influenceRadius*influenceRadius){
+            const d = Math.sqrt(d2) || 1;
+            const force = (1 - d / influenceRadius) * 0.06;
+            n.vx += (dx / d) * force;
+            n.vy += (dy / d) * force;
+          }
+        }
+      }
+    }
+
+    function drawNetwork(){
+      ctx.clearRect(0,0,width,height);
+      // draw links
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(74,144,226,${LINE_ALPHA})`;
+      ctx.beginPath();
+      for(const l of links){
+        const a = nodes[l.a];
+        const b = nodes[l.b];
+        // fade by distance
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if(d > LINK_DISTANCE) continue;
+        const alpha = (1 - d / LINK_DISTANCE) * 0.9 * LINE_ALPHA;
+        ctx.strokeStyle = `rgba(120,170,255,${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+      // draw nodes
+      for(const n of nodes){
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(180,210,255,${n.alpha * 0.9})`;
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+        ctx.fill();
+      }
+      // optional subtle glow near center (very low opacity)
+      const grd = ctx.createRadialGradient(width/2, height/2, Math.min(width,height)*0.05, width/2, height/2, Math.max(width,height)*0.9);
+      grd.addColorStop(0, 'rgba(74,144,226,0.02)');
+      grd.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0,0,width,height);
+    }
+
+    // animation loop
+    let last = performance.now();
+    function loop(now){
+      const dt = now - last;
+      last = now;
+      stepNetwork(dt);
+      drawNetwork();
+      requestAnimationFrame(loop);
+    }
+
+    // init
+    resizeCanvas();
+    initParticles = ()=>{}; // placeholder to avoid errors if referenced elsewhere
+    initNetwork();
+    requestAnimationFrame(loop);
+
+    // pause animations when not visible
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.hidden) cancelAnimationFrame(loop);
+    });
+  </script>
+</body>
+</html>
