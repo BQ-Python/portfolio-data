@@ -1,409 +1,428 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Horizon Capital — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<style>
-:root{
-  --bg:#071028; --accent:#00d1b2; --gain:#7ee787; --loss:#ff7b7b; --muted:rgba(255,255,255,0.85);
-  --card-bg: rgba(255,255,255,0.03);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:'Satoshi',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;background:var(--bg);-webkit-font-smoothing:antialiased;overflow:hidden}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Horizon Labs — Tableau de bord financier</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0f1f;
+      --accent: #4a90e2;
+      --gain: #4cd07d;
+      --loss: #e74c3c;
+      --muted: rgba(255,255,255,0.7);
+      --card-bg: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color: #fff; background: var(--bg); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 
-/* NAV */
-nav{position:fixed;top:18px;left:0;right:0;z-index:1200;display:flex;justify-content:center;pointer-events:auto}
-.nav{width:1200px;max-width:94%;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));backdrop-filter:blur(8px);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
-.brand{font-weight:800;font-size:1.4rem}
-.brand span{color:var(--accent)}
-.links a{color:var(--muted);text-decoration:none;margin-left:22px;font-weight:600;opacity:.95;transition:all .28s}
-.links a:hover{color:var(--accent);transform:translateY(-3px)}
-.links a.disabled{opacity:.45;cursor:default;transform:none;pointer-events:none}
+    /* NAV */
+    nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
+    .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
+    .brand { font-weight: 800; font-size: 1.3rem; }
+    .brand span { color: var(--accent); }
+    .links a { color: var(--muted); text-decoration: none; margin-left: 20px; font-weight: 500; transition: all .3s; }
+    .links a:hover { color: #fff; }
+    .links a.disabled { opacity: .5; cursor: default; pointer-events: none; }
 
-/* HERO */
-.hero{height:60vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:10;padding:0 20px;text-align:center}
-.hero-inner{max-width:1100px;padding:28px;background:linear-gradient(180deg, rgba(7,16,40,0.12), rgba(7,16,40,0.06));border-radius:14px;backdrop-filter:blur(6px)}
-h1{font-size:clamp(1.8rem,4.2vw,2.8rem);line-height:1.02;font-weight:800;margin-bottom:8px}
-.lead{font-size:clamp(0.95rem,1.8vw,1.05rem);color:rgba(255,255,255,0.92);margin-bottom:12px}
-.cta{display:inline-block;background:var(--accent);color:#04202a;padding:10px 20px;border-radius:12px;font-weight:800;text-decoration:none;transition:transform .25s}
-.cta:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,209,178,0.12)}
+    /* HERO */
+    .hero { min-height: 60vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; padding: 0 20px; text-align: center; }
+    .hero-inner { max-width: 900px; padding: 28px; background: var(--card-bg); border-radius: 8px; backdrop-filter: blur(8px); border: 1px solid var(--border); }
+    h1 { font-size: clamp(2rem, 4.5vw, 3.2rem); line-height: 1.1; font-weight: 800; margin-bottom: 8px; }
+    .lead { font-size: clamp(1rem, 1.8vw, 1.1rem); color: var(--muted); margin-bottom: 14px; }
+    .cta { display: inline-block; background: var(--accent); color: #fff; padding: 10px 20px; border-radius: 6px; font-weight: 700; text-decoration: none; transition: all .3s; }
+    .cta:hover { background: #357abd; box-shadow: 0 4px 12px rgba(74,144,226,0.2); }
 
-/* KPI Panel */
-.kpi-panel{position:relative;z-index:15;margin:18px auto 0;max-width:1200px;padding:12px 16px;pointer-events:auto}
-.kpi-inner{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.kpi-card{min-width:160px;background:var(--card-bg);border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(6px);border-radius:12px;padding:14px 18px;text-align:center;box-shadow:0 8px 24px rgba(2,6,23,0.35)}
-.kpi-value{font-weight:800;font-size:1.6rem;color:var(--accent);margin-bottom:6px}
-.kpi-label{font-size:0.92rem;color:rgba(255,255,255,0.78)}
-.kpi-sub{font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:6px}
+    /* DASHBOARD */
+    .dashboard { max-width: 1280px; margin: 0 auto 80px; padding: 40px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .kpi { background: var(--card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--border); transition: all .3s; }
+    .kpi:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .kpi h3 { font-size: 1rem; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+    .kpi .value { font-size: 1.8rem; font-weight: 700; }
+    .kpi .change { font-size: 1rem; font-weight: 500; margin-left: 8px; }
+    .gain { color: var(--gain); }
+    .loss { color: var(--loss); }
 
-/* SCENE (procedural finance) */
-.scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#071028 0%, #041226 60%)}
-svg#svgScene{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
-canvas#bars, canvas#particles{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
-.ticker{position:fixed;left:0;right:0;bottom:18px;z-index:30;pointer-events:none;display:flex;justify-content:center}
-.ticker .line{background:rgba(2,6,18,0.6);color:rgba(255,255,255,0.85);padding:8px 14px;border-radius:999px;font-weight:600;font-size:0.95rem;backdrop-filter:blur(6px);pointer-events:none}
+    /* SCENE */
+    .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, var(--bg) 0%, #060b1a 60%); }
+    svg#svgScene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+    canvas#bars, canvas#particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+    .ticker { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 30; pointer-events: none; display: flex; justify-content: center; }
+    .ticker .line { background: var(--card-bg); color: var(--muted); padding: 6px 12px; border-radius: 999px; font-weight: 500; font-size: 0.9rem; backdrop-filter: blur(8px); border: 1px solid var(--border); }
 
-/* footer */
-footer{position:relative;z-index:10;padding:28px;text-align:center;color:rgba(255,255,255,0.6)}
+    /* COIN STYLE */
+    .coin { filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4)); }
 
-/* responsive */
-@media(max-width:900px){
-  .nav{padding:10px}
-  .links a{margin-left:12px}
-  .hero-inner{padding:18px}
-  .kpi-card{min-width:140px;padding:12px}
-  .ticker .line{font-size:0.85rem;padding:6px 10px}
-}
-</style>
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .nav { padding: 8px; }
+      .links a { margin-left: 12px; font-size: 0.95rem; }
+      .hero-inner { padding: 20px; }
+      .ticker .line { font-size: 0.85rem; padding: 5px 10px; }
+      .dashboard { grid-template-columns: 1fr; padding: 30px 15px; gap: 15px; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- Procedural scene -->
-<div class="scene" aria-hidden="true">
-  <svg id="svgScene" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <defs>
-      <linearGradient id="gradBG" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#071028"/>
-        <stop offset="100%" stop-color="#041226"/>
-      </linearGradient>
-      <radialGradient id="coinGrad" cx="30%" cy="30%" r="60%">
-        <stop offset="0%" stop-color="#fff7d6"/>
-        <stop offset="40%" stop-color="#ffd36b"/>
-        <stop offset="100%" stop-color="#ffb84a"/>
-      </radialGradient>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#gradBG)"></rect>
-    <g id="coinsLayer"></g>
-    <path id="graphLine" d="" fill="none" stroke="#00d1b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"></path>
-    <g id="grid" opacity="0.06"></g>
-  </svg>
-
-  <canvas id="bars"></canvas>
-  <canvas id="particles"></canvas>
-</div>
-
-<div class="ticker" aria-hidden="true"><div class="line" id="tickerText">S&P 500 ▲ 0.42%  •  BTC/USD ▲ 1.2%  •  EUR/USD ▼ 0.03%</div></div>
-
-<!-- Navigation -->
-<nav>
-  <div class="nav">
-    <div class="brand">Horizon<span>Capital</span></div>
-    <div class="links">
-      <a class="disabled" aria-disabled="true">Accueil</a>
-      <a href="portefeuilles.html">Portefeuilles</a>
-      <a class="disabled" aria-disabled="true">Devis</a>
-      <a class="disabled" aria-disabled="true">Contact</a>
-    </div>
+  <div class="scene" aria-hidden="true">
+    <svg id="svgScene" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="gradBG" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="var(--bg)"/>
+          <stop offset="100%" stop-color="#060b1a"/>
+        </linearGradient>
+        <radialGradient id="coinGrad" cx="30%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#e6f0ff"/>
+          <stop offset="40%" stop-color="#a8d1ff"/>
+          <stop offset="100%" stop-color="#4a90e2"/>
+        </radialGradient>
+        <filter id="softBlur"><feGaussianBlur stdDeviation="6" result="b"/></filter>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#gradBG)"></rect>
+      <g id="coinsLayer"></g>
+      <path id="graphLine" d="" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"></path>
+      <g id="grid" opacity="0.04"></g>
+    </svg>
+    <canvas id="bars"></canvas>
+    <canvas id="particles"></canvas>
   </div>
-</nav>
 
-<!-- Hero -->
-<section class="hero">
-  <div class="hero-inner">
-    <h1>Capital en mouvement, stratégie en silence.</h1>
-    <p class="lead">Visualisation procédurale des tendances — survol ralenti pour une impression de maîtrise.</p>
-    <a class="cta" href="portefeuilles.html">Voir nos portefeuilles</a>
+  <div class="ticker" aria-hidden="true"><div class="line" id="tickerText">S&P 500 ▲ 0.42% • BTC/USD ▲ 1.2% • EUR/USD ▼ 0.03% • NASDAQ ▲ 0.65%</div></div>
 
-    <!-- KPI Panel -->
-    <section class="kpi-panel" aria-label="Indicateurs clés">
-      <div class="kpi-inner">
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-portfolios">0</div>
-          <div class="kpi-label">Portefeuilles disponibles</div>
-          <div class="kpi-sub">Stratégies actives</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-newsletters">0</div>
-          <div class="kpi-label">Abonnés newsletter</div>
-          <div class="kpi-sub">Inscription ouverte</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-aum">€0</div>
-          <div class="kpi-label">Actifs sous gestion</div>
-          <div class="kpi-sub">Échelle indicative</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-clients">0</div>
-          <div class="kpi-label">Clients actifs</div>
-          <div class="kpi-sub">Relations suivies</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-ytd">0%</div>
-          <div class="kpi-label">Performance YTD</div>
-          <div class="kpi-sub">Rendement annuel</div>
-        </div>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav">
+      <div class="brand">Horizon<span>Labs</span></div>
+      <div class="links">
+        <a class="disabled" aria-disabled="true">Accueil</a>
+        <a href="portefeuilles.html">Portefeuilles</a>
+        <a class="disabled" aria-disabled="true">Analyse</a>
+        <a class="disabled" aria-disabled="true">Paramètres</a>
       </div>
-    </section>
-    <!-- end KPI -->
-  </div>
-</section>
+    </div>
+  </nav>
 
-<footer>© 2025 Horizon Capital — Gestion privée</footer>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>Maîtrise financière, en toute simplicité.</h1>
+      <p class="lead">Tableau de bord SaaS pour un survol en temps réel — KPIs essentiels et tendances procédurales.</p>
+      <a class="cta" href="portefeuilles.html">Accéder au dashboard</a>
+    </div>
+  </section>
 
-<script>
-// ensure only Portefeuilles clickable
-document.querySelectorAll('.links a').forEach(a=>{
-  if(a.classList.contains('disabled')){ a.removeAttribute('href'); a.addEventListener('click', e=>e.preventDefault()); }
-});
+  <!-- Dashboard KPIs -->
+  <section class="dashboard">
+    <div class="kpi">
+      <h3>Valeur Totale du Portefeuille</h3>
+      <p class="value">€1,234,567 <span class="change gain">+2.3%</span></p>
+    </div>
+    <div class="kpi">
+      <h3>Rendement Annuel</h3>
+      <p class="value">12.5% <span class="change gain">+0.8%</span></p>
+    </div>
+    <div class="kpi">
+      <h3>Volatilité Moyenne</h3>
+      <p class="value">8.2% <span class="change loss">-1.1%</span></p>
+    </div>
+    <div class="kpi">
+      <h3>Actifs Diversifiés</h3>
+      <p class="value">45 <span class="change gain">+3</span></p>
+    </div>
+  </section>
 
-// ---------- Canvas & SVG setup ----------
-const barsCanvas = document.getElementById('bars'), barsCtx = barsCanvas.getContext('2d');
-const partCanvas = document.getElementById('particles'), partCtx = partCanvas.getContext('2d');
-const svg = document.getElementById('svgScene');
-const coinsLayer = document.getElementById('coinsLayer');
-const graphLine = document.getElementById('graphLine');
-const grid = document.getElementById('grid');
+  <footer style="position:relative;z-index:10;padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;">© 2025 Horizon Labs — Gestion SaaS privée</footer>
 
-function resize(){
-  const w = innerWidth, h = innerHeight;
-  barsCanvas.width = w * devicePixelRatio; barsCanvas.height = h * devicePixelRatio;
-  barsCanvas.style.width = w + 'px'; barsCanvas.style.height = h + 'px';
-  barsCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-
-  partCanvas.width = w * devicePixelRatio; partCanvas.height = h * devicePixelRatio;
-  partCanvas.style.width = w + 'px'; partCanvas.style.height = h + 'px';
-  partCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-}
-window.addEventListener('resize', resize);
-resize();
-
-// ---------- Procedural bars ----------
-let bars = [];
-function initBars(){
-  bars = [];
-  const cols = Math.max(6, Math.floor(innerWidth / 120));
-  for(let i=0;i<cols;i++){
-    bars.push({
-      x: (i + 0.5) * (innerWidth / cols),
-      width: Math.min(80, innerWidth / cols * 0.6),
-      base: innerHeight * 0.78,
-      height: (0.08 + Math.random()*0.5) * innerHeight * 0.42,
-      color: Math.random() > 0.5 ? 'var(--gain)' : 'var(--loss)',
-      phase: Math.random()*Math.PI*2
+  <script>
+    // Liens désactivés
+    document.querySelectorAll('.links a').forEach(a => {
+      if (a.classList.contains('disabled')) { a.removeAttribute('href'); a.addEventListener('click', e => e.preventDefault()); }
     });
-  }
-}
-initBars();
 
-function drawBars(t){
-  barsCtx.clearRect(0,0,innerWidth,innerHeight);
-  bars.forEach((b,i)=>{
-    // extremely slow breathing
-    const slow = Math.sin((t*0.00001) + b.phase) * 0.03;
-    const h = b.height * (1 + slow);
-    const x = b.x - b.width/2;
-    const y = b.base - h;
-    // shadow
-    barsCtx.fillStyle = 'rgba(0,0,0,0.28)';
-    barsCtx.fillRect(x+6, y+8, b.width, h);
-    // bar
-    barsCtx.fillStyle = b.color;
-    barsCtx.fillRect(x, y, b.width, h);
-    // top glow
-    barsCtx.fillStyle = 'rgba(255,255,255,0.03)';
-    barsCtx.fillRect(x, y, b.width, 4);
-  });
-}
+    // Canvases
+    const barsCanvas = document.getElementById('bars'), barsCtx = barsCanvas.getContext('2d');
+    const partCanvas = document.getElementById('particles'), partCtx = partCanvas.getContext('2d');
+    const svg = document.getElementById('svgScene');
+    const coinsLayer = document.getElementById('coinsLayer');
+    const graphLine = document.getElementById('graphLine');
+    const grid = document.getElementById('grid');
 
-// ---------- Particles ----------
-let particles = [];
-function initParticles(){
-  particles = [];
-  const count = Math.max(12, Math.floor((innerWidth*innerHeight)/300000));
-  for(let i=0;i<count;i++){
-    particles.push({
-      x: Math.random()*innerWidth,
-      y: Math.random()*innerHeight,
-      r: Math.random()*1.6+0.4,
-      v: 0.01 + Math.random()*0.03,
-      alpha: 0.02 + Math.random()*0.05
+    let DPR = Math.max(1, devicePixelRatio || 1);
+    function resize() {
+      DPR = Math.max(1, devicePixelRatio || 1);
+      barsCanvas.width = innerWidth * DPR;
+      barsCanvas.height = innerHeight * DPR;
+      barsCanvas.style.width = innerWidth + 'px';
+      barsCanvas.style.height = innerHeight + 'px';
+      barsCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+      partCanvas.width = innerWidth * DPR;
+      partCanvas.height = innerHeight * DPR;
+      partCanvas.style.width = innerWidth + 'px';
+      partCanvas.style.height = innerHeight + 'px';
+      partCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+      svg.setAttribute('viewBox', `0 0 ${innerWidth} ${innerHeight}`);
+      initBars();
+      buildGrid();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Resolve CSS variables for canvas usage
+    const css = getComputedStyle(document.documentElement);
+    function cssColor(name) { return css.getPropertyValue(name).trim() || '#fff'; }
+    let gainColor = cssColor('--gain') || '#4cd07d';
+    let lossColor = cssColor('--loss') || '#e74c3c';
+    let accentColor = cssColor('--accent') || '#4a90e2';
+
+    // Procedural bars
+    const bars = [];
+    function initBars() {
+      bars.length = 0;
+      const cols = Math.max(8, Math.floor(innerWidth / 90));
+      for (let i = 0; i < cols; i++) {
+        bars.push({
+          x: (i + 0.5) * (innerWidth / cols),
+          width: Math.min(50, innerWidth / cols * 0.5),
+          base: innerHeight * 0.82,
+          height: (0.08 + Math.random() * 0.5) * innerHeight * 0.35,
+          color: Math.random() > 0.5 ? gainColor : lossColor,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.8 + Math.random() * 1.6
+        });
+      }
+    }
+    initBars();
+
+    // Build subtle SVG grid
+    function buildGrid() {
+      grid.innerHTML = '';
+      const rows = 6;
+      for (let i = 0; i <= rows; i++) {
+        const y = (i / rows) * innerHeight;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', 0);
+        line.setAttribute('y1', y);
+        line.setAttribute('x2', innerWidth);
+        line.setAttribute('y2', y);
+        line.setAttribute('stroke', 'rgba(255,255,255,0.03)');
+        line.setAttribute('stroke-width', '1');
+        grid.appendChild(line);
+      }
+    }
+    buildGrid();
+
+    // Particles
+    const particles = [];
+    function initParticles() {
+      particles.length = 0;
+      const count = Math.max(24, Math.floor(innerWidth / 60));
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * innerWidth,
+          y: Math.random() * innerHeight,
+          vx: (Math.random() - 0.5) * 0.2,
+          vy: -0.1 - Math.random() * 0.6,
+          size: 1 + Math.random() * 3,
+          alpha: 0.08 + Math.random() * 0.18,
+          color: Math.random() > 0.6 ? gainColor : 'rgba(255,255,255,0.06)'
+        });
+      }
+    }
+    initParticles();
+
+    // SVG coins
+    function createCoins() {
+      coinsLayer.innerHTML = '';
+      const count = Math.min(10, Math.floor(innerWidth / 220));
+      for (let i = 0; i < count; i++) {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'coin');
+        const cx = Math.random() * innerWidth;
+        const cy = Math.random() * innerHeight * 0.6;
+        const r = 28 + Math.random() * 36;
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        circle.setAttribute('r', r);
+        circle.setAttribute('fill', 'url(#coinGrad)');
+        circle.setAttribute('opacity', 0.95);
+        circle.setAttribute('transform-origin', `${cx}px ${cy}px`);
+
+        const rim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        rim.setAttribute('cx', cx);
+        rim.setAttribute('cy', cy);
+        rim.setAttribute('r', r * 0.7);
+        rim.setAttribute('fill', 'rgba(255,255,255,0.06)');
+
+        g.appendChild(circle);
+        g.appendChild(rim);
+        coinsLayer.appendChild(g);
+
+        gsap.to(g, {
+          y: '+= ' + (10 + Math.random() * 30),
+          rotation: (Math.random() > 0.5 ? 1 : -1) * (6 + Math.random() * 12),
+          duration: 4 + Math.random() * 6,
+          yoyo: true,
+          repeat: -1,
+          ease: 'sine.inOut',
+          delay: Math.random() * 2
+        });
+        gsap.to(g, {
+          x: '+= ' + (Math.random() - 0.5) * 40,
+          duration: 6 + Math.random() * 6,
+          yoyo: true,
+          repeat: -1,
+          ease: 'sine.inOut'
+        });
+      }
+    }
+    createCoins();
+
+    // Ticker subtle horizontal scroll
+    const tickerText = document.getElementById('tickerText');
+    function animateTicker() {
+      const width = tickerText.offsetWidth;
+      gsap.fromTo(tickerText, { x: 0 }, {
+        x: -width - 60,
+        duration: 18,
+        ease: 'none',
+        repeat: -1,
+        modifiers: {
+          x: gsap.utils.unitize(x => parseFloat(x) % (width + 60))
+        }
+      });
+    }
+    animateTicker();
+
+    // Draw rounded-top rectangle helper
+    function roundRect(ctx, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Draw bars and update graph line
+    function drawBars(time) {
+      barsCtx.clearRect(0, 0, innerWidth, innerHeight);
+      const points = [];
+      for (let i = 0; i < bars.length; i++) {
+        const b = bars[i];
+        const oscill = 0.5 + 0.5 * Math.sin(b.phase + time * 0.001 * b.speed);
+        const h = b.height * (0.6 + oscill * 0.8);
+        const top = b.base - h;
+
+        const grad = barsCtx.createLinearGradient(b.x, top, b.x, b.base);
+        grad.addColorStop(0, hexToRgba(b.color, 0.95));
+        grad.addColorStop(1, hexToRgba(b.color, 0.18));
+
+        barsCtx.fillStyle = grad;
+        barsCtx.strokeStyle = hexToRgba('#000', 0.06);
+        barsCtx.lineWidth = 1;
+        roundRect(barsCtx, b.x - b.width / 2, top, b.width, h, 6);
+        barsCtx.stroke();
+
+        barsCtx.fillStyle = hexToRgba('#fff', 0.02);
+        barsCtx.fillRect(b.x - b.width / 2, top - 2, b.width, 2);
+
+        points.push({ x: b.x, y: top + h * 0.25 });
+      }
+
+      if (points.length) {
+        let d = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 1; i < points.length; i++) {
+          const prev = points[i - 1];
+          const cur = points[i];
+          const cx = (prev.x + cur.x) / 2;
+          d += ` Q ${prev.x} ${prev.y} ${cx} ${(prev.y + cur.y) / 2}`;
+        }
+        const last = points[points.length - 1];
+        d += ` T ${last.x} ${last.y}`;
+        graphLine.setAttribute('d', d);
+        graphLine.setAttribute('stroke', accentColor);
+      }
+    }
+
+    // Particles draw
+    function drawParticles(dt) {
+      partCtx.clearRect(0, 0, innerWidth, innerHeight);
+      for (let p of particles) {
+        p.x += p.vx * dt * 0.06;
+        p.y += p.vy * dt * 0.06;
+        p.alpha -= 0.0006 * dt;
+        if (p.y < -20 || p.alpha <= 0) {
+          p.x = Math.random() * innerWidth;
+          p.y = innerHeight + 10 + Math.random() * 80;
+          p.vx = (Math.random() - 0.5) * 0.2;
+          p.vy = -0.1 - Math.random() * 0.6;
+          p.size = 1 + Math.random() * 3;
+          p.alpha = 0.06 + Math.random() * 0.18;
+          p.color = Math.random() > 0.6 ? gainColor : 'rgba(255,255,255,0.06)';
+        }
+        partCtx.beginPath();
+        partCtx.fillStyle = hexToRgba(p.color, p.alpha);
+        partCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        partCtx.fill();
+      }
+    }
+
+    // Utility: convert hex or rgb string to rgba with alpha fallback
+    function hexToRgba(input, alpha = 1) {
+      input = (input || '').trim();
+      if (!input) return `rgba(255,255,255,${alpha})`;
+      if (input.startsWith('rgba')) return input;
+      if (input.startsWith('rgb(')) {
+        return input.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+      }
+      if (input[0] === '#') {
+        let hex = input.slice(1);
+        if (hex.length === 3) hex = hex.split('').map(h => h + h).join('');
+        const num = parseInt(hex, 16);
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+      return input;
+    }
+
+    // Animation loop
+    let last = performance.now();
+    function loop(now) {
+      const dt = now - last;
+      last = now;
+      drawBars(now);
+      drawParticles(dt);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    // Re-init on orientation/size changes
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => { resize(); initParticles(); createCoins(); }, 300);
     });
-  }
-}
-initParticles();
 
-function drawParticles(){
-  partCtx.clearRect(0,0,innerWidth,innerHeight);
-  particles.forEach(p=>{
-    p.x += Math.sin((p.y + performance.now()*0.00004) * 0.6) * 0.04;
-    p.y -= p.v;
-    if(p.y < -10){ p.y = innerHeight + 10; p.x = Math.random()*innerWidth; }
-    partCtx.beginPath();
-    partCtx.fillStyle = `rgba(255,255,255,${p.alpha})`;
-    partCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    partCtx.fill();
-  });
-}
-
-// ---------- SVG grid ----------
-function buildGrid(){
-  grid.innerHTML = '';
-  const stepX = 160, stepY = 120;
-  for(let x=0;x<1920;x+=stepX){
-    const line = document.createElementNS('http://www.w3.org/2000/svg','rect');
-    line.setAttribute('x', x);
-    line.setAttribute('y', 0);
-    line.setAttribute('width', 1);
-    line.setAttribute('height', 1080);
-    line.setAttribute('fill', 'white');
-    line.setAttribute('opacity', 0.02);
-    grid.appendChild(line);
-  }
-  for(let y=0;y<1080;y+=stepY){
-    const line = document.createElementNS('http://www.w3.org/2000/svg','rect');
-    line.setAttribute('x', 0);
-    line.setAttribute('y', y);
-    line.setAttribute('width', 1920);
-    line.setAttribute('height', 1);
-    line.setAttribute('fill', 'white');
-    line.setAttribute('opacity', 0.02);
-    grid.appendChild(line);
-  }
-}
-buildGrid();
-
-// ---------- Coins ----------
-const coins = [];
-function createCoins(n=6){
-  coinsLayer.innerHTML = '';
-  coins.length = 0;
-  for(let i=0;i<n;i++){
-    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.setAttribute('class','coin');
-    const cx = 220 + i*220 + (Math.random()*80-40);
-    const cy = 140 + (Math.random()*80-40);
-    const r = 30 + Math.random()*18;
-    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    circle.setAttribute('cx', cx);
-    circle.setAttribute('cy', cy);
-    circle.setAttribute('r', r);
-    circle.setAttribute('fill', 'url(#coinGrad)');
-    circle.setAttribute('opacity', 0.95);
-    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
-    text.setAttribute('x', cx);
-    text.setAttribute('y', cy + r*0.12);
-    text.setAttribute('text-anchor','middle');
-    text.setAttribute('font-size', Math.max(18, r*0.6));
-    text.setAttribute('fill','#6b3f00');
-    text.setAttribute('font-weight','700');
-    text.textContent = '€';
-    g.appendChild(circle);
-    g.appendChild(text);
-    coinsLayer.appendChild(g);
-    coins.push({g, cx, cy, r});
-  }
-}
-createCoins(6);
-
-// ---------- Graph ----------
-function buildGraph(){
-  const points = [];
-  const cols = 12;
-  const w = Math.max(900, innerWidth - 320), left = 160, top = 220, bottom = 720;
-  for(let i=0;i<=cols;i++){
-    const x = left + (i/cols)*w;
-    const noise = Math.sin(i*0.6 + performance.now()*0.00001) * 0.03 + (Math.random()*0.01);
-    const y = top + (0.5 + noise) * (bottom - top) * (0.6 + Math.sin(i*0.4)*0.03);
-    points.push([x,y]);
-  }
-  let d = `M ${points[0][0]} ${points[0][1]}`;
-  for(let i=1;i<points.length;i++){
-    const [x,y] = points[i];
-    const [px,py] = points[i-1];
-    const cx = (px + x)/2;
-    d += ` Q ${px} ${py} ${cx} ${(py + y)/2}`;
-    d += ` T ${x} ${y}`;
-  }
-  graphLine.setAttribute('d', d);
-}
-
-// ---------- GSAP timeline (très ralenti) ----------
-const slowTL = gsap.timeline({repeat:-1, defaults:{ease:"sine.inOut"}});
-// extremely long durations to create imperceptible slow motion
-slowTL.to({}, {duration: 600, onUpdate: function(){
-  // animate coins very slowly
-  coins.forEach((c, idx)=>{
-    const t = slowTL.time() + idx*12;
-    const dx = Math.sin(t*0.002 + idx)*8; // tiny amplitude
-    const dy = Math.cos(t*0.0015 + idx*0.6)*4;
-    c.g.setAttribute('transform', `translate(${dx},${dy})`);
-  });
-}}, 0);
-
-slowTL.to({}, {duration: 720, onUpdate: ()=> {
-  // update graph extremely slowly
-  buildGraph();
-}}, 0);
-
-// global timeScale reduction for extra slowness (very small)
-gsap.globalTimeline.timeScale(0.06);
-
-// ticker slow scroll
-const ticker = document.getElementById('tickerText');
-gsap.to(ticker, {x: '-=1600', duration: 240, ease: 'linear', repeat: -1});
-
-// ---------- Animation loop ----------
-function loop(ts){
-  drawBars(ts);
-  drawParticles();
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-
-// ---------- KPI integration & animation ----------
-const KPI_DEFAULTS = {
-  portfolios: 12,
-  newsletters: 0,
-  aum: 1250000000,
-  clients: 842,
-  ytd: 8.4
-};
-const fmtCurrency = n => {
-  if (n >= 1e9) return '€' + (n/1e9).toFixed(2) + 'B';
-  if (n >= 1e6) return '€' + (n/1e6).toFixed(2) + 'M';
-  return '€' + (n/1000 >= 1 ? (n/1000).toFixed(0)+'k' : Math.round(n).toString());
-};
-const fmtPercent = p => (Math.abs(p) >= 100 ? p.toFixed(0)+'%' : p.toFixed(2)+'%');
-
-function animateCounter(el, start, end, formatFn, duration = 2.2){
-  const obj = {v: start};
-  gsap.to(obj, {
-    v: end,
-    duration,
-    ease: "power2.out",
-    onUpdate: () => { el.textContent = formatFn(obj.v); }
-  });
-}
-
-function updateKPIs(data){
-  animateCounter(document.getElementById('kpi-portfolios'), 0, data.portfolios, v => Math.round(v).toString(), 1.6);
-  animateCounter(document.getElementById('kpi-newsletters'), 0, data.newsletters, v => Math.round(v).toString(), 1.6);
-  animateCounter(document.getElementById('kpi-aum'), 0, data.aum, v => fmtCurrency(Math.round(v)), 2.4);
-  animateCounter(document.getElementById('kpi-clients'), 0, data.clients, v => Math.round(v).toString(), 1.8);
-  animateCounter(document.getElementById('kpi-ytd'), 0, data.ytd, v => fmtPercent(v), 2.0);
-}
-updateKPIs(KPI_DEFAULTS);
-
-// ---------- reduced motion handling ----------
-const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-if(mq.matches){
-  gsap.globalTimeline.timeScale(0.02);
-  gsap.killTweensOf(ticker);
-}
-
-// ---------- responsive / rebuild on resize ----------
-window.addEventListener('resize', ()=>{
-  resize();
-  initBars();
-  initParticles();
-  buildGrid();
-  createCoins(6);
-  buildGraph();
-});
-</script>
+    // small accessibility: pause animations when page not visible
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        gsap.globalTimeline.pause();
+      } else {
+        gsap.globalTimeline.resume();
+      }
+    });
+  </script>
 </body>
 </html>
