@@ -1,10 +1,12 @@
 permissions:
   contents: write
 
+name: Mise à jour quotidienne à 19h00 (France)
+
 on:
   schedule:
-    - cron: '0 18 * * *' # 19h00 France en hiver (UTC+1)
-    - cron: '0 17 * * *' # 19h00 France en été (UTC+2)
+    - cron: '0 18 * * *'   # 19h00 France en hiver (UTC+1)
+    - cron: '0 17 * * *'   # 19h00 France en été   (UTC+2)
   workflow_dispatch:
 
 jobs:
@@ -48,7 +50,7 @@ jobs:
           ls -la scripts/ || echo "Dossier scripts/ introuvable !"
 
       - name: Exécuter le script de mise à jour
-        run: python -u scripts/update_performances.py
+        run: python -u scripts/update_portfolios.py
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json   # si ton script attend un fichier JSON
           # GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}   # ou juste la variable d'env si ton script la lit directement
