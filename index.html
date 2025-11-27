@@ -37,13 +37,14 @@
     .cta { display: inline-block; background: var(--accent); color: #fff; padding: 10px 20px; border-radius: 6px; font-weight: 700; text-decoration: none; transition: all .3s; }
     .cta:hover { background: #357abd; box-shadow: 0 4px 12px rgba(74,144,226,0.2); }
 
-    /* DASHBOARD */
-    .dashboard { max-width: 1280px; margin: 0 auto 80px; padding: 40px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-    .kpi { background: var(--card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--border); transition: all .3s; }
+    /* DASHBOARD - position + z-index to be above scene */
+    .dashboard { position: relative; z-index: 20; max-width: 1280px; margin: 0 auto 80px; padding: 40px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .kpi { background: var(--card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--border); transition: all .3s; pointer-events: auto; }
     .kpi:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
-    .kpi h3 { font-size: 1rem; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
-    .kpi .value { font-size: 1.8rem; font-weight: 700; }
-    .kpi .change { font-size: 1rem; font-weight: 500; margin-left: 8px; }
+    .kpi h3 { font-size: 0.95rem; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+    .kpi .value { font-size: 1.6rem; font-weight: 800; color: #fff; display: block; }
+    .kpi .sub { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
+    .kpi .change { font-size: 0.95rem; font-weight: 600; margin-left: 8px; }
     .gain { color: var(--gain); }
     .loss { color: var(--loss); }
 
@@ -117,22 +118,29 @@
   </section>
 
   <!-- Dashboard KPIs -->
-  <section class="dashboard">
-    <div class="kpi">
-      <h3>Valeur Totale du Portefeuille</h3>
-      <p class="value">€1,234,567 <span class="change gain">+2.3%</span></p>
+  <section class="dashboard" aria-live="polite" aria-atomic="true">
+    <div class="kpi" id="kpi-wallets">
+      <h3>Portefeuilles enregistrés</h3>
+      <span class="value" id="walletsCount">—</span>
+      <div class="sub">Nombre total de portefeuilles créés par les utilisateurs</div>
     </div>
-    <div class="kpi">
-      <h3>Rendement Annuel</h3>
-      <p class="value">12.5% <span class="change gain">+0.8%</span></p>
+
+    <div class="kpi" id="kpi-newsletters">
+      <h3>Newsletters référencées</h3>
+      <span class="value" id="newslettersCount">—</span>
+      <div class="sub">Flux et bulletins suivis dans la plateforme</div>
     </div>
-    <div class="kpi">
-      <h3>Volatilité Moyenne</h3>
-      <p class="value">8.2% <span class="change loss">-1.1%</span></p>
+
+    <div class="kpi" id="kpi-assets">
+      <h3>Actifs distincts disponibles</h3>
+      <span class="value" id="assetsCount">—</span>
+      <div class="sub" id="assetsBreakdown">Actions: — • ETF: — • Matières premières: —</div>
     </div>
-    <div class="kpi">
-      <h3>Actifs Diversifiés</h3>
-      <p class="value">45 <span class="change gain">+3</span></p>
+
+    <div class="kpi" id="kpi-other">
+      <h3>Utilisateurs actifs (30j)</h3>
+      <span class="value" id="activeUsers">—</span>
+      <div class="sub">Sessions uniques au cours des 30 derniers jours</div>
     </div>
   </section>
 
@@ -144,7 +152,89 @@
       if (a.classList.contains('disabled')) { a.removeAttribute('href'); a.addEventListener('click', e => e.preventDefault()); }
     });
 
-    // Canvases
+    /* ---------------------------
+       KPI: liaison front-end
+       - Attends un endpoint JSON à /api/stats
+       - Format attendu (exemple):
+         {
+           "wallets": 1245,
+           "newsletters": 87,
+           "assets": {
+             "total": 3421,
+             "stocks": 2100,
+             "etf": 900,
+             "commodities": 421
+           },
+           "activeUsers30d": 532
+         }
+       - Si l'API échoue, on utilise un fallback mock local.
+    --------------------------- */
+
+    const selectors = {
+      wallets: document.getElementById('walletsCount'),
+      newsletters: document.getElementById('newslettersCount'),
+      assetsTotal: document.getElementById('assetsCount'),
+      assetsBreakdown: document.getElementById('assetsBreakdown'),
+      activeUsers: document.getElementById('activeUsers')
+    };
+
+    // Met à jour l'UI avec les données
+    function renderStats(data) {
+      if (!data) return;
+      selectors.wallets.textContent = (typeof data.wallets === 'number') ? data.wallets.toLocaleString('fr-FR') : '—';
+      selectors.newsletters.textContent = (typeof data.newsletters === 'number') ? data.newsletters.toLocaleString('fr-FR') : '—';
+
+      const assets = data.assets || {};
+      const total = (typeof assets.total === 'number') ? assets.total : (typeof data.assetsTotal === 'number' ? data.assetsTotal : null);
+      selectors.assetsTotal.textContent = total !== null ? total.toLocaleString('fr-FR') : '—';
+
+      const stocks = (typeof assets.stocks === 'number') ? assets.stocks : '—';
+      const etf = (typeof assets.etf === 'number') ? assets.etf : '—';
+      const commodities = (typeof assets.commodities === 'number') ? assets.commodities : '—';
+      selectors.assetsBreakdown.textContent = `Actions: ${stocks} • ETF: ${etf} • Matières premières: ${commodities}`;
+
+      selectors.activeUsers.textContent = (typeof data.activeUsers30d === 'number') ? data.activeUsers30d.toLocaleString('fr-FR') : '—';
+    }
+
+    // Fallback mock si l'API n'est pas disponible (utile en dev)
+    function mockStats() {
+      return {
+        wallets: 1245,
+        newsletters: 87,
+        assets: {
+          total: 3421,
+          stocks: 2100,
+          etf: 900,
+          commodities: 421
+        },
+        activeUsers30d: 532
+      };
+    }
+
+    // Récupère les stats depuis le backend
+    async function fetchStats() {
+      try {
+        const res = await fetch('/api/stats', { cache: 'no-store' });
+        if (!res.ok) throw new Error('API non disponible');
+        const json = await res.json();
+        renderStats(json);
+      } catch (err) {
+        // En cas d'erreur, on utilise le mock et on log l'erreur en console
+        console.warn('Impossible de récupérer /api/stats, utilisation du fallback mock.', err);
+        renderStats(mockStats());
+      }
+    }
+
+    // Initialisation et polling léger (toutes les 30s)
+    fetchStats();
+    setInterval(fetchStats, 30000);
+
+    /* ---------------------------
+       Reste du script d'animation (barres, particules, svg coins)
+       (identique à l'exemple précédent, réduit ici pour la lisibilité)
+    --------------------------- */
+
+    // Canvases & SVG references
     const barsCanvas = document.getElementById('bars'), barsCtx = barsCanvas.getContext('2d');
     const partCanvas = document.getElementById('particles'), partCtx = partCanvas.getContext('2d');
     const svg = document.getElementById('svgScene');
@@ -174,14 +264,14 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Resolve CSS variables for canvas usage
+    // Colors
     const css = getComputedStyle(document.documentElement);
     function cssColor(name) { return css.getPropertyValue(name).trim() || '#fff'; }
     let gainColor = cssColor('--gain') || '#4cd07d';
     let lossColor = cssColor('--loss') || '#e74c3c';
     let accentColor = cssColor('--accent') || '#4a90e2';
 
-    // Procedural bars
+    // Bars, particles, coins (same logic as précédemment)
     const bars = [];
     function initBars() {
       bars.length = 0;
@@ -200,7 +290,6 @@
     }
     initBars();
 
-    // Build subtle SVG grid
     function buildGrid() {
       grid.innerHTML = '';
       const rows = 6;
@@ -218,7 +307,6 @@
     }
     buildGrid();
 
-    // Particles
     const particles = [];
     function initParticles() {
       particles.length = 0;
@@ -237,7 +325,6 @@
     }
     initParticles();
 
-    // SVG coins
     function createCoins() {
       coinsLayer.innerHTML = '';
       const count = Math.min(10, Math.floor(innerWidth / 220));
@@ -286,7 +373,7 @@
     }
     createCoins();
 
-    // Ticker subtle horizontal scroll
+    // Ticker
     const tickerText = document.getElementById('tickerText');
     function animateTicker() {
       const width = tickerText.offsetWidth;
@@ -302,7 +389,7 @@
     }
     animateTicker();
 
-    // Draw rounded-top rectangle helper
+    // Drawing helpers
     function roundRect(ctx, x, y, w, h, r) {
       const radius = Math.min(r, w / 2, h / 2);
       ctx.beginPath();
@@ -315,7 +402,6 @@
       ctx.fill();
     }
 
-    // Draw bars and update graph line
     function drawBars(time) {
       barsCtx.clearRect(0, 0, innerWidth, innerHeight);
       const points = [];
@@ -356,7 +442,6 @@
       }
     }
 
-    // Particles draw
     function drawParticles(dt) {
       partCtx.clearRect(0, 0, innerWidth, innerHeight);
       for (let p of particles) {
@@ -379,7 +464,6 @@
       }
     }
 
-    // Utility: convert hex or rgb string to rgba with alpha fallback
     function hexToRgba(input, alpha = 1) {
       input = (input || '').trim();
       if (!input) return `rgba(255,255,255,${alpha})`;
@@ -399,7 +483,6 @@
       return input;
     }
 
-    // Animation loop
     let last = performance.now();
     function loop(now) {
       const dt = now - last;
@@ -410,12 +493,10 @@
     }
     requestAnimationFrame(loop);
 
-    // Re-init on orientation/size changes
     window.addEventListener('orientationchange', () => {
       setTimeout(() => { resize(); initParticles(); createCoins(); }, 300);
     });
 
-    // small accessibility: pause animations when page not visible
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         gsap.globalTimeline.pause();
