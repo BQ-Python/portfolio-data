@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+pip install yfinance
+
 import pandas as pd
 import yfinance as yf
 import numpy as np
