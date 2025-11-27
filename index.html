@@ -20,7 +20,6 @@
     html, body { height: 100%; }
     body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color: #fff; background: var(--bg); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 
-    /* NAV */
     nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
     .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
     .brand { font-weight: 800; font-size: 1.3rem; }
@@ -29,7 +28,6 @@
     .links a:hover { color: #fff; }
     .links a.disabled { opacity: .5; cursor: default; pointer-events: none; }
 
-    /* HERO */
     .hero { min-height: 60vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; padding: 0 20px; text-align: center; }
     .hero-inner { max-width: 900px; padding: 28px; background: var(--card-bg); border-radius: 8px; backdrop-filter: blur(8px); border: 1px solid var(--border); }
     h1 { font-size: clamp(2rem, 4.5vw, 3.2rem); line-height: 1.1; font-weight: 800; margin-bottom: 8px; }
@@ -37,33 +35,21 @@
     .cta { display: inline-block; background: var(--accent); color: #fff; padding: 10px 20px; border-radius: 6px; font-weight: 700; text-decoration: none; transition: all .3s; }
     .cta:hover { background: #357abd; box-shadow: 0 4px 12px rgba(74,144,226,0.2); }
 
-    /* DASHBOARD - position + z-index to be above scene */
     .dashboard { position: relative; z-index: 20; max-width: 1280px; margin: 0 auto 80px; padding: 40px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
     .kpi { background: var(--card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--border); transition: all .3s; pointer-events: auto; }
     .kpi:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
     .kpi h3 { font-size: 0.95rem; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
     .kpi .value { font-size: 1.6rem; font-weight: 800; color: #fff; display: block; }
     .kpi .sub { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
-    .kpi .change { font-size: 0.95rem; font-weight: 600; margin-left: 8px; }
-    .gain { color: var(--gain); }
-    .loss { color: var(--loss); }
+    .kpi.kpi--error { outline: 1px solid rgba(231,76,60,0.18); box-shadow: 0 6px 18px rgba(231,76,60,0.06) inset; }
 
-    /* SCENE */
     .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, var(--bg) 0%, #060b1a 60%); }
     svg#svgScene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
     canvas#bars, canvas#particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
     .ticker { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 30; pointer-events: none; display: flex; justify-content: center; }
     .ticker .line { background: var(--card-bg); color: var(--muted); padding: 6px 12px; border-radius: 999px; font-weight: 500; font-size: 0.9rem; backdrop-filter: blur(8px); border: 1px solid var(--border); }
 
-    /* COIN STYLE */
-    .coin { filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4)); }
-
-    /* RESPONSIVE */
     @media (max-width: 900px) {
-      .nav { padding: 8px; }
-      .links a { margin-left: 12px; font-size: 0.95rem; }
-      .hero-inner { padding: 20px; }
-      .ticker .line { font-size: 0.85rem; padding: 5px 10px; }
       .dashboard { grid-template-columns: 1fr; padding: 30px 15px; gap: 15px; }
     }
   </style>
@@ -82,7 +68,6 @@
           <stop offset="40%" stop-color="#a8d1ff"/>
           <stop offset="100%" stop-color="#4a90e2"/>
         </radialGradient>
-        <filter id="softBlur"><feGaussianBlur stdDeviation="6" result="b"/></filter>
       </defs>
       <rect width="100%" height="100%" fill="url(#gradBG)"></rect>
       <g id="coinsLayer"></g>
@@ -95,7 +80,6 @@
 
   <div class="ticker" aria-hidden="true"><div class="line" id="tickerText">S&P 500 ▲ 0.42% • BTC/USD ▲ 1.2% • EUR/USD ▼ 0.03% • NASDAQ ▲ 0.65%</div></div>
 
-  <!-- Navigation -->
   <nav>
     <div class="nav">
       <div class="brand">Horizon<span>Labs</span></div>
@@ -108,7 +92,6 @@
     </div>
   </nav>
 
-  <!-- Hero -->
   <section class="hero">
     <div class="hero-inner">
       <h1>Maîtrise financière, en toute simplicité.</h1>
@@ -117,7 +100,6 @@
     </div>
   </section>
 
-  <!-- Dashboard KPIs -->
   <section class="dashboard" aria-live="polite" aria-atomic="true">
     <div class="kpi" id="kpi-wallets">
       <h3>Portefeuilles recensés</h3>
@@ -141,31 +123,41 @@
   <footer style="position:relative;z-index:10;padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;">© 2025 Horizon Labs — Gestion SaaS privée</footer>
 
   <script>
-    // Liens désactivés
-    document.querySelectorAll('.links a').forEach(a => {
-      if (a.classList.contains('disabled')) { a.removeAttribute('href'); a.addEventListener('click', e => e.preventDefault()); }
-    });
+    // --- Déclarations globales placées avant toute utilisation (évite TDZ) ---
+    const bars = [];
+    const particles = [];
 
-    /* ---------------------------
-       KPI data sources (front-end)
-       - /portfolios.json
-       - /newsletters.json (optionnel)
-       - /compositons_portefeuilles.csv  <-- nom fourni par l'utilisateur
-       Notes: place ces fichiers à la racine du serveur statique
-    --------------------------- */
+    const barsCanvas = document.getElementById('bars');
+    const barsCtx = barsCanvas ? barsCanvas.getContext('2d') : null;
+    const partCanvas = document.getElementById('particles');
+    const partCtx = partCanvas ? partCanvas.getContext('2d') : null;
+    const svg = document.getElementById('svgScene');
+    const coinsLayer = document.getElementById('coinsLayer');
+    const graphLine = document.getElementById('graphLine');
+    const grid = document.getElementById('grid');
+    const tickerText = document.getElementById('tickerText');
 
+    const css = getComputedStyle(document.documentElement);
+    function cssColor(name) { return css.getPropertyValue(name).trim() || '#fff'; }
+    let gainColor = cssColor('--gain') || '#4cd07d';
+    let lossColor = cssColor('--loss') || '#e74c3c';
+    let accentColor = cssColor('--accent') || '#4a90e2';
+    // ---------------------------------------------------------------------
+
+    // éléments KPI
     const el = {
       wallets: document.getElementById('walletsCount'),
       newsletters: document.getElementById('newslettersCount'),
       assetsTotal: document.getElementById('assetsCount'),
-      assetsBreakdown: document.getElementById('assetsBreakdown')
+      assetsBreakdown: document.getElementById('assetsBreakdown'),
+      kpiWalletsCard: document.getElementById('kpi-wallets'),
+      kpiAssetsCard: document.getElementById('kpi-assets')
     };
 
-    // Parse CSV with auto-detect delimiter (tab or comma)
+    // parse CSV (détecte tab ou virgule)
     function parseCSV(text) {
       const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
       if (!lines.length) return { headers: [], rows: [] };
-      // detect delimiter: tab if present in header, else comma
       const headerLine = lines[0];
       const delimiter = headerLine.includes('\t') ? '\t' : ',';
       const headers = headerLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
@@ -187,7 +179,7 @@
       return { headers, rows };
     }
 
-    // Update KPIs by reading files
+    // update KPIs: utilise exactement ces chemins (fichiers à la racine)
     async function updateKPIs() {
       // portfolios.json
       try {
@@ -201,9 +193,11 @@
           count = Array.isArray(arr) ? arr.length : 0;
         }
         el.wallets.textContent = count.toLocaleString('fr-FR');
+        el.kpiWalletsCard.classList.remove('kpi--error');
       } catch (err) {
         console.warn('Erreur lecture /portfolios.json :', err);
         el.wallets.textContent = '0';
+        el.kpiWalletsCard.classList.add('kpi--error');
       }
 
       // newsletters.json (optionnel)
@@ -219,26 +213,24 @@
         }
         el.newsletters.textContent = ncount.toLocaleString('fr-FR');
       } catch (err) {
-        console.info('newsletters.json absent ou inaccessible, affichage 0.');
         el.newsletters.textContent = '0';
       }
 
-      // composition CSV -> compter tickers uniques
+      // composition_portefeuilles.csv -> compter tickers uniques
       try {
-        const res3 = await fetch('/compositons_portefeuilles.csv', { cache: 'no-store' });
-        if (!res3.ok) throw new Error(`compositons_portefeuilles.csv ${res3.status}`);
+        const res3 = await fetch('/composition_portefeuilles.csv', { cache: 'no-store' });
+        if (!res3.ok) throw new Error(`composition_portefeuilles.csv ${res3.status}`);
         const csvText = await res3.text();
         const parsed = parseCSV(csvText);
         const headersLower = parsed.headers.map(h => h.toLowerCase());
-        // chercher colonne ticker (ou symbole)
         const tickerIdx = headersLower.findIndex(h => ['ticker','symbole','symbol'].includes(h));
         if (tickerIdx === -1) {
-          console.warn('Colonne "Ticker" introuvable dans compositons_portefeuilles.csv. Entêtes:', parsed.headers);
+          console.warn('Colonne "Ticker" introuvable dans composition_portefeuilles.csv. Entêtes:', parsed.headers);
           el.assetsTotal.textContent = '0';
           el.assetsBreakdown.textContent = 'Actions: — • ETF: — • Matières premières: —';
+          el.kpiAssetsCard.classList.add('kpi--error');
         } else {
           const tickers = new Set();
-          // optional: detect type column for breakdown
           const typeIdx = headersLower.findIndex(h => ['type','assettype','asset_type','categorie','category'].includes(h));
           const seenType = new Map();
           parsed.rows.forEach(row => {
@@ -251,15 +243,13 @@
               if (!seenType.has(up)) seenType.set(up, typ);
             }
           });
-          const total = tickers.size;
-          el.assetsTotal.textContent = total.toLocaleString('fr-FR');
-
+          el.assetsTotal.textContent = tickers.size.toLocaleString('fr-FR');
           if (typeIdx !== -1) {
             const counts = { stock: 0, etf: 0, commodity: 0, other: 0 };
-            for (const [tk, typ] of seenType.entries()) {
+            for (const typ of seenType.values()) {
               if (!typ) { counts.other++; continue; }
               if (typ.includes('etf')) counts.etf++;
-              else if (typ.includes('commodity') || typ.includes('mati') || typ.includes('matière')) counts.commodity++;
+              else if (typ.includes('commodity') || typ.includes('mati')) counts.commodity++;
               else if (typ.includes('stock') || typ.includes('action') || typ.includes('equity')) counts.stock++;
               else counts.other++;
             }
@@ -267,11 +257,13 @@
           } else {
             el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
           }
+          el.kpiAssetsCard.classList.remove('kpi--error');
         }
       } catch (err) {
-        console.warn('Erreur lecture /compositons_portefeuilles.csv :', err);
+        console.warn('Erreur lecture /composition_portefeuilles.csv :', err);
         el.assetsTotal.textContent = '0';
         el.assetsBreakdown.textContent = `Actions: — • ETF: — • Matières premières: —`;
+        el.kpiAssetsCard.classList.add('kpi--error');
       }
     }
 
@@ -281,51 +273,34 @@
 
     /* ---------------------------
        Animation background (barres, particules, coins)
-       - Déclarations placées avant l'utilisation pour éviter TDZ
+       - fonctions d'animation (initBars, drawBars, etc.)
+       - déclarations et initialisations déjà placées plus haut
     --------------------------- */
 
-    // Canvases & SVG references
-    const barsCanvas = document.getElementById('bars'), barsCtx = barsCanvas.getContext('2d');
-    const partCanvas = document.getElementById('particles'), partCtx = partCanvas.getContext('2d');
-    const svg = document.getElementById('svgScene');
-    const coinsLayer = document.getElementById('coinsLayer');
-    const graphLine = document.getElementById('graphLine');
-    const grid = document.getElementById('grid');
-
-    // Déclare bars et particles en haut pour éviter la TDZ
-    const bars = [];
-    const particles = [];
-
     let DPR = Math.max(1, devicePixelRatio || 1);
+
     function resize() {
       DPR = Math.max(1, devicePixelRatio || 1);
-      barsCanvas.width = innerWidth * DPR;
-      barsCanvas.height = innerHeight * DPR;
-      barsCanvas.style.width = innerWidth + 'px';
-      barsCanvas.style.height = innerHeight + 'px';
-      barsCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-      partCanvas.width = innerWidth * DPR;
-      partCanvas.height = innerHeight * DPR;
-      partCanvas.style.width = innerWidth + 'px';
-      partCanvas.style.height = innerHeight + 'px';
-      partCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-      svg.setAttribute('viewBox', `0 0 ${innerWidth} ${innerHeight}`);
+      if (barsCanvas && barsCtx) {
+        barsCanvas.width = innerWidth * DPR;
+        barsCanvas.height = innerHeight * DPR;
+        barsCanvas.style.width = innerWidth + 'px';
+        barsCanvas.style.height = innerHeight + 'px';
+        barsCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+      if (partCanvas && partCtx) {
+        partCanvas.width = innerWidth * DPR;
+        partCanvas.height = innerHeight * DPR;
+        partCanvas.style.width = innerWidth + 'px';
+        partCanvas.style.height = innerHeight + 'px';
+        partCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+      if (svg) svg.setAttribute('viewBox', `0 0 ${innerWidth} ${innerHeight}`);
       initBars();
       buildGrid();
     }
     window.addEventListener('resize', resize);
-    resize();
 
-    // Resolve CSS variables for canvas usage
-    const css = getComputedStyle(document.documentElement);
-    function cssColor(name) { return css.getPropertyValue(name).trim() || '#fff'; }
-    let gainColor = cssColor('--gain') || '#4cd07d';
-    let lossColor = cssColor('--loss') || '#e74c3c';
-    let accentColor = cssColor('--accent') || '#4a90e2';
-
-    // Procedural bars
     function initBars() {
       bars.length = 0;
       const cols = Math.max(8, Math.floor(innerWidth / 90));
@@ -341,10 +316,9 @@
         });
       }
     }
-    initBars();
 
-    // Build subtle SVG grid
     function buildGrid() {
+      if (!grid) return;
       grid.innerHTML = '';
       const rows = 6;
       for (let i = 0; i <= rows; i++) {
@@ -359,9 +333,7 @@
         grid.appendChild(line);
       }
     }
-    buildGrid();
 
-    // Particles init
     function initParticles() {
       particles.length = 0;
       const count = Math.max(24, Math.floor(innerWidth / 60));
@@ -377,74 +349,7 @@
         });
       }
     }
-    initParticles();
 
-    // SVG coins
-    function createCoins() {
-      coinsLayer.innerHTML = '';
-      const count = Math.min(10, Math.floor(innerWidth / 220));
-      for (let i = 0; i < count; i++) {
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', 'coin');
-        const cx = Math.random() * innerWidth;
-        const cy = Math.random() * innerHeight * 0.6;
-        const r = 28 + Math.random() * 36;
-
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', cx);
-        circle.setAttribute('cy', cy);
-        circle.setAttribute('r', r);
-        circle.setAttribute('fill', 'url(#coinGrad)');
-        circle.setAttribute('opacity', 0.95);
-        circle.setAttribute('transform-origin', `${cx}px ${cy}px`);
-
-        const rim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        rim.setAttribute('cx', cx);
-        rim.setAttribute('cy', cy);
-        rim.setAttribute('r', r * 0.7);
-        rim.setAttribute('fill', 'rgba(255,255,255,0.06)');
-
-        g.appendChild(circle);
-        g.appendChild(rim);
-        coinsLayer.appendChild(g);
-
-        gsap.to(g, {
-          y: '+= ' + (10 + Math.random() * 30),
-          rotation: (Math.random() > 0.5 ? 1 : -1) * (6 + Math.random() * 12),
-          duration: 4 + Math.random() * 6,
-          yoyo: true,
-          repeat: -1,
-          ease: 'sine.inOut',
-          delay: Math.random() * 2
-        });
-        gsap.to(g, {
-          x: '+= ' + (Math.random() - 0.5) * 40,
-          duration: 6 + Math.random() * 6,
-          yoyo: true,
-          repeat: -1,
-          ease: 'sine.inOut'
-        });
-      }
-    }
-    createCoins();
-
-    // Ticker subtle horizontal scroll
-    const tickerText = document.getElementById('tickerText');
-    function animateTicker() {
-      const width = tickerText.offsetWidth;
-      gsap.fromTo(tickerText, { x: 0 }, {
-        x: -width - 60,
-        duration: 18,
-        ease: 'none',
-        repeat: -1,
-        modifiers: {
-          x: gsap.utils.unitize(x => parseFloat(x) % (width + 60))
-        }
-      });
-    }
-    animateTicker();
-
-    // Drawing helpers
     function roundRect(ctx, x, y, w, h, r) {
       const radius = Math.min(r, w / 2, h / 2);
       ctx.beginPath();
@@ -458,6 +363,7 @@
     }
 
     function drawBars(time) {
+      if (!barsCtx) return;
       barsCtx.clearRect(0, 0, innerWidth, innerHeight);
       const points = [];
       for (let i = 0; i < bars.length; i++) {
@@ -465,24 +371,19 @@
         const oscill = 0.5 + 0.5 * Math.sin(b.phase + time * 0.001 * b.speed);
         const h = b.height * (0.6 + oscill * 0.8);
         const top = b.base - h;
-
         const grad = barsCtx.createLinearGradient(b.x, top, b.x, b.base);
         grad.addColorStop(0, hexToRgba(b.color, 0.95));
         grad.addColorStop(1, hexToRgba(b.color, 0.18));
-
         barsCtx.fillStyle = grad;
         barsCtx.strokeStyle = hexToRgba('#000', 0.06);
         barsCtx.lineWidth = 1;
         roundRect(barsCtx, b.x - b.width / 2, top, b.width, h, 6);
         barsCtx.stroke();
-
         barsCtx.fillStyle = hexToRgba('#fff', 0.02);
         barsCtx.fillRect(b.x - b.width / 2, top - 2, b.width, 2);
-
         points.push({ x: b.x, y: top + h * 0.25 });
       }
-
-      if (points.length) {
+      if (points.length && graphLine) {
         let d = `M ${points[0].x} ${points[0].y}`;
         for (let i = 1; i < points.length; i++) {
           const prev = points[i - 1];
@@ -498,6 +399,7 @@
     }
 
     function drawParticles(dt) {
+      if (!partCtx) return;
       partCtx.clearRect(0, 0, innerWidth, innerHeight);
       for (let p of particles) {
         p.x += p.vx * dt * 0.06;
@@ -538,6 +440,21 @@
       return input;
     }
 
+    // initial inits and loop
+    resize();
+    initParticles();
+    (function animateTicker() {
+      if (!tickerText) return;
+      const width = tickerText.offsetWidth;
+      gsap.fromTo(tickerText, { x: 0 }, {
+        x: -width - 60,
+        duration: 18,
+        ease: 'none',
+        repeat: -1,
+        modifiers: { x: gsap.utils.unitize(x => parseFloat(x) % (width + 60)) }
+      });
+    })();
+
     let last = performance.now();
     function loop(now) {
       const dt = now - last;
@@ -548,16 +465,9 @@
     }
     requestAnimationFrame(loop);
 
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => { resize(); initParticles(); createCoins(); }, 300);
-    });
-
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        gsap.globalTimeline.pause();
-      } else {
-        gsap.globalTimeline.resume();
-      }
+      if (document.hidden) gsap.globalTimeline.pause();
+      else gsap.globalTimeline.resume();
     });
   </script>
 </body>
