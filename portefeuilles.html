@@ -320,46 +320,123 @@
     }
 
     function drawVaRChart() {
-      if (varChart) varChart.destroy();
+  if (varChart) varChart.destroy();
 
-      const returns = rawData.map(d => d.dailyRet);
-      const var95 = [];
-      const var99 = [];
+  const returns = rawData.map(d => d.dailyRet);
+  const var95 = [], var99 = [], es95 = [], es99 = [];
 
-      for (let i = 29; i < returns.length; i++) {
-        const window = returns.slice(i - 29, i + 1);
-        window.sort((a, b) => a - b);
-        var95.push(window[Math.floor(0.05 * window.length)] * 100);
-        var99.push(window[Math.floor(0.01 * window.length)] * 100);
-      }
+  // On commence après 30 jours pour avoir une fenêtre complète
+  for (let i = 29; i < returns.length; i++) {
+    const window = returns.slice(i - 29, i + 1);
+    const sorted = window.slice().sort((a, b) => a - b);
 
-      const labels = rawData.slice(29).map(d => d.date);
+    const len = sorted.length;
+    const p95 = 0.05;
+    const p99 = 0.01;
 
-      varChart = new Chart(document.getElementById('varChart'), {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            { label: 'VaR 95% (30 jours)', data: var95, borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.1)', fill: true, tension: 0.4, borderWidth: 3 },
-            { label: 'VaR 99% (30 jours)', data: var99, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.1)', fill: true, tension: 0.4, borderWidth: 3 }
-          ]
+    const idx95 = Math.floor(p95 * len);
+    const idx99 = Math.floor(p99 * len);
+
+    // VaR = quantile
+    var95.push(sorted[idx95] * 100);
+    var99.push(sorted[idx99] * 100);
+
+    // Expected Shortfall = moyenne des pertes au-delà du quantile
+    const tail95 = sorted.slice(0, idx95 + 1); // inclut le quantile
+    const tail99 = sorted.slice(0, idx99 + 1);
+
+    es95.push(tail95.reduce((a, b) => a + b, 0) / tail95.length * 100);
+    es99.push(tail99.reduce((a, b) => a + b, 0) / tail99.length * 100);
+  }
+
+  const labels = rawData.slice(29).map(d => d.date);
+
+  varChart = new Chart(document.getElementById('varChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'VaR 95% (30j)',
+          data: var95,
+          borderColor: '#ea580c',
+          backgroundColor: 'rgba(234,88,12,0.08)',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'top' },
-            title: { display: true, text: 'Value at Risk Historique (30 jours glissants)', font: { size: 16 } },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` } }
-          },
-          scales: {
-            x: { type: 'time', time: { unit: 'month' } },
-            y: { ticks: { callback: v => v.toFixed(1) + '%' }, beginAtZero: false }
+        {
+          label: 'Expected Shortfall 95% (30j)',
+          data: es95,
+          borderColor: '#ea580c',
+          backgroundColor: 'rgba(234,88,12,0.18)',
+          borderWidth: 4,
+          borderDash: [8, 5],
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0
+        },
+        {
+          label: 'VaR 99% (30j)',
+          data: var99,
+          borderColor: '#dc2626',
+          backgroundColor: 'rgba(220,38,38,0.08)',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0
+        },
+        {
+          label: 'Expected Shortfall 99% (30j)',
+          data: es99,
+          borderColor: '#dc2626',
+          backgroundColor: 'rgba(220,38,38,0.22)',
+          borderWidth: 4.5,
+          borderDash: [6, 4],
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 13, weight: 600 } } },
+        title: {
+          display: true,
+          text: 'Value at Risk & Expected Shortfall (30 jours glissants)',
+          font: { size: 18, weight: 'bold' },
+          padding: 20
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`
           }
         }
-      });
-      createButtons('varControls', varChart);
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { callback: v => v.toFixed(1) + '%', stepSize: 2 },
+          suggestedMin: -20,
+          suggestedMax: 0,
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+      },
+      interaction: { mode: 'index', intersect: false },
+      animation: { duration: 1200 }
     }
+  });
+
+  createButtons('varControls', varChart);
+}
 
     async function loadComposition(name) {
       try {
