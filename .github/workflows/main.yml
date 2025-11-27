@@ -1,5 +1,8 @@
 name: Mise à jour quotidienne à 19h00 (France)
 
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: '0 18 * * *'   # 19h00 France en hiver (UTC+1)
@@ -14,26 +17,29 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0     # obligatoire pour pouvoir push ensuite
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          # Pas de 'cache' → évite l'erreur "Caching for 'false' is not supported"
 
       - name: Installer les dépendances
         run: |
           python -m pip install --upgrade pip
-
-          # Si tu as un requirements.txt → on l'utilise
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           else
-            # Sinon on installe les libs classiques pour ce genre de job
-            pip install pandas google-cloud-bigquery google-cloud-storage requests beautifulsoup4 lxml --quiet
+            pip install pandas yfinance google-cloud-bigquery google-cloud-storage requests beautifulsoup4 lxml --quiet
           fi
 
+      - name: Vérifier l'installation des paquets
+        run: |
+          python -c "import sys; print('Python', sys.version)"
+          python -c "import yfinance as yf; print('yfinance OK', yf.__version__)" || python -m pip freeze
+
       - name: Écrire la clé GCP en fichier (si nécessaire)
+        if: ${{ secrets.GCP_SA_KEY != '' }}
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > /tmp/gcp-key.json
         env:
@@ -44,13 +50,12 @@ jobs:
           echo "Répertoire courant : $(pwd)"
           ls -la
           echo "Contenu du dossier scripts/"
-          ls -la scripts/ || echo "Dossier scripts/ introuvable !"
+          ls -la scripts/ || (echo "Dossier scripts/ introuvable !" && exit 1)
 
       - name: Exécuter le script de mise à jour
-        run: python -u scripts/update_performances.py
+        run: python -u ./scripts/update_performances.py
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json   # si ton script attend un fichier JSON
-          # GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}   # ou juste la variable d'env si ton script la lit directement
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
 
       - name: Configurer Git
         run: |
