@@ -23,7 +23,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 
-    /* NAVIGATION IDENTIQUE À index.html */
     nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
     .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
     .logo { font-size: 1.3rem; font-weight: 800; }
@@ -35,7 +34,7 @@
     #user-menu { display: none; align-items: center; gap: 12px; }
     #user-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); }
     #user-name { font-weight: 600; }
-    #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; transition: color .2s; }
+    #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
     #logout-btn:hover { color: #fff; }
 
     .container { max-width: 1400px; margin: 0 auto; padding: 120px 2rem 80px; text-align: center; }
@@ -79,7 +78,7 @@
 </head>
 <body>
 
-  <!-- NAVIGATION AVEC AUTH GOOGLE -->
+  <!-- NAVIGATION AVEC AUTH -->
   <nav>
     <div class="nav">
       <div class="logo">Horizon<span>Labs</span></div>
@@ -92,7 +91,7 @@
         <a href="auth.html" id="login-btn" class="auth-button">S'authentifier</a>
 
         <div id="user-menu">
-          <img id="user-photo" src="" alt="Photo de profil">
+          <img id="user-photo" src="" alt="Photo">
           <span id="user-name"></span>
           <button id="logout-btn">Déconnexion</button>
         </div>
@@ -166,7 +165,7 @@
     });
   </script>
 
-  <!-- TON CODE ORIGINAL COMPLET (tout est là, rien n’a été coupé) -->
+  <!-- TON CODE ORIGINAL COMPLET ET CORRIGÉ -->
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
     const PORTFOLIOS_JSON = BASE_URL + "portfolios.json";
@@ -262,7 +261,7 @@
       document.body.style.overflow = 'hidden';
 
       const text = await fetch(url).then(r => r.text());
-      rawData = text.trim().split('\n').slice(1 dossiers).map(parseLine).filter(Boolean);
+      rawData = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
 
       updateKPIs();
       drawMainChart();
@@ -318,6 +317,7 @@
 
     function drawMainChart() {
       if (mainChart) mainChart.destroy();
+
       const allValues = [...rawData.map(d => d.port), ...rawData.map(d => d.sp), ...rawData.map(d => d.nas)];
       const minVal = Math.min(...allValues);
       const maxVal = Math.max(...allValues);
@@ -328,8 +328,7 @@
       mainChart = new Chart(document.getElementById('mainChart'), {
         type: 'line',
         data: {
-          labels: raw
-Data.map(d => d.date),
+          labels: rawData.map(d => d.date),
           datasets: [
             { label: currentPortfolioName, data: rawData.map(d => d.port), borderColor: '#4a90e2', backgroundColor: 'rgba(74,144,226,0.08)', fill: true, tension: 0.38, borderWidth: 4.5, pointRadius: 0 },
             { label: 'S&P 500', data: rawData.map(d => d.sp), borderColor: 'rgba(255,255,255,0.5)', borderWidth: 2.8, borderDash: [10, 7], tension: 0.38, pointRadius: 0 },
@@ -337,8 +336,10 @@ Data.map(d => d.date),
           ]
         },
         options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { position: 'top', labels: { font: { size: 14, weight: 600 }, color: '#fff' } },
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { font: { size: 14, weight: 600 }, color: '#fff' } },
             tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` }, backgroundColor: 'rgba(4,5,18,0.9)', titleColor: '#fff', bodyColor: '#fff' },
             zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } }
           },
@@ -363,7 +364,8 @@ Data.map(d => d.date),
           ]
         },
         options: {
-          responsive: true, maintainAspectRatio: false,
+          responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { position: 'top', labels: { color: '#fff' } }, title: { display: true, text: 'Risque : Volatilité & Drawdown', font: { size: 16 }, color: '#fff' } },
           scales: { x: { type: 'time', ticks: { color: 'rgba(255,255,255,0.7)' } }, y: { ticks: { callback: v => v + '%', color: 'rgba(255,255,255,0.7)' } } }
         }
@@ -373,31 +375,40 @@ Data.map(d => d.date),
 
     function drawVaRChart() {
       if (varChart) varChart.destroy();
+
       const returns = rawData.map(d => d.dailyRet);
       const var95 = [], var99 = [];
+
       for (let i = 29; i < returns.length; i++) {
         const window = returns.slice(i - 29, i + 1);
         const sorted = window.slice().sort((a, b) => a - b);
         var95.push(sorted[Math.floor(0.05 * sorted.length)] * 100);
         var99.push(sorted[Math.floor(0.01 * sorted.length)] * 100);
       }
+
       const allVaR = [...var95, ...var99];
       const minV = Math.min(...allVaR);
       const maxV = Math.max(...allVaR);
       const rangeV = maxV - minV || 10;
       const yMin = Math.floor(minV - rangeV * 0.2);
       const yMax = Math.ceil(maxV + rangeV * 0.1);
+
       const labels = rawData.slice(29).map(d => d.date);
 
       varChart = new Chart(document.getElementById('varChart'), {
         type: 'line',
-        data: { labels, datasets: [
-          { label: 'VaR 95% (30 jours)', data: var95, borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 },
-          { label: 'VaR 99% (30 jours)', data: var99, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 }
-        ]},
+        data: {
+          labels,
+          datasets: [
+            { label: 'VaR 95% (30 jours)', data: var95, borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 },
+            { label: 'VaR 99% (30 jours)', data: var99, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 }
+          ]
+        },
         options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { position: 'top', labels: { color: '#fff' } },
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { color: '#fff' } },
             tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` }, backgroundColor: 'rgba(4,5,18,0.9)', titleColor: '#fff', bodyColor: '#fff' }
           },
           scales: {
