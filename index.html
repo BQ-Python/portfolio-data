@@ -18,19 +18,17 @@
     html,body{height:100%}
     body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-    /* Scene */
     .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#02030a 0%,#040512 70%)}
     .scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.66);z-index:2;pointer-events:none}
     canvas#hero{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block}
 
-    /* Nav */
     nav{position:fixed;top:16px;left:0;right:0;z-index:1200;display:flex;justify-content:center;pointer-events:auto}
     .nav{width:1280px;max-width:96%;display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter:blur(12px);border-radius:8px;border:1px solid var(--border)}
     .brand{font-weight:800;font-size:1.3rem}
     .brand span{color:var(--accent)}
     .links{display:flex;align-items:center;gap:24px;}
     .links a{color:var(--muted);text-decoration:none;font-weight:500;transition:all .25s}
-    .links a:hover{color:#fff}
+    .links a:hover,.links a.active{color:#fff}
     .auth-button{background:var(--accent);color:#fff;padding:8px 16px;border-radius:8px;font-weight:600;font-size:0.95rem;}
     #user-menu{display:none;align-items:center;gap:12px;}
     #user-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.2);}
@@ -38,46 +36,19 @@
     #logout-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;transition:color .2s;}
     #logout-btn:hover{color:#fff;}
 
-    /* Hero header */
     .hero{min-height:56vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:40;padding:0 20px;text-align:center}
     .hero-inner{max-width:980px;padding:36px;background:linear-gradient(180deg,var(--card-bg),var(--card-strong));border-radius:12px;backdrop-filter:blur(10px);border:1px solid var(--border)}
     h1{font-size:clamp(2rem,4.5vw,3.4rem);line-height:1.05;font-weight:800;margin-bottom:8px}
- Counseling    .lead{font-size:clamp(1rem,1.6vw,1.05rem);color:var(--muted);margin-bottom:14px}
+    .lead{font-size:clamp(1rem,1.6vw,1.05rem);color:var(--muted);margin-bottom:14px}
 
-    /* KPI block */
-    .kpi-row{
-      position:relative;
-      z-index:60;
-      display:flex;
-      justify-content:center;
-      gap:18px;
-      margin:18px auto;
-      padding:8px;
-      max-width:1100px;
-      width:calc(100% - 40px);
-      pointer-events:auto;
-    }
-    .kpi-card{
-      min-width:160px;
-      max-width:260px;
-      padding:14px 18px;
-      border-radius:10px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border:1px solid rgba(255,255,255,0.03);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      box-shadow:0 6px 18px rgba(0,0,0,0.35);
-    }
+    .kpi-row{position:relative;z-index:60;display:flex;justify-content:center;gap:18px;margin:18px auto;padding:8px;max-width:1100px;width:calc(100% - 40px);pointer-events:auto;}
+    .kpi-card{min-width:160px;max-width:260px;padding:14px 18px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.35);}
     .kpi-card h3{font-size:0.95rem;color:var(--muted);font-weight:600;margin-bottom:6px}
     .kpi-card .value{font-size:1.6rem;font-weight:800;color:#fff}
 
     @media (max-width:900px){
       .kpi-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:calc(100% - 28px);max-width:640px;margin:14px auto}
-      .hero{min-height:48vh}
-      .hero-inner{padding:20px}
+      .hero{min-height:48vh}.hero-inner{padding:20px}
       .links{gap:14px;flex-wrap:wrap;}
     }
 
@@ -92,19 +63,18 @@
     <canvas id="hero" aria-hidden="true"></canvas>
   </div>
 
+  <!-- MENU COMPLET + AUTH -->
   <nav>
     <div class="nav">
       <div class="brand">Horizon<span>Labs</span></div>
       <div class="links">
-        <a class="disabled" aria-disabled="true">Accueil</a>
+        <a class="active">Accueil</a>
         <a href="portefeuilles.html">Portefeuilles</a>
-        <a class="disabled" aria-disabled="true">Newsletter</a>
-        <a class="disabled" aria-disabled="true">Abonnements</a>
+        <a href="newsletter.html">Newsletter</a>
+        <a href="abonnements.html">Abonnements</a>
 
-        <!-- Bouton connexion (visible quand déconnecté) -->
         <a href="auth.html" id="login-btn" class="auth-button">S'authentifier</a>
 
-        <!-- Menu utilisateur (visible quand connecté) -->
         <div id="user-menu">
           <img id="user-photo" src="" alt="Photo de profil">
           <span id="user-name"></span>
@@ -124,56 +94,33 @@
 
   <!-- KPI row -->
   <div class="kpi-row" role="region" aria-label="Indicateurs clés">
-    <div class="kpi-card" id="kpi-wallets">
-      <h3>Portefeuilles</h3>
-      <div class="value" id="walletsCount">—</div>
-    </div>
-    <div class="kpi-card" id="kpi-newsletters">
-      <h3>Newsletters</h3>
-      <div class="value" id="newslettersCount">—</div>
-    </div>
-    <div class="kpi-card" id="kpi-assets">
-      <h3>Actifs distincts</h3>
-      <div class="value" id="assetsCount">—</div>
-    </div>
-    <div class="kpi-card" id="kpi-visits">
-      <h3>Visites (mois)</h3>
-      <div class="value" id="visitsCount">1 234</div>
-    </div>
+    <div class="kpi-card" id="kpi-wallets"><h3>Portefeuilles</h3><div class="value" id="walletsCount">—</div></div>
+    <div class="kpi-card" id="kpi-newsletters"><h3>Newsletters</h3><div class="value" id="newslettersCount">—</div></div>
+    <div class="kpi-card" id="kpi-assets"><h3>Actifs distincts</h3><div class="value" id="assetsCount">—</div></div>
+    <div class="kpi-card" id="kpi-visits"><h3>Visites (mois)</h3><div class="value" id="visitsCount">1 234</div></div>
   </div>
 
   <!-- Contenu principal -->
   <main class="page-content" aria-live="polite">
     <article id="seo-description">
       <h2 style="color:#fff;margin-bottom:10px;font-size:1.15rem;">À propos — Présentation graphique</h2>
-
       <p>Horizon Labs propose une interface claire et visuelle pour suivre vos portefeuilles et comprendre rapidement les dynamiques de marché. Cette page de démonstration met en avant un rendu graphique soigné : peu de lignes marquantes, aires floues et diagrammes en barre pour représenter le volume. Les éléments visuels sont pensés pour être lisibles sur fond sombre et pour attirer l’attention sur les KPIs au centre de l’écran.</p>
-
       <p>Le design privilégie l’espace et la hiérarchie : les sparklines larges racontent la tendance, les barres en bas matérialisent le volume, et les blobs flous apportent de la profondeur sans distraire. Les couleurs restent froides et professionnelles, avec des accents lumineux pour les points d’intérêt. L’ensemble est optimisé pour rester discret sur mobile tout en offrant un rendu premium sur desktop.</p>
-
       <p>Les animations sont lentes et organiques pour éviter la fatigue visuelle. Elles sont conçues pour être non intrusives : si l’utilisateur active la préférence de réduction d’animations, le rendu devient statique. Les KPIs restent accessibles et centraux, permettant une lecture immédiate des indicateurs clés.</p>
-
       <p>Ce rendu est idéal pour une page d’accueil produit, une démo commerciale ou un hero visuel sur une landing page. Il met l’accent sur la clarté des informations tout en offrant un impact esthétique fort, utile pour convaincre des décideurs ou présenter un produit financier.</p>
-
       <p>Sur le plan technique, le fond animé utilise un canvas performant, des gradients et des ombres contrôlées pour limiter l’usage CPU/GPU. Les barres sont volontairement plus marquées pour être lisibles même lorsque le visiteur parcourt la page rapidement.</p>
-
       <p>Enfin, la mise en page est responsive : les vignettes KPI se recentrent et se réorganisent automatiquement sur petits écrans, et la densité visuelle est réduite pour préserver la lisibilité et la batterie des appareils mobiles.</p>
-
       <p>Si tu veux, je peux brancher les barres sur une colonne volume réelle de ton CSV pour refléter des données réelles, ou ajuster la palette (par ex. vert/rouge) pour indiquer performance positive/négative.</p>
-
       <p>Je peux aussi fournir une version encore plus épurée (3 lignes + 6 barres larges) pour un rendu ultra‑minimaliste, ou une version « data » où chaque barre correspond à un secteur et chaque ligne à une moyenne mobile.</p>
-
       <p>Dis‑moi si tu veux que j’augmente encore le contraste des barres, que je réduise la lueur des lignes, ou que j’ajoute un toggle visible pour réduire les animations manuellement.</p>
     </article>
   </main>
 
   <footer>© 2025 Horizon Labs — Gestion SaaS privée</footer>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase Auth -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-
-  <!-- Gestion Auth Google + Menu utilisateur -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB7sRyQt1lNuXqpcesTvL6ktpCAurTcIdk",
@@ -184,31 +131,28 @@
       appId: "1:28359753916:web:bf23bece9f6d1c094090b9",
       measurementId: "G-QJLJM4M3Z8"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
     auth.onAuthStateChanged(user => {
       const loginBtn = document.getElementById('login-btn');
       const userMenu = document.getElementById('user-menu');
-
       if (user) {
         loginBtn.style.display = 'none';
         userMenu.style.display = 'flex';
-        document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Utilisateur';
+        document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Membre';
         document.getElementById('user-photo').src = user.photoURL || 'https://via.placeholder.com/36/4a90e2/ffffff?text=H';
       } else {
         loginBtn.style.display = 'block';
         userMenu.style.display = 'none';
       }
     });
-
     document.getElementById('logout-btn').addEventListener('click', () => {
       auth.signOut().then(() => location.reload());
     });
   </script>
 
-  <!-- Ton code KPI + Canvas COMPLET -->
+  <!-- TON CODE KPI + CANVAS 100 % COMPLET (tout est là) -->
   <script>
     const el = {
       wallets: document.getElementById('walletsCount'),
