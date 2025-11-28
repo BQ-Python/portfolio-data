@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Horizon Labs – Connexion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#040512;--accent:#4a90e2;--card-bg:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.08);}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}
+    .card{max-width:380px;width:90%;padding:40px;background:var(--card-bg);border:1px solid var(--border);border-radius:16px;text-align:center;}
+    button{background:var(--accent);color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:1.1rem;cursor:pointer;margin-top:20px;}
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js"></script>
+</head>
+<body>
+  <div class="card">
+    <h1>Horizon<span style="color:var(--accent)">Labs</span></h1>
+    <p style="margin:20px 0;opacity:0.8;">Connectez-vous avec votre compte Google</p>
+    <button id="google-btn">Se connecter avec Google</button>
+    <p id="msg" style="margin-top:20px;color:#ff6b6b;"></p>
+  </div>
+
+  <script>
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+    // COLLE ICI TES INFOS FIREBASE (seulement ces 6 lignes)
+    const firebaseConfig = {
+      apiKey: "AIzaSy...xxxxxxxx",          // ← remplace
+      authDomain: "ton-projet-12345.firebaseapp.com", // ← remplace
+      projectId: "ton-projet-12345",         // ← remplace
+      storageBucket: "ton-projet-12345.appspot.com", // ← remplace
+      messagingSenderId: "123456789012",     // ← remplace
+      appId: "1:123456789012:web:abcdef123456" // ← remplace
+    };
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    document.getElementById('google-btn').addEventListener('click', () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(() => window.location.href = 'index.html')
+        .catch(err => document.getElementById('msg').textContent = err.message);
+    });
+  </script>
+</body>
+</html>
