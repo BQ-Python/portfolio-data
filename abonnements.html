@@ -26,7 +26,7 @@
     .logo { font-size: 1.3rem; font-weight: 800; }
     .logo span { color: var(--accent); }
     .links { display: flex; align-items: center; gap: 24px; }
-    .links a { color: var(--muted); text-decoration: none; font-weight: 500; transition: all .25s; }
+    .links a { color: var(--muted); text-decoration: none; font Feather: 500; transition: all .25s; }
     .links a:hover, .links a.active { color: #fff; }
     .auth-button { background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; }
     #user-menu { display: none; align-items: center; gap: 12px; }
@@ -35,45 +35,61 @@
     #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
     #logout-btn:hover { color: #fff; }
 
-    .container { max-width: 1100px; margin: 0 auto; padding: 120px 2rem 100px; text-align: center; }
-    h1 { font-size: clamp(2.5rem,5vw,4rem); font-weight: 800; margin-bottom: 1rem; }
-    .subtitle { font-size: 1.3rem; color: var(--muted); margin-bottom: 4rem; }
+    /* ÉLIMINE LE FLASH D'AUTH */
+    #login-btn, #user-menu { visibility: hidden; }
+    body.firebase-ready #login-btn,
+    body.firebase-ready #user-menu { visibility: visible; }
 
-    .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 120px 2rem 100px; text-align: center; }
+    h1 { font-size: clamp(2.8rem,6vw,4.5rem); font-weight: 800; margin-bottom: 1rem; }
+    .subtitle { font-size: 1.4rem; color: var(--muted); margin-bottom: 4rem; max-width: 800px; margin-left: auto; margin-right: auto; }
+
+    .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2.5rem; }
     .plan-card {
       background: linear-gradient(180deg, var(--card-bg), var(--card-strong));
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 2.5rem 2rem;
-      transition: all .3s;
+      border-radius: 18px;
+      padding: 3rem 2rem;
+      transition: all .4s;
       position: relative;
       overflow: hidden;
     }
-    .plan-card:hover { transform: translateY(-12px); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .plan-card:hover { transform: translateY(-16px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
     .popular { border: 2px solid var(--accent); }
-    .popular::before { content: "LE PLUS POPULAIRE"; position: absolute; top: 12px; right: -40px; background: var(--accent); color: #fff; padding: 6px 40px; font-size: 0.8rem; font-weight: 700; transform: rotate(45deg); }
-    .plan-name { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .price { font-size: 3rem; font-weight: 800; margin: 1rem 0; }
-    .price small { font-size: 1rem; color: var(--muted); }
-    .features { list-style: none; text-align: left; margin: 2rem 0; }
-    .features li { margin: 0.8rem 0; padding-left: 1.8rem; position: relative; color: var(--muted); }
-    .features li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: bold; }
-    button {
-      width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 1.5rem;
-      background: var(--accent); color: #fff; transition: all .25s;
+    .popular::before {
+      content: "LE PLUS POPULAIRE";
+      position: absolute;
+      top: 14px; right: -46px;
+      background: var(--accent);
+      color: #fff;
+      padding: 6px 50px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transform: rotate(45deg);
     }
-    button:hover { background: #357abd; }
-    .pro-btn { background: var(--gold); }
-    .pro-btn:hover { background: #d97706; }
-    .free-btn { background: transparent; border: 2px solid var(--accent); }
+    .plan-name { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .price { font-size: 3.5rem; font-weight: 800; margin: 1.5rem 0; }
+    .price small { font-size: 1.1rem; color: var(--muted); }
+    .features { list-style: none; text-align: left; margin: 2rem 0; }
+    .features li { margin: 1rem 0; padding-left: 2rem; position: relative; color: var(--muted); }
+    .features li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: bold; font-size: 1.3rem; }
+    button {
+      width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 700; cursor: pointer; margin-top: 1.5rem;
+      transition: all .25s;
+    }
+    .free-btn { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
     .free-btn:hover { background: rgba(74,144,226,0.2); }
+    .pro-btn { background: var(--gold); color: #000; }
+    .pro-btn:hover { background: #e67700; }
+    button:not(.free-btn) { background: var(--accent); color: #fff; }
+    button:not(.free-btn):hover { background: #357abd; transform: translateY(-3px); }
 
-    footer { padding: 3rem; text-align: center; color: var(--muted); font-size: 0.9rem; }
+    footer { padding: 4rem 2rem; text-align: center; color: var(--muted); font-size: 0.9rem; }
   </style>
 </head>
 <body>
 
-  <!-- NAVIGATION -->
+  <!-- MENU + AUTH (avec anti-flash) -->
   <nav>
     <div class="nav">
       <div class="logo">Horizon<span>Labs</span></div>
@@ -84,6 +100,7 @@
         <a href="#" class="active">Abonnements</a>
 
         <a href="auth.html" id="login-btn" class="auth-button">S'authentifier</a>
+
         <div id="user-menu">
           <img id="user-photo" src="" alt="Photo">
           <span id="user-name"></span>
@@ -95,7 +112,7 @@
 
   <div class="container">
     <h1>Choisis ton abonnement</h1>
-    <p class="subtitle">Accès illimité aux analyses, portefeuilles privés et signaux d’achat/vente</p>
+    <p class="subtitle">Accès illimité aux analyses privées, signaux d’achat/vente et portefeuilles exclusifs</p>
 
     <div class="plans">
       <!-- Gratuit -->
@@ -103,11 +120,11 @@
         <div class="plan-name">Gratuit</div>
         <div class="price">0€<small>/mois</small></div>
         <ul class="features">
-          <li>Accès aux portefeuilles publics</li>
+          <li>Portefeuilles publics</li>
           <li>Newsletter hebdomadaire</li>
           <li>Performances historiques</li>
         </ul>
-        <button class="free-btn" onclick="alert('Tu es déjà sur le plan Gratuit !')">Déjà actif</button>
+        <button class="free-btn">Déjà actif</button>
       </div>
 
       <!-- Pro (le plus populaire) -->
@@ -116,12 +133,12 @@
         <div class="price">19€<small>/mois</small></div>
         <ul class="features">
           <li>Tout le Gratuit +</li>
-          <li>Portefeuilles privés (x3)</li>
+          <li>3 portefeuilles privés</li>
           <li>Alertes en temps réel</li>
           <li>Analyse sectorielle</li>
           <li>Support prioritaire</li>
         </ul>
-        <button onclick="checkout('price_1ABC123')">S’abonner →</button>
+        <button onclick="checkout('price_1Q8...')">S’abonner →</button>
       </div>
 
       <!-- Premium -->
@@ -131,22 +148,20 @@
         <ul class="features">
           <li>Tout le Pro +</li>
           <li>Portefeuilles institutionnels</li>
-          <li>Accès aux algorithmes internes</li>
+          <li>Accès aux algorithmes</li>
           <li>Rapports mensuels détaillés</li>
           <li>Consultation 1-to-1 (1h/mois)</li>
         </ul>
-        <button class="pro-btn" onclick="checkout('price_1XYZ987')">S’abonner →</button>
+        <button class="pro-btn" onclick="checkout('price_1Q8...')">S’abonner →</button>
       </div>
     </div>
   </div>
 
   <footer>© 2025 Horizon Labs — Paiements sécurisés par Stripe</footer>
 
-  <!-- Firebase Auth -->
+  <!-- Firebase Auth + Anti-flash -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-
-  <!-- Stripe + Paiement -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB7sRyQt1lNuXqpcesTvL6ktpCAurTcIdk",
@@ -159,19 +174,28 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // Gestion du menu utilisateur
+    // ÉLIMINE LE FLASH
+    document.body.classList.add('firebase-ready');
+
     auth.onAuthStateChanged(user => {
-      document.getElementById('login-btn').style.display = user ? 'none' : 'block';
-      document.getElementById('user-menu').style.display = user ? 'flex' : 'none';
+      const loginBtn = document.getElementById('login-btn');
+      const userMenu = document.getElementById('user-menu');
       if (user) {
+        loginBtn.style.display = 'none';
+        userMenu.style.display = 'flex';
         document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Membre';
         document.getElementById('user-photo').src = user.photoURL || 'https://via.placeholder.com/36/4a90e2/ffffff?text=H';
+      } else {
+        loginBtn.style.display = 'block';
+        userMenu.style.display = 'none';
       }
     });
     document.getElementById('logout-btn').addEventListener('click', () => auth.signOut().then(() => location.reload()));
+  </script>
 
-    // Stripe
-    const stripe = Stripe('pk_live_ton_cle_publique_ici'); // ← Remplace par ta clé publique Stripe
+  <!-- Stripe Checkout -->
+  <script>
+    const stripe = Stripe('pk_live_51...'); // Remplace par TA clé publique Stripe
 
     async function checkout(priceId) {
       const user = auth.currentUser;
@@ -181,7 +205,8 @@
         return;
       }
 
-      const response = await fetch('https://ton-backend.com/create-checkout-session', { // ← Tu devras créer ce petit backend
+      // À remplacer par ton vrai backend (je te le fais après si tu veux)
+      const response = await fetch('https://ton-backend.vercel.app/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceId, userId: user.uid, email: user.email })
