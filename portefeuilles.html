@@ -3,73 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AltInvest Capital - Portefeuilles</title>
+  <title>Horizon Labs - Portefeuilles</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <style>
     :root {
-      --navy: #0f172a; --gold: #ca8a04; --slate: #64748b; --light: #f8fafc; --gray: #e2e8f0;
-      --red: #dc2626; --green: #16a34a; --orange: #ea580c;
+      --bg: #040512;
+      --accent: #4a90e2;
+      --muted: rgba(255,255,255,0.78);
+      --card-bg: rgba(255,255,255,0.03);
+      --card-strong: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.08);
+      --red: #dc2626;
+      --green: #16a34a;
+      --orange: #ea580c;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; padding-top: 90px; line-height: 1.6; }
-    nav { position: fixed; top: 0; width: 100%; background: var(--navy); padding: 1.5rem 0; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .nav { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 5rem; }
-    .logo { font-size: 2.4rem; font-weight: 900; color: white; }
-    .logo span { color: var(--gold); }
-    .links a { color: white; text-decoration: none; margin: 0 2rem; font-weight: 500; transition: .3s; }
-    .links a:hover, .links a.active { color: var(--gold); }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
+    .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
+    .logo { font-size: 1.3rem; font-weight: 800; }
+    .logo span { color: var(--accent); }
+    .links a { color: var(--muted); text-decoration: none; margin: 0 1rem; font-weight: 500; transition: all .25s; }
+    .links a:hover, .links a.active { color: #fff; }
     .container { max-width: 1400px; margin: 0 auto; padding: 120px 2rem 80px; text-align: center; }
-    h1 { font-size: 3.6rem; font-weight: 800; margin-bottom: 4rem; background: linear-gradient(90deg, var(--navy), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    h1 { font-size: clamp(2rem,4.5vw,3.4rem); line-height: 1.05; font-weight: 800; margin-bottom: 4rem; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 2.5rem; margin-top: 3rem; }
-    .card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); transition: all .4s; cursor: pointer; }
-    .card:hover { transform: translateY(-16px); box-shadow: 0 30px 70px rgba(0,0,0,0.15); }
-    .card-header { background: linear-gradient(135deg, var(--navy), #1e40af); padding: 3rem 2rem; color: white; text-align: center; }
+    .card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(0,0,0,0.35); transition: all .4s; cursor: pointer; }
+    .card:hover { transform: translateY(-16px); box-shadow: 0 30px 70px rgba(0,0,0,0.35); }
+    .card-header { background: linear-gradient(135deg, #02030a, #040512); padding: 3rem 2rem; color: #fff; text-align: center; }
     .card-header h3 { font-size: 2.2rem; font-weight: 700; }
     .metrics { padding: 2.5rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
-    .kpi { text-align: center; padding: 1rem; background: var(--light); border-radius: 14px; }
-    .kpi strong { display: block; font-size: 2rem; font-weight: 800; color: var(--gold); }
+    .kpi { text-align: center; padding: 1rem; background: var(--card-bg); border-radius: 14px; border: 1px solid var(--border); }
+    .kpi strong { display: block; font-size: 2rem; font-weight: 800; color: var(--accent); }
     .kpi.red strong { color: var(--red); }
     .kpi.green strong { color: var(--green); }
-    .kpi small { font-size: 0.85rem; color: var(--slate); display: block; margin-top: 4px; }
+    .kpi small { font-size: 0.85rem; color: var(--muted); display: block; margin-top: 4px; }
 
-    #modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.97); backdrop-filter: blur(16px); z-index: 2000; align-items: center; justify-content: center; padding: 2rem; overflow-y: auto; }
+    #modal { display: none; position: fixed; inset: 0; background: rgba(4,5,18,0.97); backdrop-filter: blur(16px); z-index: 2000; align-items: center; justify-content: center; padding: 2rem; overflow-y: auto; }
     #modal.active { display: flex; }
-    .modal-content { background: white; border-radius: 28px; max-width: 1400px; width: 95%; max-height: 95vh; overflow-y: auto; box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
-    .modal-header { background: var(--navy); color: white; padding: 2rem 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .modal-content { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 28px; max-width: 1400px; width: 95%; max-height: 95vh; overflow-y: auto; box-shadow: 0 40px 100px rgba(0,0,0,0.5); border: 1px solid var(--border); }
+    .modal-header { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color: #fff; padding: 2rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
     .modal-header h2 { font-size: 2.4rem; font-weight: 800; }
-    .close { font-size: 3rem; cursor: pointer; opacity: 0.8; transition: .3s; }
+    .close { font-size: 3rem; cursor: pointer; opacity: 0.8; transition: .3s; color: var(--muted); }
     .close:hover { opacity: 1; transform: rotate(90deg); }
-    .modal-body { padding: 3rem 4rem 4rem; }
+    .modal-body { padding: 3rem 4rem 4rem; color: var(--muted); }
     .kpi-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-    .kpi-big { background: var(--light); padding: 1.8rem; border-radius: 18px; text-align: center; border-left: 6px solid var(--gold); }
+    .kpi-big { background: var(--card-bg); padding: 1.8rem; border-radius: 18px; text-align: center; border-left: 6px solid var(--accent); border: 1px solid var(--border); }
     .kpi-big.red { border-left-color: var(--red); }
     .kpi-big.red strong { color: var(--red); }
-    .kpi-big strong { font-size: 2.5rem; font-weight: 800; color: var(--gold); display: block; }
-    .kpi-big div { font-size: 0.95rem; color: var(--slate); margin-top: 6px; }
-    .chart-wrapper { position: relative; height: 420px; background: white; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.07); margin: 3rem 0; }
+    .kpi-big strong { font-size: 2.5rem; font-weight: 800; color: var(--accent); display: block; }
+    .kpi-big div { font-size: 0.95rem; color: var(--muted); margin-top: 6px; }
+    .chart-wrapper { position: relative; height: 420px; background: var(--card-bg); border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.35); margin: 3rem 0; border: 1px solid var(--border); }
     .chart-controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 15px; }
-    .chart-btn { padding: 9px 16px; border: none; border-radius: 10px; background: #e2e8f0; color: #1e293b; font-size: 0.95rem; cursor: pointer; transition: .2s; font-weight: 600; }
-    .chart-btn.active, .chart-btn:hover { background: var(--gold); color: white; }
+    .chart-btn { padding: 9px 16px; border: none; border-radius: 10px; background: var(--card-bg); color: var(--muted); font-size: 0.95rem; cursor: pointer; transition: .2s; font-weight: 600; border: 1px solid var(--border); }
+    .chart-btn.active, .chart-btn:hover { background: var(--accent); color: #fff; }
     .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 3rem; align-items: start; }
     @media (max-width: 992px) { .comp-grid { grid-template-columns: 1fr; } }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--gray); }
-    th { background: var(--light); font-weight: 600; color: var(--navy); }
+    th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border); color: #fff; }
+    th { background: var(--card-strong); font-weight: 600; color: #fff; }
   </style>
 </head>
 <body>
 
   <nav>
     <div class="nav">
-      <div class="logo">AltInvest<span>.</span></div>
+      <div class="logo">Horizon<span>Labs</span></div>
       <div class="links">
         <a href="index.html">Accueil</a>
         <a href="#" class="active">Portefeuilles</a>
-        <a href="devis.html">Devis</a>
-        <a href="contact.html">Contact</a>
+        <a class="disabled" aria-disabled="true">Analyse</a>
+        <a class="disabled" aria-disabled="true">Paramètres</a>
       </div>
     </div>
   </nav>
@@ -83,7 +90,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modal-title"></h2>
-        <span class="close" onclick="closeModal()">x</span>
+        <span class="close" onclick="closeModal()">×</span>
       </div>
       <div class="modal-body">
         <div class="kpi-bar" id="kpi-bar"></div>
@@ -100,7 +107,7 @@
 
         <div class="chart-wrapper">
           <div style="text-align:center; margin-bottom:12px;">
-            <h3 style="font-size:1.65rem; font-weight:700; color:#1e293b;">Value at Risk (VaR) Historique – 30 jours glissants</h3>
+            <h3 style="font-size:1.65rem; font-weight:700; color:#fff;">Value at Risk (VaR) Historique – 30 jours glissants</h3>
           </div>
           <div class="chart-controls" id="varControls"></div>
           <canvas id="varChart"></canvas>
@@ -279,22 +286,22 @@
         data: {
           labels: rawData.map(d => d.date),
           datasets: [
-            { label: currentPortfolioName, data: rawData.map(d => d.port), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.08)', fill: true, tension: 0.38, borderWidth: 4.5, pointRadius: 0 },
-            { label: 'S&P 500', data: rawData.map(d => d.sp), borderColor: '#64748b', borderWidth: 2.8, borderDash: [10, 7], tension: 0.38, pointRadius: 0 },
-            { label: 'NASDAQ 100', data: rawData.map(d => d.nas), borderColor: '#94a3b8', borderWidth: 2.5, borderDash: [14, 9], tension: 0.38, pointRadius: 0 }
+            { label: currentPortfolioName, data: rawData.map(d => d.port), borderColor: '#4a90e2', backgroundColor: 'rgba(74,144,226,0.08)', fill: true, tension: 0.38, borderWidth: 4.5, pointRadius: 0 },
+            { label: 'S&P 500', data: rawData.map(d => d.sp), borderColor: 'rgba(255,255,255,0.5)', borderWidth: 2.8, borderDash: [10, 7], tension: 0.38, pointRadius: 0 },
+            { label: 'NASDAQ 100', data: rawData.map(d => d.nas), borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2.5, borderDash: [14, 9], tension: 0.38, pointRadius: 0 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'top', labels: { font: { size: 14, weight: 600 } } },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` } },
+            legend: { position: 'top', labels: { font: { size: 14, weight: 600 }, color: '#fff' } },
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` }, backgroundColor: 'rgba(4,5,18,0.9)', titleColor: '#fff', bodyColor: '#fff' },
             zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } }
           },
           scales: {
-            x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } }, grid: { display: false } },
-            y: { min: yMin, max: yMax, ticks: { callback: v => v + '%', stepSize: 10 }, grid: { color: 'rgba(0,0,0,0.06)' } }
+            x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } }, grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.7)' } },
+            y: { min: yMin, max: yMax, ticks: { callback: v => v + '%', stepSize: 10, color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.06)' } }
           }
         }
       });
@@ -308,21 +315,20 @@
         data: {
           labels: rawData.map(d => d.date),
           datasets: [
-            { label: 'Volatilité annualisée (21j)', data: rawData.map(d => d.volM), borderColor: '#ca8a04', backgroundColor: 'rgba(202,138,4,0.15)', fill: true, tension: 0.4 },
+            { label: 'Volatilité annualisée (21j)', data: rawData.map(d => d.volM), borderColor: '#4a90e2', backgroundColor: 'rgba(74,144,226,0.15)', fill: true, tension: 0.4 },
             { label: 'Drawdown actuel', data: rawData.map(d => d.ddC), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.15)', fill: true, tension: 0.4 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'top' }, title: { display: true, text: 'Risque : Volatilité & Drawdown', font: { size: 16 } } },
-          scales: { x: { type: 'time' }, y: { ticks: { callback: v => v + '%' } } }
+          plugins: { legend: { position: 'top', labels: { color: '#fff' } }, title: { display: true, text: 'Risque : Volatilité & Drawdown', font: { size: 16 }, color: '#fff' } },
+          scales: { x: { type: 'time', ticks: { color: 'rgba(255,255,255,0.7)' } }, y: { ticks: { callback: v => v + '%', color: 'rgba(255,255,255,0.7)' } } }
         }
       });
       createButtons('detailControls', detailChart);
     }
 
-    // VaR 95% & 99% uniquement (sans CVaR)
     function drawVaRChart() {
       if (varChart) varChart.destroy();
 
@@ -358,12 +364,12 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'top' },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` } }
+            legend: { position: 'top', labels: { color: '#fff' } },
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` }, backgroundColor: 'rgba(4,5,18,0.9)', titleColor: '#fff', bodyColor: '#fff' }
           },
           scales: {
-            x: { type: 'time', time: { unit: 'month' } },
-            y: { min: yMin, max: yMax > 0 ? yMax : 0, ticks: { callback: v => v.toFixed(1) + '%', stepSize: 2 } }
+            x: { type: 'time', time: { unit: 'month' }, ticks: { color: 'rgba(255,255,255,0.7)' } },
+            y: { min: yMin, max: yMax > 0 ? yMax : 0, ticks: { callback: v => v.toFixed(1) + '%', stepSize: 2, color: 'rgba(255,255,255,0.7)' } }
           }
         }
       });
@@ -377,7 +383,7 @@
         const relevant = rows.filter(r => r.split(',')[0].trim() === name);
         const table = document.getElementById('compTable');
         table.innerHTML = '';
-        const labels = [], values = [], colors = ['#ca8a04','#e4b94c','#f5d28a','#b37a00','#8c6200','#6b4d00','#4a3800','#ffd700','#ffcc00','#ffb300'];
+        const labels = [], values = [], colors = ['#4a90e2','#6aa9f2','#8ac3ff','#2a76c8','#0a5cae','#004494','#00307a','#007bff','#0066cc','#005599'];
 
         relevant.forEach(r => {
           const c = r.split(',');
@@ -392,11 +398,11 @@
         if (pieChart) pieChart.destroy();
         pieChart = new Chart(document.getElementById('pieChart'), {
           type: 'doughnut',
-          data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: '#fff' }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+          data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: 'rgba(255,255,255,0.1)' }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#fff' } } } }
         });
       } catch (e) {
-        document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">Composition en cours de mise à jour...</td></tr>';
+        document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--muted);">Composition en cours de mise à jour...</td></tr>';
       }
     }
 
