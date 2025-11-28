@@ -13,9 +13,10 @@
       --card-bg: rgba(255,255,255,0.03);
       --card-strong: rgba(255,255,255,0.06);
       --border: rgba(255,255,255,0.08);
+      --green: #16a34a;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
     nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
     .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
@@ -30,6 +31,11 @@
     #user-name { font-weight: 600; }
     #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
     #logout-btn:hover { color: #fff; }
+
+    /* ÉLIMINE LE FLASH D'AUTH */
+    #login-btn, #user-menu { visibility: hidden; }
+    body.firebase-ready #login-btn,
+    body.firebase-ready #user-menu { visibility: visible; }
 
     .container { max-width: 900px; margin: 0 auto; padding: 120px 2rem 100px; text-align: center; }
     h1 { font-size: clamp(2.5rem,5vw,4rem); line-height: 1.1; font-weight: 800; margin-bottom: 1.5rem; }
@@ -75,14 +81,14 @@
     }
     button:hover { background: #357abd; transform: translateY(-2px); }
 
-    #result { margin-top: 1.5rem; font-size: 1.1rem; min-height: 30px; }
+    #result { margin-top: 1.5rem; font-size: 1.1rem; min-height: 30px; color: var(--green); }
 
-    footer { padding: 2rem; text-align: center; color: var(--muted); font-size: 0.9rem; margin-top: 4rem; }
+    footer { padding: 3rem; text-align: center; color: var(--muted); font-size: 0.9rem; margin-top: 4rem; }
   </style>
 </head>
 <body>
 
-  <!-- NAVIGATION IDENTIQUE -->
+  <!-- MENU À 4 LIENS + AUTH -->
   <nav>
     <div class="nav">
       <div class="logo">Horizon<span>Labs</span></div>
@@ -90,7 +96,7 @@
         <a href="index.html">Accueil</a>
         <a href="portefeuilles.html">Portefeuilles</a>
         <a href="#" class="active">Newsletter</a>
-        <a class="disabled" aria-disabled="true">Abonnements</a>
+        <a href="abonnements.html">Abonnements</a>
 
         <a href="auth.html" id="login-btn" class="auth-button">S'authentifier</a>
 
@@ -105,7 +111,7 @@
 
   <div class="container">
     <h1>Rejoins la Newsletter</h1>
-    <p class="subtitle">Analyse hebdomadaire des marchés, signaux d’achat/vente, et stratégies exclusives — réservé aux membres connectés.</p>
+    <p class="subtitle">Analyse hebdomadaire des marchés, signaux d’achat/vente, et stratégies exclusives.</p>
 
     <div class="newsletter-card">
       <h2>Inscris-toi gratuitement</h2>
@@ -122,7 +128,7 @@
 
   <footer>© 2025 Horizon Labs — Tous droits réservés</footer>
 
-  <!-- Firebase Auth (même code que les autres pages) -->
+  <!-- Firebase Auth + Anti-flash -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script>
@@ -137,6 +143,9 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+
+    // ÉLIMINE LE FLASH (ligne magique)
+    document.body.classList.add('firebase-ready');
 
     auth.onAuthStateChanged(user => {
       const loginBtn = document.getElementById('login-btn');
@@ -157,18 +166,11 @@
       auth.signOut().then(() => location.reload());
     });
 
-    // Formulaire Newsletter (simulation d’envoi — tu pourras connecter à Mailchimp ou ton backend plus tard)
+    // Formulaire Newsletter (simulation)
     document.getElementById('newsletter-form').addEventListener('submit', function(e) {
       e.preventDefault();
       const email = document.getElementById('email').value;
-      const result = document.getElementById('result');
-
-      // Simulation d’envoi réussi
-      result.style.color = '#16a34a';
-      result.textContent = `Parfait ! Tu es inscrit avec ${email}. Tu recevras la prochaine édition ce dimanche.`;
-      
-      // Optionnel : envoie réel via fetch vers ton backend ou Mailchimp
-      // fetch('https://ton-backend.com/api/newsletter', { method: 'POST', body: JSON.stringify({email}) })
+      document.getElementById('result').textContent = `Parfait ! Tu es inscrit avec ${email}. Tu recevras la prochaine édition ce dimanche.`;
     });
   </script>
 </body>
