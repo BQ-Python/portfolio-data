@@ -30,6 +30,11 @@
     #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
     #logout-btn:hover { color: #fff; }
 
+    /* ANTI-FLASH AUTH – C'EST ÇA QUI MANQUAIT ! */
+    #login-btn, #user-menu { visibility: hidden; }
+    body.firebase-ready #login-btn,
+    body.firebase-ready #user-menu { visibility: visible; }
+
     .container { max-width: 1200px; margin: 0 auto; padding: 120px 2rem 80px; text-align: center; }
     h1 { font-size: clamp(2.5rem,5vw,4rem); font-weight: 800; margin-bottom: 1rem; }
     .subtitle { font-size: 1.3rem; color: var(--muted); margin-bottom: 4rem; }
@@ -75,18 +80,18 @@
     <div class="grid" id="grid"></div>
   </div>
 
-  <!-- Auth unique – plus de bug "S'authentifier" quand connecté -->
+  <!-- Authentification partagée + anti-flash -->
   <script src="auth.js"></script>
 
-  <!-- Chargement automatique depuis newsletter.json (tu peux le renommer articles.json si tu veux) -->
+  <!-- Chargement automatique des articles depuis le JSON -->
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
-    const JSON_URL = BASE_URL + "newsletter.json";  // ou "articles.json" si tu le renommes
+    const JSON_URL = BASE_URL + "newsletter.json";
 
-    async function loadContent() {
+    async function loadArticles() {
       try {
         const res = await fetch(JSON_URL + "?t=" + Date.now());
-        if (!res.ok) throw new Error("Fichier JSON introuvable");
+        if (!res.ok) throw new Error("JSON introuvable");
         const data = await res.json();
 
         const grid = document.getElementById('grid');
@@ -118,7 +123,7 @@
       }
     }
 
-    loadContent();
+    loadArticles();
   </script>
 </body>
 </html>
