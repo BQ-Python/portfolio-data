@@ -1,14 +1,22 @@
 [
   {
-    "name": "Portefeuille Croissance",
-    "file": "portefeuille_portefeuille_croissance_v2.csv"
+    "name": "EUROPE 2026",
+    "file": "portefeuille_europe_2026_v2.csv"
   },
   {
-    "name": "Portefeuille Défensif",
-    "file": "portefeuille_portefeuille_defensif_v2.csv"
+    "name": "USA 2026",
+    "file": "portefeuille_usa_2026_v2.csv"
   },
   {
-    "name": "Portefeuille Europe",
-    "file": "portefeuille_europe_v2.csv"
+    "name": "CONVICTION USA",
+    "file": "portefeuille_conviction_usa_v2.csv"
+  },
+  {
+    "name": "CONVICTION MONDE",
+    "file": "portefeuille_conviction_monde_v2.csv"
+  },
+  {
+    "name": "CONVICTION EUROPE",
+    "file": "portefeuille_conviction_europe_v2.csv"
   }
 ]
