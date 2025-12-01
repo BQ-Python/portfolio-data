@@ -6,9 +6,17 @@
   <title>Horizon Labs - Newsletter</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root { --bg: #040512; --accent: #4a90e2; --muted: rgba(255,255,255,0.78); --card-bg: rgba(255,255,255,0.03); --card-strong: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.08); }
+    :root {
+      --bg: #040512;
+      --accent: #4a90e2;
+      --muted: rgba(255,255,255,0.78);
+      --card-bg: rgba(255,255,255,0.03);
+      --card-strong: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.08);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; }
+
     nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; }
     .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
     .logo { font-size: 1.3rem; font-weight: 800; } .logo span { color: var(--accent); }
@@ -16,9 +24,16 @@
     .links a { color: var(--muted); text-decoration: none; font-weight: 500; transition: all .25s; }
     .links a:hover, .links a.active { color: #fff; }
     .auth-button { background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; }
+    #user-menu { display: none; align-items: center; gap: 12px; }
+    #user-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); }
+    #user-name { font-weight: 600; }
+    #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
+    #logout-btn:hover { color: #fff; }
+
     .container { max-width: 1200px; margin: 0 auto; padding: 120px 2rem 80px; text-align: center; }
     h1 { font-size: clamp(2.5rem,5vw,4rem); font-weight: 800; margin-bottom: 1rem; }
     .subtitle { font-size: 1.3rem; color: var(--muted); margin-bottom: 4rem; }
+
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; margin-top: 3rem; }
     .newsletter-card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all .4s; }
     .newsletter-card:hover { transform: translateY(-12px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
@@ -42,7 +57,14 @@
         <a href="portefeuilles.html">Portefeuilles</a>
         <a href="newsletter.html" class="active">Newsletter</a>
         <a href="abonnements.html">Abonnements</a>
-        <a href="auth.html" class="auth-button">S'authentifier</a>
+
+        <a href="auth.html" id="login-btn" class="auth-button">S'authentifier</a>
+
+        <div id="user-menu">
+          <img id="user-photo" src="" alt="Photo">
+          <span id="user-name"></span>
+          <button id="logout-btn">Déconnexion</button>
+        </div>
       </div>
     </div>
   </nav>
@@ -53,20 +75,24 @@
     <div class="grid" id="grid"></div>
   </div>
 
+  <!-- Auth unique (plus de code Firebase dupliqué) -->
+  <script src="auth.js"></script>
+
+  <!-- Chargement automatique des newsletters depuis newsletter.json -->
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
     const JSON_URL = BASE_URL + "newsletter.json";
 
-    async function load() {
+    async function loadNewsletters() {
       try {
         const res = await fetch(JSON_URL + "?t=" + Date.now());
-        if (!res.ok) throw new Error("JSON introuvable");
+        if (!res.ok) throw new Error("newsletter.json introuvable");
         const data = await res.json();
 
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
 
-        // Tri automatique par date (plus récent en haut)
+        // Tri par date décroissante
         data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         data.forEach(n => {
@@ -83,17 +109,17 @@
             </div>
             <div class="excerpt">${n.excerpt}</div>
             <a href="${n.file}" target="_blank" class="download-btn">
-              Télécharger le PDF →
+              Télécharger le PDF
             </a>
           `;
           grid.appendChild(card);
         });
       } catch (e) {
-        document.getElementById('grid').innerHTML = '<p style="color:#dc2626;grid-column:1/-1;">Erreur de chargement. Vérifie newsletter.json</p>';
+        document.getElementById('grid').innerHTML = '<p style="color:#dc2626;grid-column:1/-1;">Erreur de chargement des newsletters.</p>';
       }
     }
 
-    load();
+    loadNewsletters();
   </script>
 </body>
 </html>
