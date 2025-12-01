@@ -26,7 +26,7 @@ PORTFOLIOS_JSON = ROOT / "portfolios.json"
 # --- Paramètres globaux ---
 SP500 = "^GSPC"
 NASDAQ = "^IXIC"
-START_DATE = "2022-01-01"
+START_DATE = "2024-01-01"
 RISQUE_FREE_ANNUAL = 0.0  # en %
 BENCHMARKS = [SP500, NASDAQ]
 
