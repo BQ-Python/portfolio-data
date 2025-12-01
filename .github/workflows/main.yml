@@ -2,9 +2,9 @@ name: Mise à jour quotidienne + Déploiement GitHub Pages
 
 on:
   schedule:
-    - cron: '0 18 * * *'   # 19h00 France (hiver) → UTC+1
-    - cron: '0 17 * * *'   # 19h00 France (été)   → UTC+2
-  workflow_dispatch:       # Tu peux lancer manuellement
+    - cron: '0 18 * * *'   # 19h00 France hiver (UTC+1)
+    - cron: '0 17 * * *'   # 19h00 France été   (UTC+2)
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,16 +16,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  generate-and-deploy:
+  update-and-deploy:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: https://bq-python.github.io/portfolio-data/
+
     steps:
       - name: Checkout du repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -37,31 +36,27 @@ jobs:
           python -m pip install --upgrade pip
           pip install yfinance pandas numpy --quiet
 
-      - name: Générer les CSV de performance
+      # LE VRAI SCRIPT : scripts/update_performances.py
+      - name: Lancer la mise à jour des portefeuilles
         run: |
-          python generate_portfolios.py
-          echo "Génération terminée !"
-          ls -la *.csv | head -20
-
-      - name: Vérifier que les fichiers sont bien là
-        run: |
-          echo "Fichiers générés :"
-          ls -la portefeuille_*_v2.csv || echo "Aucun CSV trouvé !"
-          ls -la portfolios.json composition_portefeuilles.csv
+          python scripts/update_performances.py
+          echo "Mise à jour terminée !"
+          echo "Fichiers générés/modifiés :"
+          ls -la portefeuille_*_v2.csv 2>/dev/null || echo "Aucun CSV trouvé (normal si première exécution)"
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
 
-      - name: Upload tout le site (HTML + CSV + JSON)
+      - name: Upload tout le repo sur GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
 
-      - name: Déployer sur GitHub Pages
+      - name: Déployer le site
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Message final
+      - name: Succès
         run: |
-          echo "Déploiement réussi !"
-          echo "URL du site → https://bq-python.github.io/portfolio-data/portefeuilles.html"
+          echo "Site mis à jour avec succès !"
+          echo "Lien → https://bq-python.github.io/portfolio-data/portefeuilles.html"
