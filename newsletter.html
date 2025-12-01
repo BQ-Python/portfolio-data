@@ -6,42 +6,29 @@
   <title>Horizon Labs - Newsletter</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #040512;
-      --accent: #4a90e2;
-      --muted: rgba(255,255,255,0.78);
-      --card-bg: rgba(255,255,255,0.03);
-      --card-strong: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.08);
-      --green: #16a34a;
-    }
+    :root { --bg: #040512; --accent: #4a90e2; --muted: rgba(255,255,255,0.78); --card-bg: rgba(255,255,255,0.03); --card-strong: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.08); }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
-
-    /* NAVIGATION (identique à portefeuilles.html) */
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; }
     nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; }
     .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
-    .logo { font-size: 1.3rem; font-weight: 800; }
-    .logo span { color: var(--accent); }
+    .logo { font-size: 1.3rem; font-weight: 800; } .logo span { color: var(--accent); }
     .links { display: flex; align-items: center; gap: 24px; }
     .links a { color: var(--muted); text-decoration: none; font-weight: 500; transition: all .25s; }
     .links a:hover, .links a.active { color: #fff; }
     .auth-button { background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; }
-
     .container { max-width: 1200px; margin: 0 auto; padding: 120px 2rem 80px; text-align: center; }
     h1 { font-size: clamp(2.5rem,5vw,4rem); font-weight: 800; margin-bottom: 1rem; }
     .subtitle { font-size: 1.3rem; color: var(--muted); margin-bottom: 4rem; }
-
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; margin-top: 3rem; }
-    .newsletter-card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all .4s; cursor: pointer; }
+    .newsletter-card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all .4s; }
     .newsletter-card:hover { transform: translateY(-12px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
     .card-header { background: linear-gradient(135deg, #02030a, #040512); padding: 2rem; text-align: center; }
-    .card-header h3 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .author { font-size: 1rem; color: var(--accent); font-weight: 600; }
+    .card-header h3 { font-size: 1.65rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .author { font-size: 1.1rem; color: var(--accent); font-weight: 600; }
     .meta { padding: 1.5rem 2rem 1rem; display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 0.95rem; }
-    .read-time { background: rgba(74,144,226,0.15); padding: 4px 12px; border-radius: 20px; }
-    .excerpt { padding: 0 2rem 2rem; color: var(--muted); font-size: 1rem; line-height: 1.6; }
-    .download-btn { display: block; margin: 0 2rem 2rem; padding: 14px; background: var(--accent); color: #fff; text-align: center; border-radius: 12px; font-weight: 600; text-decoration: none; transition: .3s; }
+    .read-time { background: rgba(74,144,226,0.15); padding: 6px 14px; border-radius: 20px; font-weight: 500; }
+    .excerpt { padding: 0 2rem 2rem; color: var(--muted); font-size: 1.05rem; line-height: 1.65; }
+    .download-btn { display: block; margin: 0 2rem 2rem; padding: 16px; background: var(--accent); color: #fff; text-align: center; border-radius: 12px; font-weight: 700; text-decoration: none; transition: .3s; }
     .download-btn:hover { background: #357abd; transform: scale(1.02); }
   </style>
 </head>
@@ -61,24 +48,26 @@
   </nav>
 
   <div class="container">
-    <h1>Nos Newsletters</h1>
-    <p class="subtitle">Analyses exclusives, convictions fortes, chaque mois.</p>
-    <div class="grid" id="newsletter-grid"></div>
+    <h1>Nos Newsletters & Rapports</h1>
+    <p class="subtitle">Analyses exclusives, rapports stratégiques et convictions mensuelles.</p>
+    <div class="grid" id="grid"></div>
   </div>
 
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
-    const NEWSLETTER_JSON = BASE_URL + "newsletter.json";
+    const JSON_URL = BASE_URL + "newsletter.json";
 
-    async function loadNewsletters() {
+    async function load() {
       try {
-        const res = NEWSLETTER_JSON + "?t=" + Date.now();
-        const data = await fetch(res).then(r => r.json());
+        const res = await fetch(JSON_URL + "?t=" + Date.now());
+        if (!res.ok) throw new Error("JSON introuvable");
+        const data = await res.json();
 
-        const grid = document.getElementById('newsletter-grid');
+        const grid = document.getElementById('grid');
         grid.innerHTML = '';
 
-        data.sort((a, b) => new Date(b.date) - new Date(a.date)); // plus récent en haut
+        // Tri automatique par date (plus récent en haut)
+        data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         data.forEach(n => {
           const card = document.createElement('div');
@@ -94,18 +83,17 @@
             </div>
             <div class="excerpt">${n.excerpt}</div>
             <a href="${n.file}" target="_blank" class="download-btn">
-              Télécharger le PDF
+              Télécharger le PDF →
             </a>
           `;
           grid.appendChild(card);
         });
       } catch (e) {
-        console.error(e);
-        document.getElementById('newsletter-grid').innerHTML = '<p style="color:var(--red);grid-column:1/-1;">Erreur de chargement des newsletters.</p>';
+        document.getElementById('grid').innerHTML = '<p style="color:#dc2626;grid-column:1/-1;">Erreur de chargement. Vérifie newsletter.json</p>';
       }
     }
 
-    loadNewsletters();
+    load();
   </script>
 </body>
 </html>
