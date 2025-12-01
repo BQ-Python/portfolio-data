@@ -23,7 +23,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 
-    /* NAVIGATION */
     nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; }
     .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
     .logo { font-size: 1.3rem; font-weight: 800; }
@@ -131,7 +130,7 @@
     </div>
   </div>
 
-  <!-- Firebase Auth -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script>
@@ -164,7 +163,7 @@
     document.getElementById('logout-btn').addEventListener('click', () => auth.signOut().then(() => location.reload()));
   </script>
 
-  <!-- SCRIPT PRINCIPAL COMPLET -->
+  <!-- SCRIPT PRINCIPAL CORRIGÉ - PARSING ROBUSTE AVEC NOMS DE COLONNES -->
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
     const PORTFOLIOS_JSON = BASE_URL + "portfolios.json";
@@ -180,50 +179,66 @@
       [mainChart, detailChart, varChart, pieChart].forEach(c => c?.destroy());
     }
 
-    function parseLine(line) {
+    // PARSING ROBUSTE : utilise les noms de colonnes au lieu d'indices fixes
+    function parseLine(line, header) {
       const cols = line.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
-      if (cols.length < 19) return null;
-      const dateStr = cols[0];
+      if (cols.length < header.length) return null;
+
+      const rowObj = {};
+      header.forEach((h, i) => rowObj[h] = cols[i] || '');
+
+      const dateStr = rowObj['Date'];
       if (!dateStr) return null;
       const date = new Date(dateStr);
       if (isNaN(date)) return null;
 
       return {
         date,
-        port100: parseFloat(cols[1]) || 100,
-        sp100: parseFloat(cols[2]) || 100,
-        nas100: parseFloat(cols[3]) || 100,
-        volM: parseFloat(cols[6]) || 0,
-        ddC: parseFloat(cols[7]) || 0,
-        ddM: parseFloat(cols[8]) || 0,
-        dailyRet: (parseFloat(cols[9]) || 0) / 100,
-        sharpe: parseFloat(cols[18]) || 0
+        port100: parseFloat(rowObj['Portfolio_CumReturn']) || 100,
+        sp100: parseFloat(rowObj['SP500_CumReturn']) || 100,
+        nas100: parseFloat(rowObj['NASDAQ_CumReturn']) || 100,
+        volM: parseFloat(rowObj['Vol_Monthly']) || 0,
+        ddC: parseFloat(rowObj['Drawdown_Current']) || 0,
+        ddM: parseFloat(rowObj['Drawdown_Max']) || 0,
+        dailyRet: (parseFloat(rowObj['Return_Port_Daily']) || 0) / 100,
+        sharpe: parseFloat(rowObj['Sharpe_Monthly_Rolling']) || 0
       };
     }
 
     async function loadPortfolios() {
       try {
         const res = await fetch(PORTFOLIOS_JSON + '?t=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${PORTFOLIOS_JSON}`);
         PORTFOLIOS = await res.json();
         PORTFOLIOS = PORTFOLIOS.map(p => ({ ...p, csv: BASE_URL + p.file }));
+        console.log('Portfolios chargés:', PORTFOLIOS.length);  // Debug
         await loadCards();
       } catch (e) {
-        document.getElementById('grid').innerHTML = '<p style="color:var(--red);grid-column:1/-1;text-align:center;">Erreur de chargement des portefeuilles.</p>';
+        console.error("Erreur portfolios.json:", e);
+        document.getElementById('grid').innerHTML = '<p style="color:var(--red);grid-column:1/-1;text-align:center;">Erreur chargement portfolios.</p>';
       }
     }
 
     async function loadCards() {
       const grid = document.getElementById('grid');
-      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);">Chargement des performances...</p>';
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);">Chargement...</p>';
       const currentYear = new Date().getFullYear();
+      let cardCount = 0;
 
       for (const p of PORTFOLIOS) {
         try {
-          const text = await fetch(p.csv + '?t=' + Date.now()).then(r => r.text());
+          const res = await fetch(p.csv + '?t=' + Date.now());
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${p.csv}`);
+          const text = await res.text();
           const lines = text.trim().split('\n');
-          if (lines.length < 2) continue;
-          const data = lines.slice(1).map(parseLine).filter(Boolean);
-          if (data.length === 0) continue;
+          if (lines.length < 2) throw new Error('CSV vide');
+
+          const header = lines[0].split(',').map(h => h.trim());
+          const data = lines.slice(1).map(line => parseLine(line, header)).filter(Boolean);
+          if (data.length === 0) {
+            console.warn('Parsing vide pour', p.name, '- header:', header);  // Debug
+            continue;
+          }
 
           const last = data[data.length - 1];
           const first = data[0];
@@ -248,12 +263,16 @@
               <div class="kpi"><strong>${avgSharpe.toFixed(2)}</strong><small>Sharpe</small></div>
             </div>`;
           grid.appendChild(card);
+          cardCount++;
         } catch (e) {
-          console.error("Erreur carte", p.name, e);
+          console.error(`Erreur ${p.name}:`, e);
         }
       }
-      if (!grid.querySelector('.card')) {
+
+      if (cardCount === 0) {
         grid.innerHTML = '<p style="color:var(--red);grid-column:1/-1;text-align:center;">Aucun portefeuille disponible pour le moment.</p>';
+      } else {
+        console.log(cardCount, 'cartes affichées');  // Debug
       }
     }
 
@@ -265,15 +284,20 @@
       document.body.style.overflow = 'hidden';
 
       try {
-        const text = await fetch(url + '?t=' + Date.now()).then(r => r.text());
-        rawData = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
+        const res = await fetch(url + '?t=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const lines = text.trim().split('\n');
+        const header = lines[0].split(',').map(h => h.trim());
+        rawData = lines.slice(1).map(line => parseLine(line, header)).filter(Boolean);
+        console.log('Data modale:', rawData.length, 'lignes');  // Debug
         updateKPIs();
         drawMainChart();
         drawDetailChart();
         drawVaRChart();
         await loadComposition(name);
       } catch (e) {
-        console.error("Erreur ouverture modal", e);
+        console.error("Erreur modale:", e);
       }
     }
 
@@ -420,7 +444,9 @@
 
     async function loadComposition(name) {
       try {
-        const text = await fetch(COMP_CSV + '?t=' + Date.now()).then(r => r.text());
+        const res = await fetch(COMP_CSV + '?t=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
         const lines = text.trim().split('\n');
         const header = lines[0].split(',').map(h => h.trim());
         const rows = lines.slice(1);
@@ -455,6 +481,7 @@
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#fff', font: { size: 13 } } } } }
         });
       } catch (e) {
+        console.error("Erreur composition:", e);
         document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--muted);">Composition indisponible</td></tr>';
       }
     }
