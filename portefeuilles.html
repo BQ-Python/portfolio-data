@@ -24,7 +24,7 @@
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 
     /* NAVIGATION */
-    nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
+    nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; }
     .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
     .logo { font-size: 1.3rem; font-weight: 800; }
     .logo span { color: var(--accent); }
@@ -38,7 +38,6 @@
     #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
     #logout-btn:hover { color: #fff; }
 
-    /* ÉLIMINE LE FLASH D'AUTH */
     #login-btn, #user-menu { visibility: hidden; }
     body.firebase-ready #login-btn, body.firebase-ready #user-menu { visibility: visible; }
 
@@ -83,7 +82,6 @@
 </head>
 <body>
 
-  <!-- MENU COMPLET + AUTH -->
   <nav>
     <div class="nav">
       <div class="logo">Horizon<span>Labs</span></div>
@@ -92,9 +90,7 @@
         <a href="portefeuilles.html" class="active">Portefeuilles</a>
         <a href="newsletter.html">Newsletter</a>
         <a href="abonnements.html">Abonnements</a>
-
         <a href="auth.html" id="login-btn" class="auth-button">S'authentifier</a>
-
         <div id="user-menu">
           <img id="user-photo" src="" alt="Photo">
           <span id="user-name"></span>
@@ -109,7 +105,6 @@
     <div class="grid" id="grid"></div>
   </div>
 
-  <!-- Modal -->
   <div id="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -136,7 +131,7 @@
     </div>
   </div>
 
-  <!-- Firebase Auth + Anti-flash -->
+  <!-- Firebase Auth -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script>
@@ -151,7 +146,6 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-
     document.body.classList.add('firebase-ready');
 
     auth.onAuthStateChanged(user => {
@@ -167,12 +161,10 @@
         userMenu.style.display = 'none';
       }
     });
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      auth.signOut().then(() => location.reload());
-    });
+    document.getElementById('logout-btn').addEventListener('click', () => auth.signOut().then(() => location.reload()));
   </script>
 
-  <!-- CODE PORTFEUILLES COMPLET ET CORRIGÉ -->
+  <!-- SCRIPT PRINCIPAL COMPLET -->
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
     const PORTFOLIOS_JSON = BASE_URL + "portfolios.json";
@@ -191,44 +183,46 @@
     function parseLine(line) {
       const cols = line.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
       if (cols.length < 19) return null;
-      const date = new Date(cols[0]);
+      const dateStr = cols[0];
+      if (!dateStr) return null;
+      const date = new Date(dateStr);
       if (isNaN(date)) return null;
-
-      const port100 = parseFloat(cols[1]) || 100;
-      const sp100 = parseFloat(cols[2]) || 100;
-      const nas100 = parseFloat(cols[3]) || 100;
-      const dailyRet = parseFloat(cols[9]) / 100 || 0;
 
       return {
         date,
-        port100, sp100, nas100,
-        port: port100 - 100,
-        sp: sp100 - 100,
-        nas: nas100 - 100,
+        port100: parseFloat(cols[1]) || 100,
+        sp100: parseFloat(cols[2]) || 100,
+        nas100: parseFloat(cols[3]) || 100,
         volM: parseFloat(cols[6]) || 0,
         ddC: parseFloat(cols[7]) || 0,
         ddM: parseFloat(cols[8]) || 0,
-        sharpe: parseFloat(cols[18]) || 0,
-        dailyRet
+        dailyRet: (parseFloat(cols[9]) || 0) / 100,
+        sharpe: parseFloat(cols[18]) || 0
       };
     }
 
     async function loadPortfolios() {
-      const res = await fetch(PORTFOLIOS_JSON);
-      PORTFOLIOS = await res.json();
-      PORTFOLIOS = PORTFOLIOS.map(p => ({ ...p, csv: BASE_URL + p.file }));
-      await loadCards();
+      try {
+        const res = await fetch(PORTFOLIOS_JSON + '?t=' + Date.now());
+        PORTFOLIOS = await res.json();
+        PORTFOLIOS = PORTFOLIOS.map(p => ({ ...p, csv: BASE_URL + p.file }));
+        await loadCards();
+      } catch (e) {
+        document.getElementById('grid').innerHTML = '<p style="color:var(--red);grid-column:1/-1;text-align:center;">Erreur de chargement des portefeuilles.</p>';
+      }
     }
 
     async function loadCards() {
       const grid = document.getElementById('grid');
-      grid.innerHTML = '';
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);">Chargement des performances...</p>';
       const currentYear = new Date().getFullYear();
 
       for (const p of PORTFOLIOS) {
         try {
-          const text = await fetch(p.csv).then(r => r.text());
-          const data = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
+          const text = await fetch(p.csv + '?t=' + Date.now()).then(r => r.text());
+          const lines = text.trim().split('\n');
+          if (lines.length < 2) continue;
+          const data = lines.slice(1).map(parseLine).filter(Boolean);
           if (data.length === 0) continue;
 
           const last = data[data.length - 1];
@@ -238,9 +232,7 @@
           const ytd = ((last.port100 / firstYTD.port100) - 1) * 100;
           const years = (last.date - first.date) / (1000 * 60 * 60 * 24 * 365.25);
           const cagr = years > 0 ? (Math.pow(last.port100 / 100, 1 / years) - 1) * 100 : 0;
-          const avgSharpe = data.filter(d => d.sharpe).length > 0 
-            ? data.reduce((s, d) => s + d.sharpe, 0) / data.filter(d => d.sharpe).length 
-            : 0;
+          const avgSharpe = data.reduce((s, d) => s + (d.sharpe || 0), 0) / data.length;
 
           const card = document.createElement('div');
           card.className = 'card';
@@ -248,15 +240,20 @@
           card.innerHTML = `
             <div class="card-header"><h3>${p.name}</h3></div>
             <div class="metrics">
-              <div class="kpi"><strong>${last.port.toFixed(1)}%</strong><small>Perf. cumulée</small></div>
+              <div class="kpi"><strong>${(last.port100 - 100).toFixed(1)}%</strong><small>Perf. cumulée</small></div>
               <div class="kpi ${ytd >= 0 ? 'green' : 'red'}"><strong>${ytd.toFixed(1)}%</strong><small>YTD ${currentYear}</small></div>
-              <div class="kpi"><strong>${cagr.toFixed(1)}%</strong><small>Perf. annualisée</small></div>
-              <div class="kpi"><strong>${last.volM.toFixed(1)}%</strong><small>Volatilité 21j</small></div>
-              <div class="kpi red"><strong>${last.ddM.toFixed(1)}%</strong><small>Drawdown max</small></div>
-              <div class="kpi"><strong>${avgSharpe.toFixed(2)}</strong><small>Sharpe moyen</small></div>
+              <div class="kpi"><strong>${cagr.toFixed(1)}%</strong><small>CAGR</small></div>
+              <div class="kpi"><strong>${last.volM.toFixed(1)}%</strong><small>Vol 21j</small></div>
+              <div class="kpi red"><strong>${last.ddM.toFixed(1)}%</strong><small>Max DD</small></div>
+              <div class="kpi"><strong>${avgSharpe.toFixed(2)}</strong><small>Sharpe</small></div>
             </div>`;
           grid.appendChild(card);
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error("Erreur carte", p.name, e);
+        }
+      }
+      if (!grid.querySelector('.card')) {
+        grid.innerHTML = '<p style="color:var(--red);grid-column:1/-1;text-align:center;">Aucun portefeuille disponible pour le moment.</p>';
       }
     }
 
@@ -267,14 +264,17 @@
       document.getElementById('modal').classList.add('active');
       document.body.style.overflow = 'hidden';
 
-      const text = await fetch(url).then(r => r.text());
-      rawData = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
-
-      updateKPIs();
-      drawMainChart();
-      drawDetailChart();
-      drawVaRChart();
-      await loadComposition(name);
+      try {
+        const text = await fetch(url + '?t=' + Date.now()).then(r => r.text());
+        rawData = text.trim().split('\n').slice(1).map(parseLine).filter(Boolean);
+        updateKPIs();
+        drawMainChart();
+        drawDetailChart();
+        drawVaRChart();
+        await loadComposition(name);
+      } catch (e) {
+        console.error("Erreur ouverture modal", e);
+      }
     }
 
     function updateKPIs() {
@@ -286,48 +286,43 @@
       const ytd = ((last.port100 / firstYTD.port100) - 1) * 100;
       const years = (last.date - first.date) / (1000 * 60 * 60 * 24 * 365.25);
       const cagr = years > 0 ? (Math.pow(last.port100 / 100, 1 / years) - 1) * 100 : 0;
-
-      const validSharpe = rawData.filter(d => d.sharpe != null && !isNaN(d.sharpe));
-      const avgSharpe = validSharpe.length > 0 
-        ? validSharpe.reduce((s, d) => s + d.sharpe, 0) / validSharpe.length 
-        : 0;
+      const avgSharpe = rawData.reduce((s, d) => s + (d.sharpe || 0), 0) / rawData.length;
 
       document.getElementById('kpi-bar').innerHTML = `
-        <div class="kpi-big"><strong>${last.port.toFixed(1)}%</strong><div>Performance cumulée</div></div>
+        <div class="kpi-big"><strong>${(last.port100 - 100).toFixed(1)}%</strong><div>Performance cumulée</div></div>
         <div class="kpi-big ${ytd >= 0 ? '' : 'red'}"><strong>${ytd.toFixed(1)}%</strong><div>YTD ${currentYear}</div></div>
-        <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>Performance annualisée</div></div>
+        <div class="kpi-big"><strong>${cagr.toFixed(1)}%</strong><div>CAGR</div></div>
         <div class="kpi-big"><strong>${last.volM.toFixed(1)}%</strong><div>Volatilité (21j)</div></div>
         <div class="kpi-big red"><strong>${last.ddM.toFixed(1)}%</strong><div>Drawdown max</div></div>
-        <div class="kpi-big"><strong>${avgSharpe.toFixed(2)}</strong><div>Sharpe moyen (21j)</div></div>`;
+        <div class="kpi-big"><strong>${avgSharpe.toFixed(2)}</strong><div>Sharpe moyen</div></div>`;
     }
 
-    function createButtons(id, chart) {
-      const div = document.getElementById(id);
+    function createButtons(containerId, chartInstance) {
+      const div = document.getElementById(containerId);
       div.innerHTML = '';
-      ['1M', '3M', '6M', 'YTD', '1A', '3A', 'Tout'].forEach((l, i) => {
-        const b = document.createElement('button');
-        b.className = 'chart-btn' + (i === 6 ? ' active' : '');
-        b.textContent = l;
-        b.onclick = () => {
-          div.querySelectorAll('.chart-btn').forEach(x => x.classList.remove('active'));
-          b.classList.add('active');
-          if (l === 'Tout') chart.resetZoom();
-          else if (l === 'YTD') chart.zoomScale('x', { min: new Date(`${new Date().getFullYear()}-01-01`).getTime(), max: Date.now() });
+      ['1M', '3M', '6M', 'YTD', '1A', '3A', 'Tout'].forEach((label, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'chart-btn' + (i === 6 ? ' active' : '');
+        btn.textContent = label;
+        btn.onclick = () => {
+          div.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (label === 'Tout') chartInstance.resetZoom();
+          else if (label === 'YTD') chartInstance.zoomScale('x', { min: new Date(`${new Date().getFullYear()}-01-01`).getTime(), max: Date.now() });
           else {
-            const days = { '1M': 30, '3M': 90, '6M': 180, '1A': 365, '3A': 1095 }[l];
-            chart.zoomScale('x', { min: Date.now() - days * 86400000, max: Date.now() });
+            const days = { '1M': 30, '3M': 90, '6M': 180, '1A': 365, '3A': 1095 }[label];
+            chartInstance.zoomScale('x', { min: Date.now() - days * 86400000, max: Date.now() });
           }
         };
-        div.appendChild(b);
+        div.appendChild(btn);
       });
     }
 
     function drawMainChart() {
       if (mainChart) mainChart.destroy();
-
-      const allValues = [...rawData.map(d => d.port), ...rawData.map(d => d.sp), ...rawData.map(d => d.nas)];
-      const minVal = Math.min(...allValues);
-      const maxVal = Math.max(...allValues);
+      const values = [...rawData.map(d => d.port100 - 100), ...rawData.map(d => d.sp100 - 100), ...rawData.map(d => d.nas100 - 100)];
+      const minVal = Math.min(...values);
+      const maxVal = Math.max(...values);
       const range = Math.max(maxVal - minVal, 30);
       const yMin = Math.floor(minVal - range * 0.15);
       const yMax = Math.ceil(maxVal + range * 0.10);
@@ -337,9 +332,9 @@
         data: {
           labels: rawData.map(d => d.date),
           datasets: [
-            { label: currentPortfolioName, data: rawData.map(d => d.port), borderColor: '#4a90e2', backgroundColor: 'rgba(74,144,226,0.08)', fill: true, tension: 0.38, borderWidth: 4.5, pointRadius: 0 },
-            { label: 'S&P 500', data: rawData.map(d => d.sp), borderColor: 'rgba(255,255,255,0.5)', borderWidth: 2.8, borderDash: [10, 7], tension: 0.38, pointRadius: 0 },
-            { label: 'NASDAQ 100', data: rawData.map(d => d.nas), borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2.5, borderDash: [14, 9], tension: 0.38, pointRadius: 0 }
+            { label: currentPortfolioName, data: rawData.map(d => d.port100 - 100), borderColor: '#4a90e2', backgroundColor: 'rgba(74,144,226,0.08)', fill: true, tension: 0.38, borderWidth: 4.5, pointRadius: 0 },
+            { label: 'S&P 500', data: rawData.map(d => d.sp100 - 100), borderColor: 'rgba(255,255,255,0.5)', borderWidth: 2.8, borderDash: [10, 7], tension: 0.38, pointRadius: 0 },
+            { label: 'NASDAQ 100', data: rawData.map(d => d.nas100 - 100), borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2.5, borderDash: [14, 9], tension: 0.38, pointRadius: 0 }
           ]
         },
         options: {
@@ -347,12 +342,12 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { position: 'top', labels: { font: { size: 14, weight: 600 }, color: '#fff' } },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` }, backgroundColor: 'rgba(4,5,18,0.9)', titleColor: '#fff', bodyColor: '#fff' },
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` }, backgroundColor: 'rgba(4,5,18,0.9)' },
             zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } }
           },
           scales: {
             x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yyyy' } }, grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.7)' } },
-            y: { min: yMin, max: yMax, ticks: { callback: v => v + '%', stepSize: 10, color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+            y: { min: yMin, max: yMax, ticks: { callback: v => v + '%', color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.06)' } }
           }
         }
       });
@@ -382,33 +377,29 @@
 
     function drawVaRChart() {
       if (varChart) varChart.destroy();
-
       const returns = rawData.map(d => d.dailyRet);
       const var95 = [], var99 = [];
-
       for (let i = 29; i < returns.length; i++) {
         const window = returns.slice(i - 29, i + 1);
         const sorted = window.slice().sort((a, b) => a - b);
         var95.push(sorted[Math.floor(0.05 * sorted.length)] * 100);
         var99.push(sorted[Math.floor(0.01 * sorted.length)] * 100);
       }
-
-      const allVaR = [...var95, ...var99];
-      const minV = Math.min(...allVaR);
-      const maxV = Math.max(...allVaR);
+      const labels = rawData.slice(29).map(d => d.date);
+      const all = [...var95, ...var99];
+      const minV = Math.min(...all);
+      const maxV = Math.max(...all);
       const rangeV = maxV - minV || 10;
       const yMin = Math.floor(minV - rangeV * 0.2);
       const yMax = Math.ceil(maxV + rangeV * 0.1);
-
-      const labels = rawData.slice(29).map(d => d.date);
 
       varChart = new Chart(document.getElementById('varChart'), {
         type: 'line',
         data: {
           labels,
           datasets: [
-            { label: 'VaR 95% (30 jours)', data: var95, borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 },
-            { label: 'VaR 99% (30 jours)', data: var99, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 }
+            { label: 'VaR 95% (30j)', data: var95, borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 },
+            { label: 'VaR 99% (30j)', data: var99, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.12)', fill: true, tension: 0.4, borderWidth: 3.5 }
           ]
         },
         options: {
@@ -416,11 +407,11 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { position: 'top', labels: { color: '#fff' } },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` }, backgroundColor: 'rgba(4,5,18,0.9)', titleColor: '#fff', bodyColor: '#fff' }
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%` }, backgroundColor: 'rgba(4,5,18,0.9)' }
           },
           scales: {
             x: { type: 'time', time: { unit: 'month' }, ticks: { color: 'rgba(255,255,255,0.7)' } },
-            y: { min: yMin, max: yMax > 0 ? yMax : 0, ticks: { callback: v => v.toFixed(1) + '%', stepSize: 2, color: 'rgba(255,255,255,0.7)' } }
+            y: { min: yMin, max: yMax > 0 ? yMax : 0, ticks: { callback: v => v.toFixed(1) + '%', color: 'rgba(255,255,255,0.7)' } }
           }
         }
       });
@@ -429,31 +420,42 @@
 
     async function loadComposition(name) {
       try {
-        const text = await fetch(COMP_CSV).then(r => r.text());
-        const rows = text.trim().split('\n').slice(1);
-        const relevant = rows.filter(r => r.split(',')[0].trim() === name);
+        const text = await fetch(COMP_CSV + '?t=' + Date.now()).then(r => r.text());
+        const lines = text.trim().split('\n');
+        const header = lines[0].split(',').map(h => h.trim());
+        const rows = lines.slice(1);
+
+        const pfIdx = header.indexOf('Portefeuille');
+        const actifIdx = header.indexOf('Actif');
+        const tickerIdx = header.indexOf('Ticker');
+        const poidsIdx = header.indexOf('Pondération');
+
+        const relevant = rows
+          .map(r => r.split(',').map(c => c.trim().replace(/^"|"$/g, '')))
+          .filter(cols => cols[pfIdx] === name);
+
         const table = document.getElementById('compTable');
         table.innerHTML = '';
-        const labels = [], values = [], colors = ['#4a90e2','#6aa9f2','#8ac3ff','#2a76c8','#0a5cae','#004494','#00307a','#007bff','#0066cc','#005599'];
+        const labels = [], values = [];
+        const colors = ['#4a90e2','#6aa9f2','#8ac3ff','#2a76c8','#0a5cae','#004494','#00d4ff','#00a1c7','#ff6b6b','#ff8787','#66bb6a','#81c784','#ff5252','#43a047','#c92a2a','#2e7d32','#ff1744','#8b1a1a','#007bff','#0066cc'];
 
-        relevant.forEach(r => {
-          const c = r.split(',');
-          const asset = c[1]?.trim(), ticker = c[2]?.trim(), weight = c[3]?.trim();
-          if (asset && weight) {
-            table.innerHTML += `<tr><td><strong>${asset}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${weight}</td></tr>`;
-            labels.push(asset);
-            values.push(parseFloat(weight.replace('%', '')) || 0);
-          }
+        relevant.forEach((cols, i) => {
+          const actif = cols[actifIdx] || 'Inconnu';
+          const ticker = cols[tickerIdx] || '';
+          const poids = cols[poidsIdx] || '0%';
+          table.innerHTML += `<tr><td><strong>${actif}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${poids}</td></tr>`;
+          labels.push(actif);
+          values.push(parseFloat(poids.replace('%', '')) || 0);
         });
 
         if (pieChart) pieChart.destroy();
         pieChart = new Chart(document.getElementById('pieChart'), {
           type: 'doughnut',
           data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: 'rgba(255,255,255,0.1)' }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#fff' } } } }
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#fff', font: { size: 13 } } } } }
         });
       } catch (e) {
-        document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--muted);">Composition en cours de mise à jour...</td></tr>';
+        document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--muted);">Composition indisponible</td></tr>';
       }
     }
 
