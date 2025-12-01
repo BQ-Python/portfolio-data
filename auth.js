@@ -33,7 +33,7 @@ auth.onAuthStateChanged(user => {
     }
 
     if (userPhoto) {
-      userPhoto.src = user.photoURL || 
+      userPhoto.src = user.photoURL ||
         `https://via.placeholder.com/36/4a90e2/ffffff?text=${(user.displayName?.[0] || 'H').toUpperCase()}`;
     }
   } else {
