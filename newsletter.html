@@ -31,15 +31,18 @@
     #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
     #logout-btn:hover { color: #fff; }
 
-    /* ANTI-FLASH OBLIGATOIRE */
-    #login-btn, #user-menu { visibility: hidden; }
+    /* ANTI-FLASH + BOUTON PAR DÉFAUT */
+    #login-btn { 
+      display: block !important;   /* ← C'EST ÇA QUI MANQUAIT */
+      visibility: hidden; 
+    }
+    #user-menu { visibility: hidden; }
     body.firebase-ready #login-btn,
     body.firebase-ready #user-menu { visibility: visible; }
 
     .container { max-width: 1200px; margin: 0 auto; padding: 120px 2rem 80px; text-align: center; }
     h1 { font-size: clamp(2.5rem,5vw,4rem); font-weight: 800; margin-bottom: 1rem; }
     .subtitle { font-size: 1.3rem; color: var(--muted); margin-bottom: 4rem; }
-
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; margin-top: 3rem; }
     .card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all .4s; }
     .card:hover { transform: translateY(-12px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
@@ -81,10 +84,8 @@
     <div class="grid" id="grid"></div>
   </div>
 
-  <!-- Auth.js (ton fichier actuel est parfait) -->
   <script src="auth.js"></script>
 
-  <!-- Chargement des articles -->
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
     const JSON_URL = BASE_URL + "newsletter.json";
@@ -94,36 +95,27 @@
         const res = await fetch(JSON_URL + "?t=" + Date.now());
         if (!res.ok) throw new Error("JSON introuvable");
         const data = await res.json();
-
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
-
         data.sort((a, b) => new Date(b.date) - new Date(a.date));
-
         data.forEach(item => {
           const card = document.createElement('div');
           card.className = 'card';
           card.innerHTML = `
-            <div class="card-header">
-              <h3>${item.title}</h3>
-              <div class="author">par ${item.author}</div>
-            </div>
+            <div class="card-header"><h3>${item.title}</h3><div class="author">par ${item.author}</div></div>
             <div class="meta">
               <span>${new Date(item.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
               <span class="read-time">${item.readTime} de lecture</span>
             </div>
             <div class="excerpt">${item.excerpt}</div>
-            <a href="${item.file}" target="_blank" class="download-btn">
-              Télécharger le PDF
-            </a>
+            <a href="${item.file}" target="_blank" class="download-btn">Télécharger le PDF</a>
           `;
           grid.appendChild(card);
         });
       } catch (e) {
-        document.getElementById('grid').innerHTML = '<p style="color:#dc2626;grid-column:1/-1;">Erreur de chargement des articles.</p>';
+        document.getElementById('grid').innerHTML = '<p style="color:#dc2626;grid-column:1/-1;">Erreur de chargement.</p>';
       }
     }
-
     loadArticles();
   </script>
 </body>
