@@ -1,248 +1,190 @@
 #!/usr/bin/env python3
 # coding: utf-8
 """
-Génère les CSV de performances à partir de composition_portefeuilles.csv.
-- Prend en compte toutes les lignes d'un portefeuille à la date la plus récente.
-- Construit les poids à partir de toutes les lignes retenues.
-- Normalise les poids (somme = 1).
-- Nettoie les NaN et aligne correctement les séries avant calculs.
-- Logs détaillés pour debug.
+Génère automatiquement tous les CSV de performance pour chaque portefeuille
+présent dans portfolios.json et composition_portefeuilles.csv.
+→ Plus besoin de modifier le script quand tu ajoutes/supprimes un portefeuille !
 """
 
 import os
 from pathlib import Path
+import json
 import pandas as pd
 import numpy as np
 
-# Vérification import yfinance
+# Vérification yfinance
 try:
     import yfinance as yf
 except ImportError:
-    raise SystemExit("Le paquet 'yfinance' n'est pas installé. Installe-le avec: pip install yfinance")
+    raise SystemExit("Installe yfinance : pip install yfinance")
 
-# --- Configuration ---
+# --- Chemins ---
 ROOT = Path(__file__).parent.parent
 COMPO_FILE = ROOT / "composition_portefeuilles.csv"
+PORTFOLIOS_JSON = ROOT / "portfolios.json"
+
+# --- Paramètres globaux ---
 SP500 = "^GSPC"
 NASDAQ = "^IXIC"
 START_DATE = "2022-01-01"
-RISQUE_FREE_ANNUAL = 0.0  # en % (annualisé)
-OUTPUT_FILES = {
-    "Portefeuille Croissance": "portefeuille_portefeuille_croissance_v2.csv",
-    "Portefeuille Défensif": "portefeuille_portefeuille_defensif_v2.csv",
-    "Portefeuille Europe": "portefeuille_europe_v2.csv"
-}
+RISQUE_FREE_ANNUAL = 0.0  # en %
+BENCHMARKS = [SP500, NASDAQ]
 
-# --- Lecture et normalisation du fichier de composition ---
+# Fonction pour générer le nom de fichier propre (même logique que ton site)
+def slugify_portfolio_name(name: str) -> str:
+    return "portefeuille_" + name.lower().replace(" ", "_").replace("&", "_") + "_v2.csv"
+
+# Chargement de portfolios.json
+if not PORTFOLIOS_JSON.exists():
+    raise SystemExit(f"Fichier manquant : {PORTFOLIOS_JSON}")
+
+with open(PORTFOLIOS_JSON, "r", encoding="utf-8") as f:
+    portfolios_config = json.load(f)
+
+print(f"{len(portfolios_config)} portefeuille(s) trouvé(s) dans portfolios.json")
+
+# Chargement de la composition
 if not COMPO_FILE.exists():
-    raise SystemExit(f"Fichier introuvable: {COMPO_FILE}")
+    raise SystemExit(f"Fichier manquant : {COMPO_FILE}")
 
-print("Chargement composition depuis :", COMPO_FILE)
-df = pd.read_csv(COMPO_FILE, dtype=str, sep=None, engine="python")  # tolérant au séparateur
-
-# Normalisations et nettoyage des colonnes attendues
-df["Portefeuille"] = df.get("Portefeuille", "").fillna("").astype(str).str.strip()
-df["Ticker"] = df.get("Ticker", "").fillna("").astype(str).str.strip()
-df["Pondération"] = df.get("Pondération", "").fillna("").astype(str).str.replace("%", "").str.replace(",", ".").str.strip()
-df["Date de mise à jour"] = pd.to_datetime(df.get("Date de mise à jour", ""), dayfirst=True, errors="coerce")
-
-# Convertir pondérations en float (0..1)
+print(f"Chargement de la composition : {COMPO_FILE}")
+df = pd.read_csv(COMPO_FILE, sep=None, engine="python", dtype=str)
+df["Portefeuille"] = df["Portefeuille"].str.strip()
+df["Ticker"] = df["Ticker"].str.strip()
+df["Pondération"] = df["Pondération"].str.replace("%", "").str.replace(",", ".").str.strip()
+df["Date de mise à jour"] = pd.to_datetime(df["Date de mise à jour"], dayfirst=True, errors="coerce")
 df["Pondération"] = pd.to_numeric(df["Pondération"], errors="coerce").fillna(0) / 100.0
 
-print("Lignes totales composition:", len(df))
-print("Aperçu (colonnes importantes) :")
-print(df[["Portefeuille", "Ticker", "Pondération", "Date de mise à jour"]].head(50).to_string(index=False))
+# Garder uniquement la version la plus récente par portefeuille
+latest_compo = df.loc[df.groupby("Portefeuille")["Date de mise à jour"].idxmax()].copy()
+latest_compo = latest_compo.dropna(subset=["Date de mise à jour"])
 
-# --- Sélection : garder toutes les lignes dont la date est la plus récente par portefeuille ---
-df["Date de mise à jour"] = pd.to_datetime(df["Date de mise à jour"], dayfirst=True, errors="coerce")
-max_dates = df.groupby("Portefeuille")["Date de mise à jour"].transform("max")
-compo = df[df["Date de mise à jour"] == max_dates].copy()
+print(f"{len(latest_compo['Portefeuille'].unique())} portefeuille(s) avec composition à jour")
 
-print("\nLignes retenues par portefeuille (toutes les lignes à la date la plus récente) :")
-print(compo[["Portefeuille", "Ticker", "Pondération", "Date de mise à jour"]].to_string(index=False))
+# Tous les tickers uniques + benchmarks
+all_tickers = set(latest_compo["Ticker"].dropna()) | set(BENCHMARKS)
+all_tickers.discard("")  # sécurité
 
-# Construire la liste de tickers à télécharger (inclure benchmarks)
-tickers = sorted(set(compo["Ticker"].dropna().str.strip().tolist() + [SP500, NASDAQ]))
-tickers = [t for t in tickers if t]  # enlever chaînes vides
+print(f"Téléchargement de {len(all_tickers)} actifs depuis {START_DATE}...")
+data = yf.download(list(all_tickers), start=START_DATE, progress=False, auto_adjust=True)["Close"]
 
-print(f"\nTéléchargement de {len(tickers)} actifs depuis {START_DATE}...")
-data = yf.download(tickers, start=START_DATE, progress=False, auto_adjust=True)["Close"]
-
-# Forçage des benchmarks si manquant
-for b in [SP500, NASDAQ]:
+# Forcer les benchmarks au cas où
+for b in BENCHMARKS:
     if b not in data.columns:
-        print(f"Benchmark {b} absent des colonnes téléchargées, tentative de re-download...")
+        print(f"   → Re-téléchargement forcé du benchmark {b}")
         data[b] = yf.download(b, start=START_DATE, progress=False, auto_adjust=True)["Close"]
 
-# Taux sans risque journalier
 rf_daily = RISQUE_FREE_ANNUAL / 100.0 / 252.0
 
-# --- Boucle par portefeuille ---
-for pf_name in compo["Portefeuille"].unique():
-    print(f"\nTraitement : {pf_name}")
-    sub = compo[compo["Portefeuille"] == pf_name].copy()
-    if sub.empty:
-        print("Aucune ligne retenue pour ce portefeuille, skip.")
+# --- Boucle sur chaque portefeuille du JSON ---
+for portfolio in portfolios_config:
+    pf_name = portfolio["name"].strip()
+    expected_file = portfolio["file"]  # tu gardes le contrôle du nom exact si tu veux
+
+    print(f"\nTraitement → {pf_name}")
+
+    # Récupérer la composition la plus récente pour ce portefeuille
+    compo_pf = latest_compo[latest_compo["Portefeuille"] == pf_name]
+    if compo_pf.empty:
+        print(f"   Aucun actif trouvé pour '{pf_name}' dans composition_portefeuilles.csv → ignoré")
         continue
 
-    # Construire weights à partir de toutes les lignes du portefeuille
-    # Supporte une ligne par actif (ton format actuel)
-    # Si une cellule Ticker contient plusieurs tickers séparés par ; ou , on les répartit uniformément
-    tickers_expanded = []
-    weights_expanded = []
-    for _, row in sub.iterrows():
-        raw_tickers = str(row["Ticker"]).strip()
-        raw_weight = float(row["Pondération"]) if pd.notna(row["Pondération"]) else 0.0
-        # split sur ; ou , et nettoyer
-        parts = [p.strip() for p in raw_tickers.replace(",", ";").split(";") if p.strip()]
-        if not parts:
+    # Construction des poids (support multi-tickers par ligne avec ; ou ,)
+    weights = {}
+    for _, row in compo_pf.iterrows():
+        ticker_str = str(row["Ticker"]).strip()
+        weight = float(row["Pondération"]) if pd.notna(row["Pondération"]) else 0.0
+        tickers = [t.strip() for t in ticker_str.replace(",", ";").split(";") if t.strip()]
+        if not tickers:
             continue
-        if len(parts) == 1:
-            tickers_expanded.append(parts[0])
-            weights_expanded.append(raw_weight)
-        else:
-            per = raw_weight / len(parts)
-            for p in parts:
-                tickers_expanded.append(p)
-                weights_expanded.append(per)
+        w_per_ticker = weight / len(tickers)
+        for t in tickers:
+            weights[t] = weights.get(t, 0.0) + w_per_ticker
 
-    # construire dict final et filtrer entrées vides
-    weights = {t: float(w) for t, w in zip(tickers_expanded, weights_expanded) if t}
-    print("Weights après expansion :", weights)
+    if not weights:
+        print("   Aucun poids valide → skip")
+        continue
 
-    # filtrer les tickers réellement téléchargés
-    available = [t for t in weights if t in data.columns]
+    # Filtrer les tickers disponibles
+    available_tickers = [t for t in weights if t in data.columns]
     missing = [t for t in weights if t not in data.columns]
-    print("Tickers disponibles dans les données de marché :", available)
     if missing:
-        print("Tickers manquants après download (vérifier orthographe / ticker):", missing)
+        print(f"   Tickers manquants : {missing}")
 
-    if not available:
-        print("Aucun ticker disponible pour ce portefeuille, skip.")
+    if not available_tickers:
+        print("   Aucun ticker disponible → skip")
         continue
 
-    # construire la série de poids alignée et normaliser (somme = 1)
-    weights_series = pd.Series({t: weights[t] for t in available}, dtype=float)
-    total_w = weights_series.sum()
-    if total_w <= 0:
-        print("Somme des poids <= 0, skip.")
-        continue
-    weights_series = weights_series / total_w
-    print("Somme des poids après normalisation :", weights_series.sum())
-    print("weights_series:")
-    print(weights_series.to_string())
+    # Normalisation des poids
+    weights_series = pd.Series({t: weights[t] for t in available_tickers})
+    weights_series = weights_series / weights_series.sum()
 
-    # Préparer les prix et retours
-    prices = data[available].reindex(data.index).ffill()
-    # pct_change sans dropna immédiat pour garder alignement
-    daily_returns = prices.pct_change()
-    # garder les lignes où au moins un ticker a un retour non-NaN
-    daily_returns = daily_returns.loc[daily_returns.notna().any(axis=1)]
-    # pf_returns
-    pf_returns = daily_returns.dot(weights_series)
-    pf_returns = pf_returns.dropna()
+    # Calcul des rendements du portefeuille
+    prices = data[available_tickers].ffill()
+    returns = prices.pct_change()
+    pf_returns = returns.dot(weights_series).dropna()
+
     if pf_returns.empty:
-        print("pf_returns vide après nettoyage, skip.")
+        print("   Pas de données de rendement → skip")
         continue
 
-    # Debug pf_returns
-    print("Premier jour pf_returns:", pf_returns.index[0])
-    print("Exemple pf_returns (5 premières):")
-    print(pf_returns.head(5).to_string())
-
-    # Indices de référence alignés sur les mêmes dates que pf_returns
+    # Alignement benchmarks
     idx = pf_returns.index
     sp_ret = data[SP500].reindex(idx).pct_change()
     nas_ret = data[NASDAQ].reindex(idx).pct_change()
 
-    # NAV normalisée à 100 au PREMIER jour valide
+    # NAV à 100 au départ
     nav = (1 + pf_returns).cumprod() * 100
     sp_nav = (1 + sp_ret).cumprod() * 100
     nas_nav = (1 + nas_ret).cumprod() * 100
 
-    # Drawdowns
-    dd_current = nav / nav.cummax() - 1
-    dd_max = dd_current.cummin()
+    # Drawdown
+    dd = nav / nav.cummax() - 1
 
     # Volatilités annualisées
-    vol_annual_252 = pf_returns.rolling(252).std() * np.sqrt(252) * 100
-    vol_annual_5d = pf_returns.rolling(5).std() * np.sqrt(252) * 100
-    vol_annual_21d = pf_returns.rolling(21).std() * np.sqrt(252) * 100
+    vol_252 = pf_returns.rolling(252).std() * np.sqrt(252) * 100
+    vol_5d = pf_returns.rolling(5).std() * np.sqrt(252) * 100
+    vol_21d = pf_returns.rolling(21).std() * np.sqrt(252) * 100
 
-    # Rendements sur fenêtres glissantes
-    ret_port_daily = pf_returns * 100
-    ret_port_weekly = (1 + pf_returns).rolling(5).apply(np.prod, raw=True).sub(1) * 100
-    ret_port_monthly = (1 + pf_returns).rolling(21).apply(np.prod, raw=True).sub(1) * 100
+    # Rendements glissants
+    ret_daily = pf_returns * 100
+    ret_weekly = (1 + pf_returns).rolling(5).apply(np.prod, raw=True).sub(1) * 100
+    ret_monthly = (1 + pf_returns).rolling(21).apply(np.prod, raw=True).sub(1) * 100
 
-    ret_sp_weekly = (1 + sp_ret).rolling(5).apply(np.prod, raw=True).sub(1) * 100
-    ret_sp_monthly = (1 + sp_ret).rolling(21).apply(np.prod, raw=True).sub(1) * 100
-    ret_nas_weekly = (1 + nas_ret).rolling(5).apply(np.prod, raw=True).sub(1) * 100
-    ret_nas_monthly = (1 + nas_ret).rolling(21).apply(np.prod, raw=True).sub(1) * 100
+    sp_weekly = (1 + sp_ret).rolling(5).apply(np.prod, raw=True).sub(1) * 100
+    sp_monthly = (1 + sp_ret).rolling(21).apply(np.prod, raw=True).sub(1) * 100
+    nas_weekly = (1 + nas_ret).rolling(5).apply(np.prod, raw=True).sub(1) * 100
+    nas_monthly = (1 + nas_ret).rolling(21).apply(np.prod, raw=True).sub(1) * 100
 
-    # Sharpe rolling 21 jours (annualisé)
+    # Sharpe rolling 21j
     excess = pf_returns - rf_daily
-    rolling_mean_excess = excess.rolling(21).mean()
-    rolling_std = pf_returns.rolling(21).std()
-    sharpe_rolling_21d = (rolling_mean_excess / rolling_std) * np.sqrt(252)
-    sharpe_rolling_21d = sharpe_rolling_21d.round(3)
+    sharpe_21d = (excess.rolling(21).mean() / pf_returns.rolling(21).std()) * np.sqrt(252)
+    sharpe_21d = sharpe_21d.round(3)
 
     # DataFrame final
     result = pd.DataFrame({
-        "Date":                  idx.strftime("%Y-%m-%d"),
-        "Portfolio_CumReturn":   nav.round(2),
-        "SP500_CumReturn":       sp_nav.round(2),
-        "NASDAQ_CumReturn":      nas_nav.round(2),
-        "Vol_Daily":             vol_annual_252.round(2),
-        "Vol_Weekly":            vol_annual_5d.round(2),
-        "Vol_Monthly":           vol_annual_21d.round(2),
-        "Drawdown_Current":      (dd_current * 100).round(2),
-        "Drawdown_Max":          (dd_max * 100).round(2),
-        "Return_Port_Daily":     ret_port_daily.round(2),
-        "Return_Port_Weekly":    ret_port_weekly.round(2),
-        "Return_Port_Monthly":   ret_port_monthly.round(2),
-        "Return_SP_Daily":       (sp_ret * 100).round(2),
-        "Return_SP_Weekly":      ret_sp_weekly.round(2),
-        "Return_SP_Monthly":     ret_sp_monthly.round(2),
-        "Return_NASDAQ_Daily":   (nas_ret * 100).round(2),
-        "Return_NASDAQ_Weekly":  ret_nas_weekly.round(2),
-        "Return_NASDAQ_Monthly": ret_nas_monthly.round(2),
-        "Sharpe_Monthly_Rolling": sharpe_rolling_21d
+        "Date": idx.strftime("%Y-%m-%d"),
+        "Portfolio_CumReturn": nav.round(2),
+        "SP500_CumReturn": sp_nav.round(2),
+        "NASDAQ_CumReturn": nas_nav.round(2),
+        "Vol_Daily": vol_252.round(2),
+        "Vol_Weekly": vol_5d.round(2),
+        "Vol_Monthly": vol_21d.round(2),
+        "Drawdown_Current": (dd * 100).round(2),
+        "Drawdown_Max": (dd.cummin() * 100).round(2),
+        "Return_Port_Daily": ret_daily.round(2),
+        "Return_Port_Weekly": ret_weekly.round(2),
+        "Return_Port_Monthly": ret_monthly.round(2),
+        "Return_SP_Weekly": sp_weekly.round(2),
+        "Return_SP_Monthly": sp_monthly.round(2),
+        "Return_NASDAQ_Weekly": nas_weekly.round(2),
+        "Return_NASDAQ_Monthly": nas_monthly.round(2),
+        "Sharpe_Monthly_Rolling": sharpe_21d,
     }).reset_index(drop=True)
 
-    # Sauvegarde
-    path = ROOT / OUTPUT_FILES.get(pf_name, f"output_{pf_name}.csv")
-    result.to_csv(path, index=False, encoding="utf-8")
-    # s'assurer que l'écriture est flushée sur le runner
-    try:
-        with open(path, "rb") as f:
-            os.fsync(f.fileno())
-    except Exception:
-        pass
+    # Sauvegarde avec le nom EXACT que tu as mis dans portfolios.json
+    output_path = ROOT / expected_file
+    result.to_csv(output_path, index=False, encoding="utf-8")
+    print(f"   Généré : {expected_file} ({len(result):,} jours) | +{(nav.iloc[-1]-100):.1f}% depuis 2022")
 
-    # Stats finales et aperçu
-    if not result.empty:
-        last_date = result["Date"].iloc[-1]
-        perf_totale = result["Portfolio_CumReturn"].iloc[-1] - 100
-        vol_last = result["Vol_Monthly"].iloc[-1]
-        sharpe_last = result["Sharpe_Monthly_Rolling"].iloc[-1]
-        sharpe_moyen = result["Sharpe_Monthly_Rolling"].replace([np.inf, -np.inf], np.nan).mean()
-        print(f"{pf_name} → OK | {len(result):,} jours | "
-              f"Perf depuis 2022 = +{perf_totale:.1f}% | "
-              f"Vol 21j = {vol_last:.1f}% | "
-              f"Sharpe 21j (dernier) = {sharpe_last:.2f} | "
-              f"Sharpe moyen = {sharpe_moyen:.2f}")
-    else:
-        print(f"{pf_name} → Résultat vide, aucun jour valide trouvé.")
-
-    # Aperçu du fichier généré
-    try:
-        print("WROTE:", path, "size:", path.stat().st_size)
-        with open(path, "r", encoding="utf-8") as f:
-            lines = f.read().splitlines()
-            print("Aperçu (10 premières lignes) :")
-            for ln in lines[:10]:
-                print(ln)
-    except Exception as e:
-        print("Impossible d'afficher l'aperçu du fichier :", e)
-
-print("\nTOUS LES CSV CORRIGÉS ET GÉNÉRÉS AVEC CALCULS EXACTS")
+print("\nTOUS LES PORTFEUILLES SONT À JOUR !")
