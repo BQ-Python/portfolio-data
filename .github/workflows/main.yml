@@ -1,71 +1,67 @@
-permissions:
-  contents: write
-
-name: Mise à jour quotidienne à 19h00 (France)
+name: Mise à jour quotidienne + Déploiement GitHub Pages
 
 on:
   schedule:
-    - cron: '0 18 * * *'   # 19h00 France en hiver (UTC+1)
-    - cron: '0 17 * * *'   # 19h00 France en été   (UTC+2)
-  workflow_dispatch:
+    - cron: '0 18 * * *'   # 19h00 France (hiver) → UTC+1
+    - cron: '0 17 * * *'   # 19h00 France (été)   → UTC+2
+  workflow_dispatch:       # Tu peux lancer manuellement
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  update-portfolios:
+  generate-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://bq-python.github.io/portfolio-data/
     steps:
       - name: Checkout du repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0     # obligatoire pour pouvoir push ensuite
+          fetch-depth: 0
 
-      - name: Setup Python 3.11
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          # Pas de 'cache' → évite l'erreur "Caching for 'false' is not supported"
 
       - name: Installer les dépendances
         run: |
           python -m pip install --upgrade pip
+          pip install yfinance pandas numpy --quiet
 
-          # Si tu as un requirements.txt → on l'utilise
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            # Sinon on installe les libs classiques pour ce genre de job
-            pip install pandas google-cloud-bigquery google-cloud-storage requests beautifulsoup4 lxml --quiet
-          fi
-
-      - name: Écrire la clé GCP en fichier (si nécessaire)
+      - name: Générer les CSV de performance
         run: |
-          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/gcp-key.json
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          python generate_portfolios.py
+          echo "Génération terminée !"
+          ls -la *.csv | head -20
 
-      - name: Vérifier la présence du script
+      - name: Vérifier que les fichiers sont bien là
         run: |
-          echo "Répertoire courant : $(pwd)"
-          ls -la
-          echo "Contenu du dossier scripts/"
-          ls -la scripts/ || echo "Dossier scripts/ introuvable !"
+          echo "Fichiers générés :"
+          ls -la portefeuille_*_v2.csv || echo "Aucun CSV trouvé !"
+          ls -la portfolios.json composition_portefeuilles.csv
 
-      - name: Exécuter le script de mise à jour
-        run: python -u scripts/update_performances.py
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json   # si ton script attend un fichier JSON
-          # GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}   # ou juste la variable d'env si ton script la lit directement
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
 
-      - name: Configurer Git
+      - name: Upload tout le site (HTML + CSV + JSON)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Message final
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit & push seulement s'il y a des changements
-        run: |
-          git add .
-          if git diff --staged --quiet; then
-            echo "Aucun changement, rien à pousser."
-          else
-            git commit -m "MAJ auto portefeuilles $(date -u '+%Y-%m-%d %H:%M UTC')"
-            git push origin HEAD:${{ github.ref }}
-          fi
+          echo "Déploiement réussi !"
+          echo "URL du site → https://bq-python.github.io/portfolio-data/portefeuilles.html"
