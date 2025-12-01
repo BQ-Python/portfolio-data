@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horizon Labs - Articles</title>
+  <title>Horizon Labs - Articles & Rapports</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -35,8 +35,8 @@
     .subtitle { font-size: 1.3rem; color: var(--muted); margin-bottom: 4rem; }
 
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; margin-top: 3rem; }
-    .newsletter-card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all .4s; }
-    .newsletter-card:hover { transform: translateY(-12px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
+    .card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all .4s; }
+    .card:hover { transform: translateY(-12px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
     .card-header { background: linear-gradient(135deg, #02030a, #040512); padding: 2rem; text-align: center; }
     .card-header h3 { font-size: 1.65rem; font-weight: 700; margin-bottom: 0.5rem; }
     .author { font-size: 1.1rem; color: var(--accent); font-weight: 600; }
@@ -55,7 +55,7 @@
       <div class="links">
         <a href="index.html">Accueil</a>
         <a href="portefeuilles.html">Portefeuilles</a>
-        <a href="newsletter.html" class="active">Articles</a>
+        <a href="articles.html" class="active">Articles & Rapports</a>
         <a href="abonnements.html">Abonnements</a>
 
         <a href="auth.html" id="login-btn" class="auth-button">S'authentifier</a>
@@ -70,56 +70,55 @@
   </nav>
 
   <div class="container">
-    <h1>Nos Newsletters & Rapports</h1>
+    <h1>Nos Articles & Rapports</h1>
     <p class="subtitle">Analyses exclusives, rapports stratégiques et convictions mensuelles.</p>
     <div class="grid" id="grid"></div>
   </div>
 
-  <!-- Auth unique (plus de code Firebase dupliqué) -->
+  <!-- Auth unique – plus de bug "S'authentifier" quand connecté -->
   <script src="auth.js"></script>
 
-  <!-- Chargement automatique des newsletters depuis newsletter.json -->
+  <!-- Chargement automatique depuis newsletter.json (tu peux le renommer articles.json si tu veux) -->
   <script>
     const BASE_URL = "https://raw.githubusercontent.com/BQ-Python/portfolio-data/main/";
-    const JSON_URL = BASE_URL + "newsletter.json";
+    const JSON_URL = BASE_URL + "newsletter.json";  // ou "articles.json" si tu le renommes
 
-    async function loadNewsletters() {
+    async function loadContent() {
       try {
         const res = await fetch(JSON_URL + "?t=" + Date.now());
-        if (!res.ok) throw new Error("newsletter.json introuvable");
+        if (!res.ok) throw new Error("Fichier JSON introuvable");
         const data = await res.json();
 
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
 
-        // Tri par date décroissante
         data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        data.forEach(n => {
+        data.forEach(item => {
           const card = document.createElement('div');
-          card.className = 'newsletter-card';
+          card.className = 'card';
           card.innerHTML = `
             <div class="card-header">
-              <h3>${n.title}</h3>
-              <div class="author">par ${n.author}</div>
+              <h3>${item.title}</h3>
+              <div class="author">par ${item.author}</div>
             </div>
             <div class="meta">
-              <span>${new Date(n.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-              <span class="read-time">${n.readTime} de lecture</span>
+              <span>${new Date(item.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              <span class="read-time">${item.readTime} de lecture</span>
             </div>
-            <div class="excerpt">${n.excerpt}</div>
-            <a href="${n.file}" target="_blank" class="download-btn">
+            <div class="excerpt">${item.excerpt}</div>
+            <a href="${item.file}" target="_blank" class="download-btn">
               Télécharger le PDF
             </a>
           `;
           grid.appendChild(card);
         });
       } catch (e) {
-        document.getElementById('grid').innerHTML = '<p style="color:#dc2626;grid-column:1/-1;">Erreur de chargement des newsletters.</p>';
+        document.getElementById('grid').innerHTML = '<p style="color:#dc2626;grid-column:1/-1;">Erreur de chargement des articles.</p>';
       }
     }
 
-    loadNewsletters();
+    loadContent();
   </script>
 </body>
 </html>
