@@ -24,13 +24,14 @@
     .links a { color: var(--muted); text-decoration: none; font-weight: 500; transition: all .25s; }
     .links a:hover, .links a.active { color: #fff; }
     .auth-button { background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; }
+
     #user-menu { display: none; align-items: center; gap: 12px; }
     #user-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); }
     #user-name { font-weight: 600; }
     #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
     #logout-btn:hover { color: #fff; }
 
-    /* CETTE PARTIE MANQUAIT → ANTI-FLASH AUTH */
+    /* ANTI-FLASH OBLIGATOIRE */
     #login-btn, #user-menu { visibility: hidden; }
     body.firebase-ready #login-btn,
     body.firebase-ready #user-menu { visibility: visible; }
@@ -38,8 +39,9 @@
     .container { max-width: 1200px; margin: 0 auto; padding: 120px 2rem 80px; text-align: center; }
     h1 { font-size: clamp(2.5rem,5vw,4rem); font-weight: 800; margin-bottom: 1rem; }
     .subtitle { font-size: 1.3rem; color: var(--muted); margin-bottom: 4rem; }
+
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; margin-top: 3rem; }
-    .card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 16px; overflow: hidden; border: 1869px solid var(--border); transition: all .4s; }
+    .card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all .4s; }
     .card:hover { transform: translateY(-12px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
     .card-header { background: linear-gradient(135deg, #02030a, #040512); padding: 2rem; text-align: center; }
     .card-header h3 { font-size: 1.65rem; font-weight: 700; margin-bottom: 0.5rem; }
@@ -59,7 +61,7 @@
       <div class="links">
         <a href="index.html">Accueil</a>
         <a href="portefeuilles.html">Portefeuilles</a>
-        <a href="newsletter.html" class="active">Articles & Rapports</a>
+        <a href="newsletter.html" class="active">Articles</a>
         <a href="abonnements.html">Abonnements</a>
 
         <a href="auth.html" id="login-btn" class="auth-button">S'authentifier</a>
@@ -79,7 +81,7 @@
     <div class="grid" id="grid"></div>
   </div>
 
-  <!-- Auth.js (déjà parfait) + anti-flash grâce au CSS ci-dessus -->
+  <!-- Auth.js (ton fichier actuel est parfait) -->
   <script src="auth.js"></script>
 
   <!-- Chargement des articles -->
