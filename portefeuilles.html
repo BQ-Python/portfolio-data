@@ -1,83 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horizon Labs - Portefeuilles</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-  <style>
-    :root {
-      --bg: #040512;
-      --accent: #4a90e2;
-      --muted: rgba(255,255,255,0.78);
-      --card-bg: rgba(255,255,255,0.03);
-      --card-strong: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.08);
-      --red: #dc2626;
-      --green: #16a34a;
-      --orange: #ea580c;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizon Labs - Portefeuilles</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 
-    nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; }
-    .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
-    .logo { font-size: 1.3rem; font-weight: 800; }
-    .logo span { color: var(--accent); }
-    .links { display: flex; align-items: center; gap: 24px; }
-    .links a { color: var(--muted); text-decoration: none; font-weight: 500; transition: all .25s; }
-    .links a:hover, .links a.active { color: #fff; }
-    .auth-button { background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; }
-    #user-menu { display: none; align-items: center; gap: 12px; }
-    #user-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); }
-    #user-name { font-weight: 600; }
-    #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
-    #logout-btn:hover { color: #fff; }
-
-    #login-btn, #user-menu { visibility: hidden; }
-    body.firebase-ready #login-btn, body.firebase-ready #user-menu { visibility: visible; }
-
-    .container { max-width: 1400px; margin: 0 auto; padding: 120px 2rem 80px; text-align: center; }
-    h1 { font-size: clamp(2rem,4.5vw,3.4rem); line-height: 1.05; font-weight: 800; margin-bottom: 4rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 2.5rem; margin-top: 3rem; }
-    .card { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(0,0,0,0.35); transition: all .4s; cursor: pointer; }
-    .card:hover { transform: translateY(-16px); box-shadow: 0 30px 70px rgba(0,0,0,0.35); }
-    .card-header { background: linear-gradient(135deg, #02030a, #040512); padding: 3rem 2rem; color: #fff; text-align: center; }
-    .card-header h3 { font-size: 2.2rem; font-weight: 700; }
-    .metrics { padding: 2.5rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
-    .kpi { text-align: center; padding: 1rem; background: var(--card-bg); border-radius: 14px; border: 1px solid var(--border); }
-    .kpi strong { display: block; font-size: 2rem; font-weight: 800; color: var(--accent); }
-    .kpi.red strong { color: var(--red); }
-    .kpi.green strong { color: var(--green); }
-    .kpi small { font-size: 0.85rem; color: var(--muted); display: block; margin-top: 4px; }
-
-    #modal { display: none; position: fixed; inset: 0; background: rgba(4,5,18,0.97); backdrop-filter: blur(16px); z-index: 2000; align-items: center; justify-content: center; padding: 2rem; overflow-y: auto; }
-    #modal.active { display: flex; }
-    .modal-content { background: linear-gradient(180deg, var(--card-bg), var(--card-strong)); border-radius: 28px; max-width: 1400px; width: 95%; max-height: 95vh; overflow-y: auto; box-shadow: 0 40px 100px rgba(0,0,0,0.5); border: 1px solid var(--border); }
-    .modal-header { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color: #fff; padding: 2rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .modal-header h2 { font-size: 2.4rem; font-weight: 800; }
-    .close { font-size: 3rem; cursor: pointer; opacity: 0.8; transition: .3s; color: var(--muted); }
-    .close:hover { opacity: 1; transform: rotate(90deg); }
-    .modal-body { padding: 3rem 4rem 4rem; color: var(--muted); }
-    .kpi-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-    .kpi-big { background: var(--card-bg); padding: 1.8rem; border-radius: 18px; text-align: center; border-left: 6px solid var(--accent); border: 1px solid var(--border); }
-    .kpi-big.red { border-left-color: var(--red); }
-    .kpi-big.red strong { color: var(--red); }
-    .kpi-big strong { font-size: 2.5rem; font-weight: 800; color: var(--accent); display: block; }
-    .kpi-big div { font-size: 0.95rem; color: var(--muted); margin-top: 6px; }
-    .chart-wrapper { position: relative; height: 420px; background: var(--card-bg); border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.35); margin: 3rem 0; border: 1px solid var(--border); }
-    .chart-controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 15px; }
-    .chart-btn { padding: 9px 16px; border: none; border-radius: 10px; background: var(--card-bg); color: var(--muted); font-size: 0.95rem; cursor: pointer; transition: .2s; font-weight: 600; border: 1px solid var(--border); }
-    .chart-btn.active, .chart-btn:hover { background: var(--accent); color: #fff; }
-    .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 3rem; align-items: start; }
-    @media (max-width: 992px) { .comp-grid { grid-template-columns: 1fr; } }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border); color: #fff; }
-    th { background: var(--card-strong); font-weight: 600; color: #fff; }
-  </style>
 </head>
 <body>
 
@@ -115,16 +45,16 @@
         <div class="chart-wrapper"><div class="chart-controls" id="mainControls"></div><canvas id="mainChart"></canvas></div>
         <div class="chart-wrapper"><div class="chart-controls" id="detailControls"></div><canvas id="detailChart"></canvas></div>
         <div class="chart-wrapper">
-          <div style="text-align:center; margin-bottom:12px;">
-            <h3 style="font-size:1.65rem; font-weight:700; color:#fff;">Value at Risk (VaR) Historique – 30 jours glissants</h3>
+          <div>
+            <h3>Value at Risk (VaR) Historique – 30 jours glissants</h3>
           </div>
           <div class="chart-controls" id="varControls"></div>
           <canvas id="varChart"></canvas>
         </div>
-        <h3 style="text-align:center;margin:4rem 0 2rem;font-size:2rem;font-weight:700;">Composition Actuelle</h3>
+        <h3>Composition Actuelle</h3>
         <div class="comp-grid">
-          <div class="chart-wrapper" style="height:350px;"><canvas id="pieChart"></canvas></div>
-          <table><thead><tr><th>Actif</th><th>Ticker</th><th style="text-align:right;">Pondération</th></tr></thead><tbody id="compTable"></tbody></table>
+          <div class="chart-wrapper"><canvas id="pieChart"></canvas></div>
+          <table><thead><tr><th>Actif</th><th>Ticker</th><th>Pondération</th></tr></thead><tbody id="compTable"></tbody></table>
         </div>
       </div>
     </div>
@@ -215,13 +145,13 @@
         await loadCards();
       } catch (e) {
         console.error("Erreur portfolios.json:", e);
-        document.getElementById('grid').innerHTML = '<p style="color:var(--red);grid-column:1/-1;text-align:center;">Erreur chargement portfolios.</p>';
+        document.getElementById('grid').innerHTML = '<p>Erreur chargement portfolios.</p>';
       }
     }
 
     async function loadCards() {
       const grid = document.getElementById('grid');
-      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);">Chargement...</p>';
+      grid.innerHTML = '<p>Chargement...</p>';
       const currentYear = new Date().getFullYear();
       let cardCount = 0;
 
@@ -270,7 +200,7 @@
       }
 
       if (cardCount === 0) {
-        grid.innerHTML = '<p style="color:var(--red);grid-column:1/-1;text-align:center;">Aucun portefeuille disponible pour le moment.</p>';
+        grid.innerHTML = '<p>Aucun portefeuille disponible pour le moment.</p>';
       } else {
         console.log(cardCount, 'cartes affichées');  // Debug
       }
@@ -469,7 +399,7 @@
           const actif = cols[actifIdx] || 'Inconnu';
           const ticker = cols[tickerIdx] || '';
           const poids = cols[poidsIdx] || '0%';
-          table.innerHTML += `<tr><td><strong>${actif}</strong></td><td>${ticker}</td><td style="text-align:right;font-weight:700;">${poids}</td></tr>`;
+          table.innerHTML += `<tr><td><strong>${actif}</strong></td><td>${ticker}</td><td>${poids}</td></tr>`;
           labels.push(actif);
           values.push(parseFloat(poids.replace('%', '')) || 0);
         });
@@ -482,7 +412,7 @@
         });
       } catch (e) {
         console.error("Erreur composition:", e);
-        document.getElementById('compTable').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--muted);">Composition indisponible</td></tr>';
+        document.getElementById('compTable').innerHTML = '<tr><td colspan="3">Composition indisponible</td></tr>';
       }
     }
 

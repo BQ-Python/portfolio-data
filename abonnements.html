@@ -1,91 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horizon Labs - Abonnements</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://js.stripe.com/v3/"></script>
-  <style>
-    :root {
-      --bg: #040512;
-      --accent: #4a90e2;
-      --muted: rgba(255,255,255,0.78);
-      --card-bg: rgba(255,255,255,0.03);
-      --card-strong: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.08);
-      --green: #16a34a;
-      --gold: #f59e0b;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; padding-top: 90px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizon Labs - Abonnements</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 
-    /* NAVIGATION */
-    nav { position: fixed; top: 16px; left: 0; right: 0; z-index: 1200; display: flex; justify-content: center; pointer-events: auto; }
-    .nav { width: 1280px; max-width: 96%; display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(12px); border-radius: 8px; border: 1px solid var(--border); }
-    .logo { font-size: 1.3rem; font-weight: 800; }
-    .logo span { color: var(--accent); }
-    .links { display: flex; align-items: center; gap: 24px; }
-    .links a { color: var(--muted); text-decoration: none; font Feather: 500; transition: all .25s; }
-    .links a:hover, .links a.active { color: #fff; }
-    .auth-button { background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; }
-    #user-menu { display: none; align-items: center; gap: 12px; }
-    #user-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); }
-    #user-name { font-weight: 600; }
-    #logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
-    #logout-btn:hover { color: #fff; }
-
-    /* ÉLIMINE LE FLASH D'AUTH */
-    #login-btn, #user-menu { visibility: hidden; }
-    body.firebase-ready #login-btn,
-    body.firebase-ready #user-menu { visibility: visible; }
-
-    .container { max-width: 1200px; margin: 0 auto; padding: 120px 2rem 100px; text-align: center; }
-    h1 { font-size: clamp(2.8rem,6vw,4.5rem); font-weight: 800; margin-bottom: 1rem; }
-    .subtitle { font-size: 1.4rem; color: var(--muted); margin-bottom: 4rem; max-width: 800px; margin-left: auto; margin-right: auto; }
-
-    .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2.5rem; }
-    .plan-card {
-      background: linear-gradient(180deg, var(--card-bg), var(--card-strong));
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 3rem 2rem;
-      transition: all .4s;
-      position: relative;
-      overflow: hidden;
-    }
-    .plan-card:hover { transform: translateY(-16px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
-    .popular { border: 2px solid var(--accent); }
-    .popular::before {
-      content: "LE PLUS POPULAIRE";
-      position: absolute;
-      top: 14px; right: -46px;
-      background: var(--accent);
-      color: #fff;
-      padding: 6px 50px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      transform: rotate(45deg);
-    }
-    .plan-name { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .price { font-size: 3.5rem; font-weight: 800; margin: 1.5rem 0; }
-    .price small { font-size: 1.1rem; color: var(--muted); }
-    .features { list-style: none; text-align: left; margin: 2rem 0; }
-    .features li { margin: 1rem 0; padding-left: 2rem; position: relative; color: var(--muted); }
-    .features li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: bold; font-size: 1.3rem; }
-    button {
-      width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 700; cursor: pointer; margin-top: 1.5rem;
-      transition: all .25s;
-    }
-    .free-btn { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
-    .free-btn:hover { background: rgba(74,144,226,0.2); }
-    .pro-btn { background: var(--gold); color: #000; }
-    .pro-btn:hover { background: #e67700; }
-    button:not(.free-btn) { background: var(--accent); color: #fff; }
-    button:not(.free-btn):hover { background: #357abd; transform: translateY(-3px); }
-
-    footer { padding: 4rem 2rem; text-align: center; color: var(--muted); font-size: 0.9rem; }
-  </style>
 </head>
 <body>
 
