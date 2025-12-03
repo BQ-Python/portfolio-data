@@ -1,0 +1,245 @@
+/* ========================================= */
+/*  style.css – Horizon Labs – Thème Sombre Pro */
+/*  Fond animé + design glassy + Inter + responsive */
+/* ========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg: #040512;
+  --accent: #00d4ff;
+  --text: #e0e0e0;
+  --text-muted: #888caa;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-strong: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow: rgba(0, 0, 0, 0.4);
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ====================== BACKGROUND ANIMÉ ====================== */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(180deg, #02030a 0%, #040512 70%);
+}
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.66);
+  z-index: 2;
+}
+canvas#hero {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: block;
+}
+
+/* ====================== NAVIGATION ====================== */
+nav {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1280px, 96%);
+  z-index: 1200;
+  pointer-events: auto;
+}
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  backdrop-filter: blur(14px);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+}
+.logo span { color: var(--accent); }
+.links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+.links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color .25s;
+}
+.links a:hover, .links a.active { color: #fff; }
+.auth-button {
+  background: var(--accent);
+  color: #000;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+#user-menu {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: rgba(26, 29, 38, 0.95);
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+#user-menu.show { display: flex; }
+#user-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+
+/* ====================== CONTENU GÉNÉRAL ====================== */
+.container {
+  position: relative;
+  z-index: 50;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 140px 2rem 4rem;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 800;
+  text-align: center;
+  background: linear-gradient(90deg, #00d4ff, #0099cc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+.subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  max-width: 720px;
+  margin: 0 auto 3rem;
+}
+
+/* ====================== GRILLE ARTICLES & KPI ====================== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.8rem;
+  transition: all .3s ease;
+  backdrop-filter: blur(6px);
+}
+.card:hover {
+  transform: translateY(-8px);
+  border-color: var(--accent);
+  box-shadow: 0 10px 30px var(--shadow);
+}
+.card-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: flex-start; 
+  margin-bottom: 0.8rem;
+}
+.card-header h3 { 
+  font-size: 1.35rem; 
+  color: #fff;
+}
+.author { 
+  color: var(--accent); 
+  font-size: 0.9rem; 
+  font-weight: 500;
+}
+.meta { 
+  display: flex; 
+  justify-content: space-between; 
+  color: var(--text-muted); 
+  font-size: 0.9rem; 
+  margin-bottom: 1rem;
+}
+.excerpt { 
+  color: #ccc; 
+  line-height: 1.7; 
+  margin-bottom: 1.5rem;
+}
+.download-btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #000;
+  padding: 0.7rem 1.4rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background .3s;
+}
+.download-btn:hover { background: #00b0d4; }
+
+/* KPI Cards (page d’accueil) */
+.kpi-row {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin: 3rem auto;
+  max-width: 1100px;
+}
+.kpi-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem 1.6rem;
+  min-width: 180px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+.kpi-card h3 { 
+  color: var(--text-muted); 
+  font-size: 0.95rem; 
+  margin-bottom: 0.5rem;
+}
+.kpi-card .value { 
+  font-size: 1.8rem; 
+  font-weight: 800; 
+  color: #fff;
+}
+
+/* ====================== RESPONSIVE ====================== */
+@media (max-width: 900px) {
+  .links { gap: 1.2rem; font-size: 0.95rem; }
+  .kpi-row { gap: 1rem; }
+  .container { padding: 120px 1rem 3rem; }
+}
+@media (max-width: 640px) {
+  nav { top: 8px; }
+  .nav { padding: 10px 14px; flex-direction: column; gap: 1rem; }
+  .links { order: 2; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+}
+
+/* ====================== FIN ====================== */
