@@ -117,7 +117,7 @@
 
     const portfoliosUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/portfolios.json';
     const compositionCsvUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/composition_portefeuilles.csv';
-    const newslettersUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/newsletters.json';
+    const newslettersUrl = 'https://raw.githubusercontent.com/BQ-Python/portfolio-data/refs/heads/main/newsletter.json';
 
     function parseCSV(text){
       const lines = text.split(/\r?\n/).filter(l=>l.trim()!=='');
@@ -151,7 +151,7 @@
 
       try{
         const res2 = await fetch(newslettersUrl, {cache:'no-store'});
-        if(!res2.ok) throw new Error('newsletters.json '+res2.status);
+        if(!res2.ok) throw new Error('newsletter.json '+res2.status);
         const ndata = await res2.json();
         let ncount = Array.isArray(ndata) ? ndata.length : (ndata && typeof ndata==='object' ? (Object.values(ndata).find(v=>Array.isArray(v))||[]).length : 0);
         el.newsletters.textContent = ncount.toLocaleString('fr-FR');
