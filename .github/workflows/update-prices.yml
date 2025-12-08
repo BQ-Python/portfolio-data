@@ -1,39 +1,23 @@
 # .github/workflows/update-prices.yml
-name: Mise à jour quotidienne des cours (après clôture US)
+name: Mise à jour des cours après clôture US
 
 on:
   schedule:
-    # Tous les jours ouvrés à 23h30 Paris (22h30 UTC)
-    - cron: '30 22 * * 1-5'   # ← 23h30 Paris en heure d'hiver ET d'été
-  workflow_dispatch:          # Pour lancer manuellement quand tu veux
+    - cron: '45 22 * * 1-5'   # 23h45 Paris en hiver, 00h45 en été → 100 % safe
+  workflow_dispatch:
 
 jobs:
-  update-prices:
+  update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install yfinance pandas --quiet
-
-      - name: Mise à jour des prix (après clôture US)
-        run: python scripts/update_prices_daily.py
-
-      - name: Commit & Push si modifié
-        run: |
+      - run: pip install yfinance pandas --quiet
+      - run: python scripts/update_prices_daily.py
+      - run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "actions@github.com"
           git add prices_daily.csv
-          if git diff --quiet; then
-            echo "Aucun changement aujourd'hui"
-          else
-            git commit -m "Mise à jour automatique des cours (clôture US) — $(date +'%Y-%m-%d')"
-            git push
-          fi
+          git diff --quiet || (git commit -m "Clôtures US $(date +'%Y-%m-%d')" && git push)
