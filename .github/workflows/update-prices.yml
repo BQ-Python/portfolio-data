@@ -1,30 +1,39 @@
-name: Mise à jour quotidienne des cours
+# .github/workflows/update-prices.yml
+name: Mise à jour quotidienne des cours (après clôture US)
 
 on:
   schedule:
-    - cron: '30 18 * * 1-5'   # Tous les jours ouvrés à 18h30 Paris
-  workflow_dispatch:         # Lancement manuel possible
+    # Tous les jours ouvrés à 23h30 Paris (22h30 UTC)
+    - cron: '30 22 * * 1-5'   # ← 23h30 Paris en heure d'hiver ET d'été
+  workflow_dispatch:          # Pour lancer manuellement quand tu veux
 
 jobs:
   update-prices:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install yfinance
-        run: pip install yfinance pandas
+      - name: Install dependencies
+        run: pip install yfinance pandas --quiet
 
-      - name: Mise à jour prices_daily.csv
+      - name: Mise à jour des prix (après clôture US)
         run: python scripts/update_prices_daily.py
 
       - name: Commit & Push si modifié
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add prices_daily.csv
-          git diff --quiet && echo "Aucun changement" || (git commit -m "Mise à jour automatique des performances — $(date +'%Y-%m-%d %H:%M')" && git push)
+          if git diff --quiet; then
+            echo "Aucun changement aujourd'hui"
+          else
+            git commit -m "Mise à jour automatique des cours (clôture US) — $(date +'%Y-%m-%d')"
+            git push
+          fi
