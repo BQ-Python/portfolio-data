@@ -1,0 +1,33 @@
+name: Daily Update
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Tous les jours à minuit UTC
+  workflow_dispatch:    # Permet de lancer manuellement
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run update script
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: python update.py
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add prices_daily.csv init.done
+          git commit -m "Daily update: prices and metrics" || echo "No changes"
+          git push
