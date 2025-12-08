@@ -1,0 +1,30 @@
+name: Mise à jour quotidienne des cours
+
+on:
+  schedule:
+    - cron: '30 18 * * 1-5'   # Tous les jours ouvrés à 18h30 Paris
+  workflow_dispatch:         # Lancement manuel possible
+
+jobs:
+  update-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install yfinance
+        run: pip install yfinance pandas
+
+      - name: Mise à jour prices_daily.csv
+        run: python scripts/update_prices_daily.py
+
+      - name: Commit & Push si modifié
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prices_daily.csv
+          git diff --quiet && echo "Aucun changement" || (git commit -m "Mise à jour automatique des performances — $(date +'%Y-%m-%d %H:%M')" && git push)
