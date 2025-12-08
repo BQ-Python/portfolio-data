@@ -1,0 +1,45 @@
+name: 💰 Mise à Jour Quotidienne des Portefeuilles
+# Ce workflow s'exécute à 00:00 UTC (1h00 du matin heure de Paris en hiver)
+# Le changement d'heure peut le décaler à 2h00 en été.
+# Il s'exécute du Lundi au Vendredi (jours de bourse).
+on:
+  schedule:
+    # Exécution à 00:00 UTC (0 0 * * *) 
+    - cron: '0 0 * * 1-5' 
+  
+  # Permet de déclencher manuellement le workflow depuis l'interface GitHub
+  workflow_dispatch: 
+
+jobs:
+  update_and_calculate:
+    runs-on: ubuntu-latest
+    
+    # Récupération du SECRET pour Firebase
+    env:
+      # Ceci correspond à la variable FIREBASE_SERVICE_ACCOUNT utilisée dans votre code Python
+      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+    
+    steps:
+      - name: ⬇️ Checkout du code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Configuration de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          
+      - name: ⚙️ Installation des dépendances
+        run: |
+          pip install pandas numpy firebase-admin yfinance
+          
+      # Votre script Python est conçu pour lire le secret soit
+      # depuis 'service-account.json' soit depuis la variable d'environnement.
+      # Pour GitHub Actions, nous passons par la variable d'environnement (env).
+      - name: 🚀 Exécution du script de mise à jour (01h00 CET)
+        run: python votre_script.py
+        
+      - name: 💾 Sauvegarde du CSV mis à jour (Optionnel)
+        # Ceci est utile si vous voulez conserver le 'prices_daily.csv' mis à jour
+        # pour le prochain run (nécessite une petite configuration supplémentaire, 
+        # mais on peut le faire plus tard si besoin de persistance).
+        run: echo "Le fichier prices_daily.csv a été mis à jour localement."
