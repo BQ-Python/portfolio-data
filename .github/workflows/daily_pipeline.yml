@@ -4,7 +4,6 @@ name: ⚙️ Pipeline Quotidien des Portefeuilles (Prix & Métriques)
 # S'exécute du Lundi au Vendredi (jours de bourse) à 00:00 UTC (1h00 du matin heure de Paris en hiver)
 on:
   schedule:
-    # 00:00 UTC permet de s'assurer que les prix de la veille sont disponibles.
     - cron: '0 0 * * 1-5'
   workflow_dispatch:
 
@@ -14,6 +13,11 @@ jobs:
   # ===============================================
   update_prices:
     runs-on: ubuntu-latest
+    
+    # 🚨 CORRECTION: AJOUT DE L'ENV POUR ACCÉDER À FIREBASE
+    env:
+      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      
     steps:
       - name: ⬇️ Checkout du code
         uses: actions/checkout@v4
@@ -27,49 +31,42 @@ jobs:
         run: pip install pandas numpy yfinance firebase-admin --quiet
         
       - name: 🚀 Exécution de la mise à jour et du calcul
-        # Votre script contient les fonctions `update_prices()` et `initialize_firestore()`.
-        # L'exécution principale (if __name__ == '__main__':) fait les deux.
-        # Nous n'avons besoin que d'un seul run ici.
         run: python update.py
         
+      # ... (Pas de changement dans les étapes Artifact et Commit)
+      
       - name: 📦 Sauvegarde des fichiers de travail (Artifacts)
         uses: actions/upload-artifact@v4
         with:
           name: prices-data
-          # Nous sauvegardons les fichiers mis à jour pour le prochain run (le Job 2 ne les utilise pas ici, mais le run du lendemain si).
           path: |
             prices_daily.csv
             tickers.csv
             init.done 
             
-      - name: 💾 Commit et push des données mises à jour (Optionnel mais Recommandé)
-        # Ceci garantit que le code source possède les dernières données CSV.
+      - name: 💾 Commit et push des données mises à jour
         run: |
           git config --local user.email "github-actions@github.com"
           git config --local user.name "GitHub Actions"
           git add prices_daily.csv init.done
-          # Commit seulement s'il y a des changements (pour ne pas faire un commit vide)
           git commit -m "Daily update: prices data and initialization flag" || echo "No changes to commit"
           git push
 
   # ===============================================
   # JOB 2 : CALCUL DES MÉTRIQUES ET PUSH FIRESTORE
   # ===============================================
-  # Ce Job est DÉPENDANT du Job 1 pour être sûr que les prix sont à jour.
   calculate_metrics:
     needs: update_prices
     runs-on: ubuntu-latest
     
+    # L'ENV ÉTAIT DÉJÀ PRÉSENT ICI, MAIS ON LE GARDE
     env:
       FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       
     steps:
       - name: ⬇️ Checkout du code
         uses: actions/checkout@v4
-
-      # Note : La récupération d'Artifact n'est pas nécessaire car le Job 1 a fait le 'commit'
-      # et le Job 2 fait un 'checkout' juste après, récupérant les fichiers mis à jour.
-          
+        
       - name: 🐍 Configuration de Python
         uses: actions/setup-python@v5
         with:
@@ -79,7 +76,4 @@ jobs:
         run: pip install pandas numpy firebase-admin yfinance --quiet
         
       - name: 📊 Exécution du calcul et Push Firestore
-        # Le script principal (update.py) contient également `calculate_and_push_metrics()`
-        # Nous l'exécutons à nouveau, cette fois il ne refera pas `update_prices()`
-        # car la date du fichier CSV est très récente, mais il fera les calculs.
         run: python update.py
