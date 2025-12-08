@@ -59,21 +59,23 @@ jobs:
     needs: update_prices
     runs-on: ubuntu-latest
     
-    # L'ENV ÉTAIT DÉJÀ PRÉSENT ICI, MAIS ON LE GARDE
     env:
       FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       
     steps:
-      - name: ⬇️ Checkout du code
-        uses: actions/checkout@v4
-        
-      - name: 🐍 Configuration de Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-          
-      - name: ⚙️ Installation des dépendances
-        run: pip install pandas numpy firebase-admin yfinance --quiet
+      # ... (étapes précédentes non modifiées)
         
       - name: 📊 Exécution du calcul et Push Firestore
-        run: python update.py
+        # Remplacer l'étape run: par ceci
+        run: |
+          echo "--- Débogage des fichiers CSV ---"
+          ls -l prices_daily.csv tickers.csv
+          
+          echo "--- 5 premières lignes de prices_daily.csv ---"
+          head -n 5 prices_daily.csv
+          
+          echo "--- 5 dernières lignes de prices_daily.csv ---"
+          tail -n 5 prices_daily.csv
+          
+          echo "--- Exécution du script Python ---"
+          python update.py
