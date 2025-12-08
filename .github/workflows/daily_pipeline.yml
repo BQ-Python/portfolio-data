@@ -1,9 +1,10 @@
 # .github/workflows/daily_pipeline.yml
 name: ⚙️ Pipeline Quotidien des Portefeuilles (Prix & Métriques)
 
-# S'exécute du Lundi au Vendredi (jours de bourse) à 00:00 UTC (1h00 du matin heure de Paris en hiver)
+# S'exécute du Lundi au Vendredi (jours de bourse) à 00:00 UTC
 on:
   schedule:
+    # 00:00 UTC permet de s'assurer que les prix de la veille sont disponibles.
     - cron: '0 0 * * 1-5'
   workflow_dispatch:
 
@@ -14,7 +15,7 @@ jobs:
   update_prices:
     runs-on: ubuntu-latest
     
-    # 🚨 CORRECTION: AJOUT DE L'ENV POUR ACCÉDER À FIREBASE
+    # 🔑 Assure l'accès aux secrets Firebase pour l'initialisation éventuelle
     env:
       FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       
@@ -31,11 +32,11 @@ jobs:
         run: pip install pandas numpy yfinance firebase-admin --quiet
         
       - name: 🚀 Exécution de la mise à jour et du calcul
+        # Le script met à jour prices_daily.csv et init.done localement
         run: python update.py
         
-      # ... (Pas de changement dans les étapes Artifact et Commit)
-      
       - name: 📦 Sauvegarde des fichiers de travail (Artifacts)
+        # Ceci garantit le transfert des fichiers mis à jour vers le Job 2
         uses: actions/upload-artifact@v4
         with:
           name: prices-data
@@ -44,11 +45,13 @@ jobs:
             tickers.csv
             init.done 
             
-      - name: 💾 Commit et push des données mises à jour
+      - name: 💾 Commit et push des données mises à jour (Persistance à long terme)
+        # Ceci garantit que le code source possède les dernières données CSV.
         run: |
           git config --local user.email "github-actions@github.com"
           git config --local user.name "GitHub Actions"
           git add prices_daily.csv init.done
+          # Commit seulement s'il y a des changements
           git commit -m "Daily update: prices data and initialization flag" || echo "No changes to commit"
           git push
 
@@ -59,23 +62,29 @@ jobs:
     needs: update_prices
     runs-on: ubuntu-latest
     
+    # 🔑 Assure l'accès aux secrets Firebase pour le push final
     env:
       FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       
     steps:
-      # ... (étapes précédentes non modifiées)
+      - name: ⬇️ Checkout du code (Récupération du script Python)
+        uses: actions/checkout@v4
+
+      - name: 📥 Récupération des fichiers de prix (ARTIFACTS)
+        # Télécharge les fichiers générés par le Job 1 dans ce répertoire de travail
+        uses: actions/download-artifact@v4
+        with:
+          name: prices-data
+          
+      - name: 🐍 Configuration de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          
+      - name: ⚙️ Installation des dépendances
+        run: pip install pandas numpy firebase-admin yfinance --quiet
         
       - name: 📊 Exécution du calcul et Push Firestore
-        # Remplacer l'étape run: par ceci
-        run: |
-          echo "--- Débogage des fichiers CSV ---"
-          ls -l prices_daily.csv tickers.csv
-          
-          echo "--- 5 premières lignes de prices_daily.csv ---"
-          head -n 5 prices_daily.csv
-          
-          echo "--- 5 dernières lignes de prices_daily.csv ---"
-          tail -n 5 prices_daily.csv
-          
-          echo "--- Exécution du script Python ---"
-          python update.py
+        # Le script s'exécute, trouve les fichiers CSV grâce à l'Artifact, calcule les métriques,
+        # gère la logique du "Jour Zéro", et envoie le tout à Firestore.
+        run: python update.py
