@@ -2,8 +2,7 @@ name: Mise à jour quotidienne + Déploiement GitHub Pages
 
 on:
   schedule:
-    - cron: '0 18 * * *'   # 19h00 France hiver (UTC+1)
-    - cron: '0 17 * * *'   # 19h00 France été   (UTC+2)
+    - cron: '45 22 * * 1-5'   # 23h45 Paris en hiver, 00h45 en été → 100 % safe
   workflow_dispatch:
 
 permissions:
