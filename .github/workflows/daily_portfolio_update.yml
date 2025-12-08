@@ -36,7 +36,7 @@ jobs:
       # depuis 'service-account.json' soit depuis la variable d'environnement.
       # Pour GitHub Actions, nous passons par la variable d'environnement (env).
       - name: 🚀 Exécution du script de mise à jour (01h00 CET)
-        run: python votre_script.py
+        run: python update.py
         
       - name: 💾 Sauvegarde du CSV mis à jour (Optionnel)
         # Ceci est utile si vous voulez conserver le 'prices_daily.csv' mis à jour
