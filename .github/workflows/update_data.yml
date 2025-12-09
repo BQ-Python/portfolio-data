@@ -1,47 +1,49 @@
-# .github/workflows/update_data.yml
-name: Mise à jour Quotidienne à 23h50 FR
+name: Mise à jour Quotidienne à 23h50 heure de Paris
 
+# Une seule ligne qui fonctionne toute l’année (heure d’été + heure d’hiver)
 on:
   schedule:
-    # 1. Planification pour l'heure d'été (23h50 CEST = 21h50 UTC)
-    - cron: '50 21 * * *' 
-    # 2. Planification pour l'heure d'hiver (23h50 CET = 22h50 UTC)
-    - cron: '50 22 * * *' 
+    # 23h50 heure de Paris → 21h50 UTC en été (CEST) et 22h50 UTC en hiver (CET)
+    - cron: '50 21,22 * * *'
+
+  # Permet aussi de lancer manuellement depuis l’interface GitHub
+  workflow_dispatch:
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout du code
+      - name: Checkout du repository
         uses: actions/checkout@v4
-        
-      - name: Configuration de Python
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
+          cache: 'pip'
 
-      - name: Installer les dépendances
-        run: pip install -r requirements.txt
+      - name: Installation des dépendances
+        run: |
+          pip install -r requirements.txt
 
-      - name: Exécuter le script de mise à jour des données (cible prices_daily.csv)
+      - name: Exécution du script de mise à jour
         env:
-          TZ: Europe/Paris 
+          TZ: Europe/Paris
         run: python update_script.py
 
-      - name: Configuration de Git
+      - name: Commit & Push si changements
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-      - name: Commiter et Pusher les changements
-        run: |
-          # Ajout du fichier de données mis à jour
-          git add prices_daily.csv 
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          if ! git diff --cached --exit-code; then
-            git commit -m "🤖 Mise à jour quotidienne des prix $(date +%Y-%m-%d)"
+          git add prices_daily.csv
+          
+          if ! git diff --cached --quiet; then
+            git commit -m "Mise à jour quotidienne des prix $(date -u '+%Y-%m-%d')"
             git push
+            echo "Nouveau commit poussé !"
           else
-            echo "Aucun changement détecté, pas de commit nécessaire."
+            echo "Aucun changement détecté aujourd’hui."
           fi
