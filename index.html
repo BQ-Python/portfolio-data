@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mon Portefeuille</title>
+  <script type="module" src="/main.jsx"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div id="root" class="min-h-screen flex items-center justify-center"></div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSy...",            // ← tu colles ici ton apiKey Firebase
+      authDomain: "ton-projet.firebaseapp.com",
+      projectId: "ton-projet",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const API_URL = "https://portfolio-api-testv3.onrender.com";  // ← ton backend Render
+
+    window.firebaseAuth = { auth, GoogleAuthProvider, signInWithPopup, signOut, db, API_URL };
+  </script>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
