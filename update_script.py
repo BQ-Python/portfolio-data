@@ -1,98 +1,99 @@
 # update_script.py
 import pandas as pd
+import yfinance as yf
 from datetime import datetime
+import pytz
 import os
-import pytz 
 
-# Nom du fichier de données à mettre à jour
-FILE_NAME = 'prices_daily.csv'
-TIMEZONE = 'Europe/Paris'
+FILE_NAME = "prices_daily.csv"
+TICKERS_FILE = "tickers.csv"
+TIMEZONE = "Europe/Paris"
 
 def get_current_date():
-    """Récupère la date d'aujourd'hui dans le fuseau horaire de Paris."""
-    paris_tz = pytz.timezone(TIMEZONE)
-    return datetime.now(paris_tz).strftime('%Y-%m-%d')
+    """Date du jour en heure de Paris (format YYYY-MM-DD)"""
+    return datetime.now(pytz.timezone(TIMEZONE)).strftime("%Y-%m-%d")
+
+
+def load_tickers():
+    """Charge uniquement la colonne 'ticker' depuis ton tickers.csv"""
+    if not os.path.exists(TICKERS_FILE):
+        raise FileNotFoundError(f"Fichier {TICKERS_FILE} introuvable !")
+    
+    df = pd.read_csv(TICKERS_FILE, sep="\t")  # ton fichier est tabulé
+    if "ticker" not in df.columns:
+        raise ValueError("La colonne 'ticker' est absente dans tickers.csv")
+    
+    tickers = df["ticker"].dropna().tolist()
+    print(f"{len(tickers)} tickers chargés depuis tickers.csv")
+    return tickers
 
 
 def get_new_data(current_date):
-    """
-    🚨 LOGIQUE CRITIQUE : REMPLACEZ CETTE FONCTION 
-    par votre code réel de récupération de données.
+    """Récupère les prix de clôture du dernier jour de marché disponible"""
+    tickers = load_tickers()
+
+    print(f"Téléchargement des données pour {len(tickers)} symboles...")
     
-    Vous pouvez utiliser 'tickers.csv' pour lire la liste des symboles.
-    """
-    
-    try:
-        # Lire la liste des tickers
-        tickers_df = pd.read_csv('tickers.csv')
-        # Supposons que 'tickers.csv' contient une colonne nommée 'Symbole'
-        # ou, si c'est une simple liste de valeurs (comme votre en-tête), 
-        # vous devrez l'adapter. Ici, nous partons du principe que vous pouvez
-        # récupérer la liste des symboles (colonnes de votre CSV)
-        
-        # --- Simuler la récupération des prix ---
-        # Cette partie doit être remplacée par l'appel à une API financière
-        
-        # Liste de tous vos symboles (y compris les .DE, .MI, etc.)
-        all_symbols = [
-            'A', 'AAL', 'AAPL', 'ABBV', 'ABT', 'ACGL', 'ACN', 'ADBE', 
-            # ... tous les symboles de votre en-tête initial
-            'ZTS', 'ADS.DE', 'AIR.DE', 'ARX.TO' 
-        ] # REMPLACER PAR VOTRE LISTE COMPLÈTE
-        
-        # Création des données simulées
-        data = {'Date': current_date}
-        for symbol in all_symbols:
-            # Remplacer par la valeur réelle de l'action/indice pour ce jour
-            data[symbol] = 0.0 
-            
-        new_df = pd.DataFrame([data], columns=['Date'] + all_symbols)
-        return new_df
-        
-    except Exception as e:
-        print(f"Erreur lors de la récupération des données : {e}")
+    # On prend 5 jours pour être sûr d’avoir le dernier jour de marché fermé
+    data = yf.download(
+        tickers=tickers,
+        period="5d",
+        interval="1d",
+        auto_adjust=True,
+        progress=False,
+        threads=True,         # plus rapide quand tu as beaucoup de tickers
+        group_by="ticker"
+    )
+
+    if data.empty:
+        print("Aucune donnée récupérée via yfinance")
         return None
 
+    # yfinance retourne soit un DataFrame simple, soit un multi-index selon le nombre de tickers
+    if len(tickers) == 1:
+        latest_prices = data["Close"].iloc[-1] if "Close" in data.columns else data.iloc[-1]
+    else:
+        latest_prices = data["Close"].iloc[-1]
 
-# --- 3. Mise à Jour du Fichier ---
+    # Construction de la nouvelle ligne
+    row = {"Date": current_date}
+    for ticker in tickers:
+        price = latest_prices[ticker] if ticker in latest_prices.index else None
+        row[ticker] = round(float(price), 4) if price is not None and pd.notna(price) else None
+
+    return pd.DataFrame([row])
+
+
 def update_csv_file(new_df):
-    """Charge le CSV existant, ajoute la nouvelle ligne et sauvegarde."""
-    
-    today_date = new_df['Date'].iloc[0]
-    
+    """Ajoute la nouvelle ligne seulement si la date n’existe pas déjà"""
+    today = new_df["Date"].iloc[0]
+
     if os.path.exists(FILE_NAME):
         existing_df = pd.read_csv(FILE_NAME)
-        
-        # VÉRIFICATION DU DUPLICATA
-        if today_date in existing_df['Date'].astype(str).values:
-            print(f"La date {today_date} est déjà présente. Annulation.")
+
+        # Protection contre les doublons
+        if today in existing_df["Date"].astype(str).values:
+            print(f"La date {today} existe déjà → rien à faire.")
             return
 
-        # VÉRIFICATION DE L'ORDRE ET DU NOMBRE DE COLONNES
-        if not all(existing_df.columns == new_df.columns):
-             print("Erreur: L'ordre ou le nombre des colonnes ne correspond pas.")
-             print("Colonnes existantes:", list(existing_df.columns))
-             print("Nouvelles colonnes:", list(new_df.columns))
-             # Tente d'aligner les colonnes (utile si les tickers changent)
-             new_df = new_df[existing_df.columns]
-        
-        # Concatène la nouvelle ligne
-        updated_df = pd.concat([existing_df, new_df], ignore_index=True)
-        
-        # Sauvegarde
-        updated_df.to_csv(FILE_NAME, index=False)
-        print(f"Fichier {FILE_NAME} mis à jour avec les données du {today_date}.")
-    else:
-        # Si le fichier n'existe pas, créez-le
-        new_df.to_csv(FILE_NAME, index=False)
-        print(f"Fichier {FILE_NAME} créé.")
+        # Alignement des colonnes (important si tu ajoutes/supprimes des tickers un jour)
+        new_df = new_df.reindex(columns=existing_df.columns, fill_value=None)
 
-# --- Exécution ---
+        updated_df = pd.concat([existing_df, new_df], ignore_index=True)
+    else:
+        updated_df = new_df
+
+    updated_df.to_csv(FILE_NAME, index=False)
+    print(f"prices_daily.csv mis à jour avec succès pour {today}")
+
+
 if __name__ == "__main__":
     current_date = get_current_date()
+    print(f"Lancement de la mise à jour pour la date : {current_date}")
+
     new_data = get_new_data(current_date)
-    
+
     if new_data is not None and not new_data.empty:
         update_csv_file(new_data)
     else:
-        print("Erreur: Aucune donnée à ajouter.")
+        print("Aucune donnée n’a pu être récupérée aujourd’hui.")
