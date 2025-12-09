@@ -1,0 +1,47 @@
+# .github/workflows/update_data.yml
+name: Mise à jour Quotidienne à 23h50 FR
+
+on:
+  schedule:
+    # 1. Planification pour l'heure d'été (23h50 CEST = 21h50 UTC)
+    - cron: '50 21 * * *' 
+    # 2. Planification pour l'heure d'hiver (23h50 CET = 22h50 UTC)
+    - cron: '50 22 * * *' 
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        
+      - name: Configuration de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Exécuter le script de mise à jour des données (cible prices_daily.csv)
+        env:
+          TZ: Europe/Paris 
+        run: python update_script.py
+
+      - name: Configuration de Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Commiter et Pusher les changements
+        run: |
+          # Ajout du fichier de données mis à jour
+          git add prices_daily.csv 
+          
+          if ! git diff --cached --exit-code; then
+            git commit -m "🤖 Mise à jour quotidienne des prix $(date +%Y-%m-%d)"
+            git push
+          else
+            echo "Aucun changement détecté, pas de commit nécessaire."
+          fi
