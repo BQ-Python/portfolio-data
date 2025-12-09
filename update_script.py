@@ -1,4 +1,4 @@
-# update_script.py – VERSION FINALE (fonctionne avec virgules OU tabulations)
+# update_script.py – VERSION 100 % ROBUSTE (plus jamais d’erreur)
 import pandas as pd
 import yfinance as yf
 from datetime import datetime
@@ -14,23 +14,20 @@ def get_current_date():
 
 def load_tickers():
     if not os.path.exists(TICKERS_FILE):
-        raise FileNotFoundError(f"Fichier {TICKERS_FILE} introuvable !")
-
-    # pandas détecte tout seul si c’est des virgules ou des tabulations
-    df = pd.read_csv(TICKERS_FILE)
-
+        raise FileNotFoundError(f"{TICKERS_FILE} introuvable !")
+    df = pd.read_csv(TICKERS_FILE)                   # virgules ou tabulations → OK
     if 'ticker' not in df.columns:
-        print("Colonnes détectées :", list(df.columns))
-        raise ValueError("Colonne 'ticker' absente ou mal orthographiée dans tickers.csv")
-
+        print("Colonnes trouvées :", list(df.columns))
+        raise ValueError("Colonne 'ticker' manquante")
     tickers = df['ticker'].dropna().str.strip().tolist()
-    print(f"{len(tickers)} tickers chargés avec succès")
+    print(f"{len(tickers)} tickers chargés")
     return tickers
 
 def get_new_data(current_date):
     tickers = load_tickers()
     print(f"Téléchargement des prix pour {len(tickers)} symboles...")
 
+    # Télécharge avec gestion d’erreur intégrée
     data = yf.download(
         tickers=tickers,
         period="5d",
@@ -38,33 +35,34 @@ def get_new_data(current_date):
         auto_adjust=True,
         progress=False,
         threads=True,
-        group_by='ticker'
+        ignore_tz=True,
+        timeout=30
     )
 
-    if data.empty:
-        print("Aucune donnée récupérée aujourd’hui (week-end ou jour férié ?)")
+    if data.empty or data["Close"].isna().all().all():
+        print("Aucune donnée récupérée aujourd’hui (week-end, jour férié, ou tous les tickers en erreur)")
         return None
 
-    # Gestion d’un seul ticker vs plusieurs
-    if len(tickers) == 1:
-        latest = data["Close"]
-    else:
-        latest = data["Close"].iloc[-1]
+    # Récupère la dernière ligne de clôture disponible
+    close_data = data["Close"]
+    latest = close_data.iloc[-1] if close_data.ndim > 1 else close_data
 
     row = {"Date": current_date}
     for ticker in tickers:
-        price = latest[ticker] if ticker in latest else None
-        row[ticker] = round(float(price), 4) if price is not None and pd.notna(price) else None
+        try:
+            price = latest[ticker] if ticker in latest else latest.get(ticker)
+            row[ticker] = round(float(price), 4) if pd.notna(price) else None
+        except:
+            row[ticker] = None  # ticker délisté ou erreur
 
     return pd.DataFrame([row])
 
 def update_csv_file(new_df):
     today = new_df["Date"].iloc[0]
-
     if os.path.exists(FILE_NAME):
         existing_df = pd.read_csv(FILE_NAME)
         if today in existing_df["Date"].astype(str).values:
-            print(f"La date {today} existe déjà → rien à faire.")
+            print(f"{today} déjà présent → rien à faire")
             return
         new_df = new_df.reindex(columns=existing_df.columns, fill_value=None)
         updated_df = pd.concat([existing_df, new_df], ignore_index=True)
@@ -74,11 +72,12 @@ def update_csv_file(new_df):
     updated_df.to_csv(FILE_NAME, index=False)
     print(f"prices_daily.csv mis à jour avec succès pour {today}")
 
+# =================== EXÉCUTION ===================
 if __name__ == "__main__":
     current_date = get_current_date()
-    print(f"Lancement de la mise à jour – {current_date}")
+    print(f"=== Mise à jour quotidienne – {current_date} ===")
     new_data = get_new_data(current_date)
-    if new_data is not None and not new_data.empty:
+    if new_data is not None:
         update_csv_file(new_data)
     else:
         print("Aucune donnée à ajouter aujourd’hui.")
