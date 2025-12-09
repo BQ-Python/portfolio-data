@@ -1,4 +1,4 @@
-// frontend/src/App.jsx
+// frontend/src/App.jsx (version corrigée – erreur Firebase fixée + design pro)
 import React, { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import {
@@ -39,7 +39,6 @@ ChartJS.register(
   Filler
 );
 
-// Ta config Firebase (elle reste publique → c’est normal)
 const firebaseConfig = {
   apiKey: "AIzaSyB7sRyQt1lNuXqpcesTvL6ktpCAurTcIdk",
   authDomain: "horizon-labs-3321a.firebaseapp.com",
@@ -54,22 +53,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-const API_URL = "https://portfolio-api-8o1e.onrender.com"; // Ton backend Render
+const API_URL = "https://portfolio-api-8o1e.onrender.com";
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [positions, setPositions] = useState({});
+  const [positions, setPositions] = useState({}); // {ticker: {weight: 0.25, qty: 10}}
   const [ticker, setTicker] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const [weight, setWeight] = useState("");
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState(null);
   const [metrics, setMetrics] = useState(null);
+  const [totalWeight, setTotalWeight] = useState(0);
+  const [error, setError] = useState(null); // Pour fixer les erreurs popup
 
-  // Auth listener
+  // Calcul somme poids
+  useEffect(() => {
+    const sum = Object.values(positions).reduce((acc, p) => acc + p.weight, 0);
+    setTotalWeight(sum);
+  }, [positions]);
+
+  // Auth listener avec fix erreur popup
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
+      setError(null); // Reset erreur
       if (u) {
         const snap = await getDoc(doc(db, "users", u.uid));
         if (snap.exists()) {
@@ -84,18 +91,39 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  const login = () => signInWithPopup(auth, new GoogleAuthProvider());
+  const login = async () => {
+    try {
+      setError(null);
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Popup fermé – réessaye la connexion');
+      } else {
+        setError('Erreur connexion : ' + err.message);
+      }
+    }
+  };
+
   const logout = () => signOut(auth);
 
   const addPosition = () => {
-    if (!ticker || !quantity) return;
+    if (!ticker || !weight || weight <= 0) {
+      setError('Ticker et poids requis');
+      return;
+    }
     const t = ticker.toUpperCase();
+    const w = Number(weight);
+    if (totalWeight + w > 1) {
+      setError('Somme des poids > 100%');
+      return;
+    }
     setPositions((prev) => ({
       ...prev,
-      [t]: (prev[t] || 0) + Number(quantity),
+      [t]: { weight: w, qty: 0 }, // qty = 0 pour l'instant, on peut ajouter plus tard
     }));
     setTicker("");
-    setQuantity("");
+    setWeight("");
+    setError(null);
   };
 
   const removePosition = (t) => {
@@ -113,9 +141,13 @@ export default function App() {
   };
 
   const loadPerformance = async () => {
-    if (!user || Object.keys(positions).length === 0) return;
+    if (!user || Object.keys(positions).length === 0) {
+      setError('Ajoute des positions d\'abord');
+      return;
+    }
 
     setLoading(true);
+    setError(null);
     try {
       const token = await user.getIdToken();
       const res = await fetch(`${API_URL}/portfolio/equity`, {
@@ -124,7 +156,7 @@ export default function App() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ positions }),
+        body: JSON.stringify({ positions }), // Envoie les poids
       });
 
       if (!res.ok) throw new Error("Erreur API");
@@ -148,7 +180,7 @@ export default function App() {
       });
     } catch (err) {
       console.error(err);
-      alert("Erreur lors du calcul de la performance");
+      setError("Erreur calcul : " + err.message);
     } finally {
       setLoading(false);
     }
@@ -165,84 +197,78 @@ export default function App() {
           >
             Connexion avec Google
           </button>
+          {error && <p className="text-red-300 mt-4">{error}</p>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-4xl font-bold text-gray-800">
+            <h1 className="text-3xl font-bold text-gray-800">
               Portefeuille de {user.displayName.split(" ")[0]}
             </h1>
-            <button
-              onClick={logout}
-              className="text-red-600 hover:text-red-800 font-medium"
-            >
+            <button onClick={logout} className="text-red-600 hover:text-red-800">
               Déconnexion
             </button>
           </div>
         </div>
 
-        {/* Ajouter une position */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-bold mb-6">Ajouter une position</h2>
+        {/* Ajout position avec poids */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <h2 className="text-2xl font-bold mb-4">Ajouter une position (en %)</h2>
           <div className="flex gap-4 flex-wrap">
             <input
               value={ticker}
               onChange={(e) => setTicker(e.target.value)}
-              placeholder="AAPL"
-              className="px-6 py-4 border border-gray-300 rounded-xl text-lg flex-1 min-w-32"
+              placeholder="Ticker (AAPL)"
+              className="px-4 py-3 border border-gray-300 rounded-lg flex-1 min-w-32"
             />
             <input
               type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder="100"
-              className="px-6 py-4 border border-gray-300 rounded-xl text-lg w-32"
+              step="0.01"
+              min="0"
+              max="100"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="Poids % (ex: 25)"
+              className="px-4 py-3 border border-gray-300 rounded-lg w-32"
             />
-            <button
-              onClick={addPosition}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold"
-            >
+            <button onClick={addPosition} className="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700">
               Ajouter
             </button>
-            <button
-              onClick={savePortfolio}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold"
-            >
+            <button onClick={savePortfolio} className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700">
               Sauvegarder
             </button>
             <button
               onClick={loadPerformance}
-              disabled={loading || Object.keys(positions).length === 0}
-              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-8 py-4 rounded-xl font-bold"
+              disabled={loading || totalWeight !== 1}
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-bold disabled:opacity-50 hover:bg-purple-700"
             >
-              {loading ? "Calcul..." : "Analyser"}
+              {loading ? "Calcul..." : "Analyser (somme 100%)"}
             </button>
           </div>
+          <div className="mt-2 text-sm text-gray-600">
+            Somme des poids : {Math.round(totalWeight * 100)}% {totalWeight !== 1 && <span className="text-red-500">(doit faire 100%)</span>}
+          </div>
+          {error && <p className="text-red-500 mt-2">{error}</p>}
         </div>
 
         {/* Positions */}
         {Object.keys(positions).length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <h2 className="text-2xl font-bold mb-6">Mes positions</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-              {Object.entries(positions).map(([t, q]) => (
-                <div
-                  key={t}
-                  className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-6 rounded-xl text-center shadow-lg"
-                >
-                  <div className="text-3xl font-bold">{t}</div>
-                  <div className="text-lg mt-2">{q} actions</div>
-                  <button
-                    onClick={() => removePosition(t)}
-                    className="mt-3 text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded"
-                  >
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <h2 className="text-2xl font-bold mb-4">Mes positions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(positions).map(([t, p]) => (
+                <div key={t} className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-bold">{t}</h3>
+                  <p className="text-lg">{(p.weight * 100).toFixed(1)}%</p>
+                  <p className="text-sm text-gray-600">Qty: {p.qty || 0}</p>
+                  <button onClick={() => removePosition(t)} className="mt-2 text-red-500 text-sm">
                     Supprimer
                   </button>
                 </div>
@@ -253,41 +279,28 @@ export default function App() {
 
         {/* Métriques */}
         {metrics && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="bg-green-50 p-6 rounded-2xl text-center">
               <h3 className="text-xl text-gray-600">Retour total</h3>
-              <p className={`text-5xl font-bold mt-4 ${metrics.total_return_pct > 0 ? "text-green-600" : "text-red-600"}`}>
-                {metrics.total_return_pct > 0 ? "+" : ""}{metrics.total_return_pct}%
-              </p>
+              <p className="text-4xl font-bold text-green-600">{metrics.total_return_pct > 0 ? '+' : ''}{metrics.total_return_pct}%</p>
             </div>
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="bg-blue-50 p-6 rounded-2xl text-center">
               <h3 className="text-xl text-gray-600">Sharpe Ratio</h3>
-              <p className="text-5xl font-bold text-blue-600 mt-4">
-                {metrics.sharpe_ratio.toFixed(2)}
-              </p>
+              <p className="text-4xl font-bold text-blue-600">{metrics.sharpe_ratio.toFixed(2)}</p>
             </div>
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="bg-orange-50 p-6 rounded-2xl text-center">
               <h3 className="text-xl text-gray-600">Max Drawdown</h3>
-              <p className="text-5xl font-bold text-orange-600 mt-4">
-                {metrics.max_drawdown_pct.toFixed(1)}%
-              </p>
+              <p className="text-4xl font-bold text-orange-600">{metrics.max_drawdown_pct.toFixed(1)}%</p>
             </div>
           </div>
         )}
 
         {/* Graphique */}
         {chartData && (
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-3xl font-bold mb-6">Évolution du portefeuille</h2>
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-3xl font-bold mb-4">Évolution du portefeuille</h2>
             <div className="h-96">
-              <Line
-                data={chartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: { legend: { position: "top" } },
-                }}
-              />
+              <Line data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
             </div>
           </div>
         )}
