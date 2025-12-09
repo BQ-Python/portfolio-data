@@ -1,7 +1,8 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
-pandas==2.2.2
-yfinance==0.2.40
-pytz==2024.1
-numpy==1.26.4
-python-multipart==0.0.9  # pour les POST JSON
+pandas==2.3.1
+numpy==2.1.1
+firebase-admin==6.5.0
+duckdb==1.1.0
+pyarrow==17.0.0
+python-multipart==0.0.9
