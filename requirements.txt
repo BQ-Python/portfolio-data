@@ -3,6 +3,6 @@ uvicorn[standard]==0.30.6
 pandas==2.2.3
 numpy==2.1.2
 firebase-admin==6.5.0
-duckdb==1.1.1            # ← version qui a un wheel cp313-manylinux_2_28
-pyarrow==17.0.0
+duckdb==1.1.1
+pyarrow==16.1.0          # ← Downgrade pour wheel pré-compilé
 python-multipart==0.0.9
